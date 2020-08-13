@@ -10,7 +10,7 @@
         <join-column name="externalSystemid" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
       </join-columns>
     </many-to-one>
-    <many-to-one field="importable" target-entity="Sports\League" inversed-by="externals">
+    <many-to-one field="importable" target-entity="Sports\League">
       <join-columns>
         <join-column name="importableObjectid" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
       </join-columns>

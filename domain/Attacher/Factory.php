@@ -10,7 +10,7 @@ use SportsImport\Attacher\Association as AssociationAttacher;
 use SportsImport\Attacher\Season as SeasonAttacher;
 use SportsImport\Attacher\League as LeagueAttacher;
 use SportsImport\Attacher\Competition as CompetitionAttacher;
-use SportsImport\Attacher\Competitor as CompetitorAttacher;
+use SportsImport\Attacher\CompetitorDep as CompetitorAttacher;
 use Sports\Sport;
 use Sports\Association;
 use Sports\Season;
