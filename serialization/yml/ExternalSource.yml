@@ -1,0 +1,22 @@
+SportsImport\ExternalSource:
+  exclusion_policy: ALL
+  exclude: false
+  access_type: public_method
+
+  properties:
+    id:
+      type: integer
+    name:
+      type: string
+    website:
+      type: string
+    username:
+      type: string
+    password:
+      type: string
+    apiurl:
+      type: string
+    apikey:
+      type: string
+    implementations:
+      type: integer

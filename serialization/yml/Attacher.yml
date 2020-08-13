@@ -1,0 +1,12 @@
+SportsImport\Attacher:
+  exclusion_policy: ALL
+  exclude: false
+  access_type: public_method
+
+  properties:
+    id:
+      type: integer
+    importableId:
+      type: integer
+    externalId:
+      type: string

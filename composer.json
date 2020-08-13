@@ -1,0 +1,71 @@
+{
+  "name": "thepercival/php-sports-import",
+  "description": "php library for importing sports",
+  "keywords": ["sports","import"],
+  "homepage": "https://github.com/thepercival/php-sports-import",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Coen Dunnink",
+      "email": "coendunnink@gmail.com"
+    }
+  ],
+  "support": {
+	"email": "coendunnink@gmail.com"
+  },
+  "require": {
+    "php": ">=7.4",
+    "vlucas/phpdotenv": "^4.1",
+    "league/period": "^4.9",
+    "doctrine/orm": "^2.7",
+    "jms/serializer": "^3.4",
+    "symfony/yaml": "^5.0",
+    "monolog/monolog": "^2.0",
+    "guzzlehttp/guzzle": "^6.5",
+    "thepercival/php-sports-helpers": "^1.0",
+    "thepercival/php-sports": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8.2",
+    "phpstan/phpstan": "^0.12",
+    "phpstan/phpstan-doctrine": "^0.12",
+    "phpstan/extension-installer": "^1.0",
+    "phpstan/phpstan-phpunit": "^0.12.8",
+    "friendsofphp/php-cs-fixer": "^2.16",
+    "phpstan/phpstan-strict-rules": "^0.12.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "SportsImport\\": "domain/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SportsImport\\Tests\\": "tests/cases",
+      "SportsImport\\TestHelper\\": "tests/helpers"
+    },
+    "psr-0": {
+      "": "tests/"
+    }
+  },
+  "scripts": {
+    "start": "php -S localhost:2990 -t public/",
+    "test": [
+      "vendor/bin/phpunit --configuration tests/phpunit.xml tests/cases/"
+    ],
+    "stan": "vendor/bin/phpstan analyse --level=5 domain tests/cases/ tests/helpers/",
+    "cs-fix": "php-cs-fixer fix .",
+    "copy-vob": [
+      "rm -rf ../vobetting-api/vendor/thepercival/php-sports-import",
+      "mkdir ../vobetting-api/vendor/thepercival/php-sports-import",
+      "cp . ../vobetting-api/vendor/thepercival/php-sports-import -R"
+    ]
+  },
+  "extra": {
+    "phpstan": {
+      "includes": [
+        "extension.neon"
+      ]
+    }
+  }
+}
