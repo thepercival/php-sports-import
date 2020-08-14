@@ -24,6 +24,16 @@ class Repository extends \Sports\Repository
         return null;
     }
 
+    public function getExpireDateTime(string $name): ?\DateTimeImmutable
+    {
+        /** @var CacheItemDb|null $cacheItem */
+        $cacheItem = $this->findOneBy(["name" => $name]);
+        if ($cacheItem === null ) {
+            return null;
+        }
+        return $cacheItem->getExpireDateTime();
+    }
+
     public function saveItem(string $name, $value, int $nrOfMinutesToExpire = null)
     {
         $cacheItem = $this->findOneBy(["name" => $name]);

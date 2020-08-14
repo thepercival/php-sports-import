@@ -53,7 +53,7 @@ class Team extends SofaScoreHelper implements ExternalSourceTeam
         $competitionTeams = [];
         $association = $competition->getLeague()->getAssociation();
 
-        $apiData = $this->apiHelper->getCompetitionData($competition);
+        $apiData = $this->apiHelper->getStructureData($competition);
 
         $apiDataTeams = $this->convertExternalSourceTeams($apiData);
 

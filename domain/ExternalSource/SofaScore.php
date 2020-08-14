@@ -33,7 +33,8 @@ class SofaScore implements
     ExternalSourceCompetition,
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
-    ExternalSourceGame
+    ExternalSourceGame,
+    CacheInfo, ApiHelper
 {
     public const SPORTFILTER = "football";
     public const NAME = "SofaScore";
@@ -51,7 +52,7 @@ class SofaScore implements
      */
     private $logger;
     /**
-     * @var array
+     * @var array|mixed[]
      */
     private $helpers;
 
@@ -71,6 +72,9 @@ class SofaScore implements
          );*/
     }
 
+    /**
+     * @return mixed
+     */
     protected function getApiHelper()
     {
         if (array_key_exists(SofaScore\ApiHelper::class, $this->helpers)) {
@@ -299,5 +303,27 @@ class SofaScore implements
             $this->logger
         );
         return $this->helpers[SofaScore\Helper\Game::class];
+    }
+
+    public function getEndPoint( int $dataTypeIdentifier = null ): string
+    {
+        return $this->getApiHelper()->getEndPoint( $dataTypeIdentifier );
+    }
+
+    public function getEndPointSuffix( int $dataTypeIdentifier ): string
+    {
+        return $this->getApiHelper()->getEndPointSuffix( $dataTypeIdentifier );
+    }
+
+    public function getCacheMinutes( int $dataTypeIdentifier ): int{
+        return $this->getApiHelper()->getCacheMinutes( $dataTypeIdentifier );
+    }
+
+    public function getCacheId( int $dataTypeIdentifier ): string {
+        return $this->getApiHelper()->getCacheId( $dataTypeIdentifier );
+    }
+
+    public function getCacheInfo( int $dataTypeIdentifier = null): string {
+        return $this->getApiHelper()->getCacheInfo( $dataTypeIdentifier );
     }
 }

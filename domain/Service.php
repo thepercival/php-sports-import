@@ -31,14 +31,6 @@ class Service
 
     protected CompetitionAttacherRepository $competitionAttacherRepos;
 
-    public const SPORT_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const ASSOCIATION_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const SEASON_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const LEAGUE_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const COMPETITION_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const COMPETITOR_CACHE_MINUTES = 1440 * 7; // 60 * 24
-    public const GAME_CACHE_MINUTES = 10; // 60 * 24
-
     public function __construct(
         Service\Sport $sportImportService,
         Service\Association $associationImportService,

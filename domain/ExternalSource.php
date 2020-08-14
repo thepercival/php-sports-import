@@ -50,6 +50,17 @@ class ExternalSource
     const MAX_LENGTH_APIURL = 255;
     const MAX_LENGTH_APIKEY = 255;
 
+    const DATA_SPORTS = 1;
+    const DATA_ASSOCIATIONS = 2;
+    const DATA_SEASONS = 4;
+    const DATA_LEAGUES = 8;
+    const DATA_COMPETITIONS = 16;
+    const DATA_TEAMS = 32;
+    const DATA_TEAMCOMPETITORS = 64;
+    // const DATA_PERSONCOMPETITORS = 2;
+    const DATA_STRUCTURES = 256;
+    const DATA_GAMES = 512;
+
     public function __construct($name, $website = null)
     {
         $this->setName($name);

@@ -46,7 +46,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
      */
     public function getBatchNrs(Competition $competition, bool $forImport): array
     {
-        $apiData = $this->apiHelper->getCompetitionData($competition);
+        $apiData = $this->apiHelper->getStructureData($competition);
 
         if (!property_exists($apiData, "events")) {
             return [];

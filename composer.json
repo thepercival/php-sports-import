@@ -59,6 +59,11 @@
       "rm -rf ../vobetting-api/vendor/thepercival/php-sports-import",
       "mkdir ../vobetting-api/vendor/thepercival/php-sports-import",
       "cp . ../vobetting-api/vendor/thepercival/php-sports-import -R"
+    ],
+    "copy-sup": [
+      "rm -rf ../superelf-api/vendor/thepercival/php-sports-import",
+      "mkdir ../superelf-api/vendor/thepercival/php-sports-import",
+      "cp . ../superelf-api/vendor/thepercival/php-sports-import -R"
     ]
   },
   "extra": {
