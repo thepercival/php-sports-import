@@ -1,16 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 16-4-19
- * Time: 16:00
- */
 
-namespace Voetbal\ExternalSource\Logger;
+namespace SportsImport\ExternalSource\Logger;
 
-use Voetbal\Competition;
-use Voetbal\ExternalSource;
-use Voetbal\Game;
+use Sports\Competition;
+use SportsImport\ExternalSource;
+use Sports\Game;
 
 interface GameLogger
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\Competition;
-use Voetbal\Competitor as CompetitorBase;
-use Voetbal\Game as GameBase;
+use Sports\Competition;
+use Sports\Competitor;
+use Sports\Game as GameBase;
 
 interface Game
 {

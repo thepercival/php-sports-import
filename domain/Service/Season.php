@@ -3,7 +3,6 @@
 namespace SportsImport\Service;
 
 use Exception;
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\Season\Repository as SeasonRepository;
 use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
@@ -11,7 +10,7 @@ use Sports\Season as SeasonBase;
 use SportsImport\Attacher\Season as SeasonAttacher;
 use Psr\Log\LoggerInterface;
 
-class Season implements ImporterInterface
+class Season
 {
     /**
      * @var SeasonRepository
@@ -38,12 +37,11 @@ class Season implements ImporterInterface
 
     /**
      * @param ExternalSource $externalSource
-     * @param array $externalSourceSeasons
+     * @param array|SeasonBase[] $externalSourceSeasons
      * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceSeasons)
     {
-        /** @var SeasonBase $externalSourceSeason */
         foreach ($externalSourceSeasons as $externalSourceSeason) {
             $externalId = $externalSourceSeason->getId();
             $seasonAttacher = $this->seasonAttacherRepos->findOneByExternalId(

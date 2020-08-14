@@ -1,24 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 19:55
- */
 
-namespace Voetbal\ExternalSource\SofaScore\Helper;
+namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use Voetbal\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Voetbal\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use Voetbal\League as LeagueBase;
-use Voetbal\ExternalSource;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
+use Sports\League as LeagueBase;
+use SportsImport\ExternalSource;
 use stdClass;
 use Psr\Log\LoggerInterface;
-use Voetbal\Import\Service as ImportService;
-use Voetbal\ExternalSource\SofaScore;
+use SportsImport\Service as ImportService;
+use SportsImport\ExternalSource\SofaScore;
 
-use Voetbal\ExternalSource\League as ExternalSourceLeague;
-use Voetbal\Planning\Game;
+use SportsImport\ExternalSource\League as ExternalSourceLeague;
 
 class League extends SofaScoreHelper implements ExternalSourceLeague
 {

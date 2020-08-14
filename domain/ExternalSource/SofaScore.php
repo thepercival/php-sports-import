@@ -1,44 +1,37 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 4-3-18
- * Time: 19:47
- */
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\ExternalSource as ExternalSourceBase;
-use Voetbal\ExternalSource\Implementation as ExternalSourceImplementation;
-use Voetbal\CacheItemDb\Repository as CacheItemDbRepository;
-use Voetbal\Structure\Range as StructureOptions;
+use SportsImport\ExternalSource as ExternalSourceBase;
+use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use Psr\Log\LoggerInterface;
 
-use Voetbal\Sport;
-use Voetbal\ExternalSource\Sport as ExternalSourceSport;
-use Voetbal\ExternalSource\Association as ExternalSourceAssociation;
-use Voetbal\Association;
-use Voetbal\ExternalSource\Season as ExternalSourceSeason;
-use Voetbal\Season;
-use Voetbal\ExternalSource\League as ExternalSourceLeague;
-use Voetbal\League;
-use Voetbal\ExternalSource\Competition as ExternalSourceCompetition;
-use Voetbal\Competition;
-use Voetbal\ExternalSource\Competitor as ExternalSourceCompetitor;
-use Voetbal\Competitor;
-use Voetbal\ExternalSource\Structure as ExternalSourceStructure;
-use Voetbal\Structure;
-use Voetbal\ExternalSource\Game as ExternalSourceGame;
-use Voetbal\Game;
+use Sports\Sport;
+use SportsImport\ExternalSource\Sport as ExternalSourceSport;
+use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
+use Sports\Association;
+use SportsImport\ExternalSource\Season as ExternalSourceSeason;
+use Sports\Season;
+use SportsImport\ExternalSource\League as ExternalSourceLeague;
+use Sports\League;
+use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
+use Sports\Competition;
+use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
+use Sports\Competitor\Team as TeamCompetitor;
+use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
+use Sports\Structure;
+use SportsImport\ExternalSource\Game as ExternalSourceGame;
+use Sports\Game;
 
 class SofaScore implements
     ExternalSourceImplementation,
     ExternalSourceSport,
     ExternalSourceAssociation,
-                           ExternalSourceSeason,
+    ExternalSourceSeason,
     ExternalSourceLeague,
     ExternalSourceCompetition,
-                           ExternalSourceCompetitor,
+    ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
     ExternalSourceGame
 {
@@ -61,10 +54,6 @@ class SofaScore implements
      * @var array
      */
     private $helpers;
-    /**
-     * @var StructureOptions
-     */
-    // protected $structureOptions;
 
     public function __construct(
         ExternalSourceBase $externalSource,
@@ -246,29 +235,29 @@ class SofaScore implements
     }
 
     /**
-     * @return array|Competitor[]
+     * @return array|TeamCompetitor[]
      */
-    public function getCompetitors(Competition $competition): array
+    public function getTeamCompetitors(Competition $competition): array
     {
-        return $this->getCompetitorHelper()->getCompetitors($competition);
+        return $this->getTeamCompetitorHelper()->getTeamCompetitors($competition);
     }
 
-    public function getCompetitor(Competition $competition, $id): ?Competitor
+    public function getTeamCompetitor(Competition $competition, $id): ?TeamCompetitor
     {
-        return $this->getCompetitorHelper()->getCompetitor($competition, $id);
+        return $this->getTeamCompetitorHelper()->getTeamCompetitor($competition, $id);
     }
 
-    protected function getCompetitorHelper(): SofaScore\Helper\Competitor
+    protected function getTeamCompetitorHelper(): SofaScore\Helper\Competitor\Team
     {
-        if (array_key_exists(SofaScore\Helper\Competitor::class, $this->helpers)) {
-            return $this->helpers[SofaScore\Helper\Competitor::class];
+        if (array_key_exists(SofaScore\Helper\Competitor\Team::class, $this->helpers)) {
+            return $this->helpers[SofaScore\Helper\Competitor\Team::class];
         }
-        $this->helpers[SofaScore\Helper\Competitor::class] = new SofaScore\Helper\Competitor(
+        $this->helpers[SofaScore\Helper\Competitor\Team::class] = new SofaScore\Helper\Competitor\Team(
             $this,
             $this->getApiHelper(),
             $this->logger
         );
-        return $this->helpers[SofaScore\Helper\Competitor::class];
+        return $this->helpers[SofaScore\Helper\Competitor\Team::class];
     }
 
     public function getStructure(Competition $competition): ?Structure

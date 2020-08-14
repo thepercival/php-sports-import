@@ -1,9 +1,9 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\Structure as StructureBase;
-use Voetbal\Competition;
+use Sports\Structure as StructureBase;
+use Sports\Competition;
 
 interface Structure
 {

@@ -2,7 +2,6 @@
 
 namespace SportsImport\Service;
 
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\Sport\Repository as SportRepository;
 use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
@@ -10,7 +9,7 @@ use Sports\Sport as SportBase;
 use SportsImport\Attacher\Sport as SportAttacher;
 use Psr\Log\LoggerInterface;
 
-class Sport implements ImporterInterface
+class Sport
 {
     /**
      * @var SportRepository
@@ -38,12 +37,11 @@ class Sport implements ImporterInterface
 
     /**
      * @param ExternalSource $externalSource
-     * @param array $externalSourceSports
+     * @param array|SportBase[] $externalSourceSports
      * @throws \Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceSports)
     {
-        /** @var SportBase $externalSourceSport */
         foreach ($externalSourceSports as $externalSourceSport) {
             $externalId = $externalSourceSport->getId();
             $sportAttacher = $this->sportAttacherRepos->findOneByExternalId(

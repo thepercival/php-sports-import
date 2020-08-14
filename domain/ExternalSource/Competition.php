@@ -1,8 +1,8 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\Competition as CompetitionBase;
+use Sports\Competition as CompetitionBase;
 
 interface Competition
 {

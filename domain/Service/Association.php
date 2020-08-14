@@ -2,7 +2,6 @@
 
 namespace SportsImport\Service;
 
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\Association\Repository as AssociationRepository;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
@@ -11,7 +10,7 @@ use SportsImport\Attacher\Association as AssociationAttacher;
 
 use Psr\Log\LoggerInterface;
 
-class Association implements ImporterInterface
+class Association
 {
     /**
      * @var AssociationRepository
@@ -38,12 +37,11 @@ class Association implements ImporterInterface
 
     /**
      * @param ExternalSource $externalSource
-     * @param array $externalSourceAssociations
+     * @param array|AssociationBase[] $externalSourceAssociations
      * @throws \Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceAssociations)
     {
-        /** @var AssociationBase $externalSourceAssociation */
         foreach ($externalSourceAssociations as $externalSourceAssociation) {
             $externalId = $externalSourceAssociation->getId();
             $associationAttacher = $this->associationAttacherRepos->findOneByExternalId(

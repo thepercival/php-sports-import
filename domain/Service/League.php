@@ -2,7 +2,6 @@
 
 namespace SportsImport\Service;
 
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\League\Repository as LeagueRepository;
 use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
@@ -11,7 +10,7 @@ use Sports\League as LeagueBase;
 use SportsImport\Attacher\League as LeagueAttacher;
 use Psr\Log\LoggerInterface;
 
-class League implements ImporterInterface
+class League
 {
     /**
      * @var LeagueRepository
@@ -44,12 +43,11 @@ class League implements ImporterInterface
 
     /**
      * @param ExternalSource $externalSource
-     * @param array $externalSourceLeagues
+     * @param array|LeagueBase[] $externalSourceLeagues
      * @throws \Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceLeagues)
     {
-        /** @var LeagueBase $externalSourceLeague */
         foreach ($externalSourceLeagues as $externalSourceLeague) {
             $externalId = $externalSourceLeague->getId();
             $leagueAttacher = $this->leagueAttacherRepos->findOneByExternalId(

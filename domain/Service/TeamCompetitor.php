@@ -4,7 +4,6 @@ namespace SportsImport\Service;
 
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\Competitor\Team\Repository as TeamCompetitorRepository;
 use SportsImport\Attacher\Competitor\Team\Repository as TeamCompetitorAttacherRepository;
@@ -13,7 +12,7 @@ use SportsImport\Attacher\Competitor\Team as TeamCompetitorAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Competitor\Team as TeamCompetitorBase;
 
-class TeamCompetitor implements ImporterInterface
+class TeamCompetitor
 {
     /**
      * @var TeamCompetitorRepository

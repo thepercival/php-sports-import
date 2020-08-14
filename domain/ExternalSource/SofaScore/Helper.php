@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 19:55
- */
 
-namespace Voetbal\ExternalSource\SofaScore;
+namespace SportsImport\ExternalSource\SofaScore;
 
-use Voetbal\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore;
 use Psr\Log\LoggerInterface;
 
 class Helper

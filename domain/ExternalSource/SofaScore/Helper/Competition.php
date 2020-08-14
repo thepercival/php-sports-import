@@ -1,24 +1,18 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 19:55
- */
 
-namespace Voetbal\ExternalSource\SofaScore\Helper;
+namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use stdClass;
-use Voetbal\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Voetbal\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use Voetbal\Competition as CompetitionBase;
-use Voetbal\ExternalSource;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
+use Sports\Competition as CompetitionBase;
+use SportsImport\ExternalSource;
 use Psr\Log\LoggerInterface;
-use Voetbal\Import\Service as ImportService;
-use Voetbal\ExternalSource\SofaScore;
-use Voetbal\Sport\Config\Service as SportConfigService;
-use Voetbal\Sport;
-use Voetbal\ExternalSource\Competition as ExternalSourceCompetition;
+use SportsImport\Import\Service as ImportService;
+use SportsImport\ExternalSource\SofaScore;
+use Sports\Sport\Config\Service as SportConfigService;
+use Sports\Sport;
+use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
 
 class Competition extends SofaScoreHelper implements ExternalSourceCompetition
 {

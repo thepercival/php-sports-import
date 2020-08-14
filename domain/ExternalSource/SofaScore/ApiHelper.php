@@ -1,25 +1,20 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 20:53
- */
 
-namespace Voetbal\ExternalSource\SofaScore;
+namespace SportsImport\ExternalSource\SofaScore;
 
 use DateTimeImmutable;
-use Voetbal\Competitor as CompetitorBase;
-use Voetbal\ExternalSource;
-use Voetbal\CacheItemDb\Repository as CacheItemDbRepository;
+use Sports\Team;
+use SportsImport\Competitor as CompetitorBase;
+use SportsImport\ExternalSource;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use stdClass;
 use GuzzleHttp\Client;
-use Voetbal\Import\Service as ImportService;
-use Voetbal\Range as VoetbalRange;
-use Voetbal\Competition;
-use Voetbal\Competitor;
-use Voetbal\Sport;
-use Voetbal\Association;
+use SportsImport\Service as ImportService;
+use SportsHelpers\Range;
+use Sports\Competition;
+use Sports\Competitor;
+use Sports\Sport;
+use Sports\Association;
 
 class ApiHelper
 {
@@ -36,7 +31,7 @@ class ApiHelper
      */
     private $client;
     /**
-     * @var VoetbalRange|null
+     * @var Range|null
      */
     private $sleepRangeInSeconds;
 
@@ -79,7 +74,7 @@ class ApiHelper
         }
 
         if ($this->sleepRangeInSeconds === null) {
-            $this->sleepRangeInSeconds = new VoetbalRange(5, 60);
+            $this->sleepRangeInSeconds = new Range(5, 60);
         } else {
             sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
         }
@@ -177,16 +172,16 @@ class ApiHelper
      *   "national": false,
      *   "id": 42964,
      *   "subTeams": []
-    },
-     * @return Competitor
+     * }
      */
-    public function convertCompetitor(Association $association, stdClass $externalCompetitor): Competitor
+    public function convertTeam(Association $association, stdClass $externalTeam): Team
     {
-        $competitor = new Competitor($association, $externalCompetitor->name);
-        $competitor->setId($externalCompetitor->id);
-        $competitor->setAbbreviation(substr($externalCompetitor->name, 0, Competitor::MAX_LENGTH_ABBREVIATION));
-        $competitor->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$competitor->getId().".png");
-        return $competitor;
+        $team = new Team($association, $externalTeam->name);
+        // @TODO DEPRECATED
+//        $team->setId($externalTeam->id);
+//        $team->setAbbreviation(substr($externalTeam->name, 0, Team::MAX_LENGTH_ABBREVIATION));
+//        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$competitor->getId().".png");
+        return $team;
     }
     /*
         public function getLeague(ExternalLeague $externalLeague): ?\stdClass

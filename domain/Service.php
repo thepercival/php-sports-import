@@ -1,50 +1,35 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 12-3-17
- * Time: 22:17
- */
 
 namespace SportsImport;
 
 use Psr\Log\LoggerInterface;
 
-use SportsImport\Attacher\Game\Repository as GameAttacherRepository;
-use SportsImport\Attacher\Place\Repository as PlaceAttacherRepository;
-use SportsImport\Attacher\Poule\Repository as PouleAttacherRepository;
 use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
-use Sports\Game\Repository as GameRepository;
-use Sports\Game\Score\Repository as GameScoreRepository;
-use Sports\Sport\Repository as SportRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\ExternalSource\Sport as ExternalSourceSport;
-use Sports\Association\Repository as AssociationRepository;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
 use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
-use Sports\Season\Repository as SeasonRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
 use SportsImport\ExternalSource\Season as ExternalSourceSeason;
-use Sports\League\Repository as LeagueRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
 use SportsImport\ExternalSource\League as ExternalSourceLeague;
-use Sports\Competition\Repository as CompetitionRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
-use Sports\Competitor\Repository as CompetitorRepository;
-use SportsImport\Attacher\Competitor\Repository as CompetitorAttacherRepository;
-use SportsImport\ExternalSource\Competitor as ExternalSourceCompetitor;
-use Sports\State;
-use Sports\Structure\Repository as StructureRepository;
+use SportsImport\ExternalSource\Team as ExternalSourceTeam;
+use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
+use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
 use SportsImport\ExternalSource\Game as ExternalSourceGame;
 
+
 class Service
 {
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
+    protected Service\Sport$sportImportService;
+    protected Service\Association$associationImportService;
+    protected Service\Season $seasonImportService;
+    protected Service\League $leagueImportService;
+    protected Service\Competition $competitionImportService;
+    protected Service\Team $teamImportService;
+    protected Service\TeamCompetitor $teamCompetitorImportService;
+    protected Service\Structure $structureImportService;
+    protected Service\Game $gameImportService;
+
+    protected CompetitionAttacherRepository $competitionAttacherRepos;
 
     public const SPORT_CACHE_MINUTES = 1440 * 7; // 60 * 24
     public const ASSOCIATION_CACHE_MINUTES = 1440 * 7; // 60 * 24
@@ -54,228 +39,166 @@ class Service
     public const COMPETITOR_CACHE_MINUTES = 1440 * 7; // 60 * 24
     public const GAME_CACHE_MINUTES = 10; // 60 * 24
 
-    /**
-     * Service constructor.
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        LoggerInterface $logger
+        Service\Sport $sportImportService,
+        Service\Association $associationImportService,
+        Service\Season $seasonImportService,
+        Service\League $leagueImportService,
+        Service\Competition $competitionImportService,
+        Service\Team $teamImportService,
+        Service\TeamCompetitor $teamCompetitorImportService
     ) {
-        $this->logger = $logger;
+        $this->sportImportService = $sportImportService;
+        $this->associationImportService = $associationImportService;
+        $this->seasonImportService = $seasonImportService;
+        $this->leagueImportService = $leagueImportService;
+        $this->competitionImportService = $competitionImportService;
+        $this->teamImportService = $teamImportService;
+        $this->teamCompetitorImportService = $teamCompetitorImportService;
+        $this->associationImportService = $associationImportService;
     }
 
-    public function importSports(
-        ExternalSourceImplementation $externalSourceImplementation,
-        SportRepository $sportRepos,
-        SportAttacherRepository $sportAttacherRepos
-    ) {
+    public function importSports( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceSport)) {
             return;
         }
-        $importSportService = new Service\Sport(
-            $sportRepos,
-            $sportAttacherRepos,
-            $this->logger
-        );
-        $importSportService->import(
+        $this->sportImportService->import(
             $externalSourceImplementation->getExternalSource(),
             $externalSourceImplementation->getSports()
         );
     }
 
-    public function importAssociations(
-        ExternalSourceImplementation $externalSourceImplementation,
-        AssociationRepository $associationRepos,
-        AssociationAttacherRepository $associationAttacherRepos
-    ) {
+    public function importAssociations( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceAssociation)) {
             return;
         }
-        $importAssociationService = new Service\Association(
-            $associationRepos,
-            $associationAttacherRepos,
-            $this->logger
-        );
-        $importAssociationService->import(
+        $this->associationImportService->import(
             $externalSourceImplementation->getExternalSource(),
             $externalSourceImplementation->getAssociations()
         );
     }
 
-    public function importSeasons(
-        ExternalSourceImplementation $externalSourceImplementation,
-        SeasonRepository $seasonRepos,
-        SeasonAttacherRepository $seasonAttacherRepos
-    ) {
+    public function importSeasons( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceSeason)) {
             return;
         }
-        $importSeasonService = new Service\Season(
-            $seasonRepos,
-            $seasonAttacherRepos,
-            $this->logger
-        );
-        $importSeasonService->import(
+        $this->seasonImportService->import(
             $externalSourceImplementation->getExternalSource(),
             $externalSourceImplementation->getSeasons()
         );
     }
 
-    public function importLeagues(
-        ExternalSourceImplementation $externalSourceImplementation,
-        LeagueRepository $leagueRepos,
-        LeagueAttacherRepository $leagueAttacherRepos,
-        AssociationAttacherRepository $associationAttacherRepos
-    ) {
+    public function importLeagues( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceLeague)) {
             return;
         }
-        $importLeagueService = new Service\League(
-            $leagueRepos,
-            $leagueAttacherRepos,
-            $associationAttacherRepos,
-            $this->logger
-        );
-        $importLeagueService->import(
+        $this->leagueImportService->import(
             $externalSourceImplementation->getExternalSource(),
             $externalSourceImplementation->getLeagues()
         );
     }
 
-    public function importCompetitions(
-        ExternalSourceImplementation $externalSourceImplementation,
-        CompetitionRepository $competitionRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos,
-        LeagueAttacherRepository $leagueAttacherRepos,
-        SeasonAttacherRepository $seasonAttacherRepos,
-        SportAttacherRepository $sportAttacherRepos
-    ) {
+    public function importCompetitions( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceCompetition)) {
             return;
         }
-        $importCompetitionService = new Service\Competition(
-            $competitionRepos,
-            $competitionAttacherRepos,
-            $leagueAttacherRepos,
-            $seasonAttacherRepos,
-            $sportAttacherRepos,
-            $this->logger
-        );
-        $importCompetitionService->import(
+        $this->competitionImportService->import(
             $externalSourceImplementation->getExternalSource(),
             $externalSourceImplementation->getCompetitions()
         );
     }
 
-    public function importCompetitors(
-        ExternalSourceImplementation $externalSourceImplementation,
-        CompetitorRepository $competitorRepos,
-        CompetitorAttacherRepository $competitorAttacherRepos,
-        AssociationAttacherRepository $associationAttacherRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos
-    ) {
-        if (!($externalSourceImplementation instanceof ExternalSourceCompetitor)
+    public function importTeams( ExternalSourceImplementation $externalSourceImplementation ) {
+        if (!($externalSourceImplementation instanceof ExternalSourceTeam)
             || !($externalSourceImplementation instanceof ExternalSourceCompetition)) {
             return;
         }
-        $importCompetitorService = new Service\TeamCompetitor(
-            $competitorRepos,
-            $competitorAttacherRepos,
-            $associationAttacherRepos,
-            $this->logger
-        );
-
         $filter = ["externalSource" => $externalSourceImplementation->getExternalSource() ];
-        $competitionAttachers = $competitionAttacherRepos->findBy($filter);
+        $competitionAttachers = $this->competitionAttacherRepos->findBy($filter);
         foreach ($competitionAttachers as $competitionAttacher) {
             $competition = $externalSourceImplementation->getCompetition($competitionAttacher->getExternalId());
             if ($competition === null) {
                 continue;
             }
-            $importCompetitorService->import(
+            $this->teamImportService->import(
                 $externalSourceImplementation->getExternalSource(),
-                $externalSourceImplementation->getCompetitors($competition)
+                $externalSourceImplementation->getTeams($competition)
             );
         }
     }
 
-    public function importStructures(
-        ExternalSourceImplementation $externalSourceImplementation,
-        StructureRepository $structureRepos,
-        CompetitorAttacherRepository $competitorAttacherRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos
-    ) {
+    public function importTeamCompetitors( ExternalSourceImplementation $externalSourceImplementation ) {
+        if (!($externalSourceImplementation instanceof ExternalSourceTeamCompetitor)
+            || !($externalSourceImplementation instanceof ExternalSourceCompetition)) {
+            return;
+        }
+
+        $filter = ["externalSource" => $externalSourceImplementation->getExternalSource() ];
+        $competitionAttachers = $this->competitionAttacherRepos->findBy($filter);
+        foreach ($competitionAttachers as $competitionAttacher) {
+            $competition = $externalSourceImplementation->getCompetition($competitionAttacher->getExternalId());
+            if ($competition === null) {
+                continue;
+            }
+            $this->teamCompetitorImportService->import(
+                $externalSourceImplementation->getExternalSource(),
+                $externalSourceImplementation->getTeamCompetitors($competition)
+            );
+        }
+    }
+
+    public function importStructures( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceStructure)
             || !($externalSourceImplementation instanceof ExternalSourceCompetition)) {
             return;
         }
-        $importStructureService = new Service\Structure(
-            $structureRepos,
-            $competitorAttacherRepos,
-            $competitionAttacherRepos,
-            $this->logger
-        );
-
         $filter = ["externalSource" => $externalSourceImplementation->getExternalSource() ];
-        $competitionAttachers = $competitionAttacherRepos->findBy($filter);
+        $competitionAttachers = $this->competitionAttacherRepos->findBy($filter);
         foreach ($competitionAttachers as $competitionAttacher) {
             $competition = $externalSourceImplementation->getCompetition($competitionAttacher->getExternalId());
             if ($competition === null) {
                 continue;
             }
-            $importStructureService->import(
+            $this->structureImportService->import(
                 $externalSourceImplementation->getExternalSource(),
-                [$externalSourceImplementation->getStructure($competition)]
+                $externalSourceImplementation->getStructure($competition)
             );
         }
     }
 
-
-    public function importGames(
-        ExternalSourceImplementation $externalSourceImplementation,
-        GameRepository $gameRepos,
-        GameScoreRepository $gameScoreRepos,
-        CompetitorRepository $competitorRepos,
-        StructureRepository $structureRepos,
-        GameAttacherRepository $gameAttacherRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos,
-        CompetitorAttacherRepository $competitorAttacherRepos
-    ) {
+    /**
+     * imports only batches which are not finished
+     *
+     * @param ExternalSourceImplementation $externalSourceImplementation
+     */
+    public function importGames( ExternalSourceImplementation $externalSourceImplementation ) {
         if (!($externalSourceImplementation instanceof ExternalSourceGame)
             || !($externalSourceImplementation instanceof ExternalSourceStructure)
             || !($externalSourceImplementation instanceof ExternalSourceCompetition)) {
             return;
         }
-        $importGameService = new Service\Game(
-            $gameRepos,
-            $gameScoreRepos,
-            $structureRepos,
-            $gameAttacherRepos,
-            $competitionAttacherRepos,
-            $competitorAttacherRepos,
-            $this->logger
-        );
 
         $filter = ["externalSource" => $externalSourceImplementation->getExternalSource() ];
-        $competitionAttachers = $competitionAttacherRepos->findBy($filter);
+        $competitionAttachers = $this->competitionAttacherRepos->findBy($filter);
         foreach ($competitionAttachers as $competitionAttacher) {
             $externalCompetition = $externalSourceImplementation->getCompetition($competitionAttacher->getExternalId());
             if ($externalCompetition === null) {
                 continue;
             }
             $competition = $competitionAttacher->getImportable();
-            $nrOfCompetitors = $competitorRepos->getNrOfCompetitors($competition);
-            if ($nrOfCompetitors === 0) {
+            $nrOfPlaces = $externalSourceImplementation->getStructure($competition)->getFirstRoundNumber()->getNrOfPlaces();
+            if ($nrOfPlaces === 0) {
                 continue;
             }
             $batchNrs = $externalSourceImplementation->getBatchNrs($externalCompetition, true);
             foreach ($batchNrs as $batchNr) {
-                $finishedGames = $gameRepos->getCompetitionGames($competition, State::Finished, $batchNr);
-                if ((count($finishedGames) * 2) === $nrOfCompetitors) {
-                    continue;
-                }
+                // always import, do single import for for example superelf
+//                $finishedGames = $gameRepos->getCompetitionGames($competition, State::Finished, $batchNr);
+//                if ((count($finishedGames) * 2) === $nrOfPlaces) {
+//                    continue;
+//                }
                 // $importGameService->setPoule( );
-                $importGameService->import(
+                $this->gameImportService->import(
                     $externalSourceImplementation->getExternalSource(),
                     $externalSourceImplementation->getGames($externalCompetition, $batchNr)
                 );

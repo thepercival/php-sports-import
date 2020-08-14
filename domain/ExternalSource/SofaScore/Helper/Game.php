@@ -1,28 +1,22 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 19:55
- */
 
-namespace Voetbal\ExternalSource\SofaScore\Helper;
+namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use DateTimeImmutable;
 use stdClass;
-use Voetbal\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Voetbal\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use Voetbal\Game as GameBase;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
+use Sports\Game as GameBase;
 use Psr\Log\LoggerInterface;
-use Voetbal\Import\Service as ImportService;
-use Voetbal\ExternalSource\SofaScore;
-use \Voetbal\Competition;
-use Voetbal\ExternalSource\Game as ExternalSourceGame;
-use Voetbal\Poule;
-use Voetbal\Place;
-use Voetbal\Competitor;
-use Voetbal\State;
-use Voetbal\Structure as StructureBase;
+use SportsImport\Import\Service as ImportService;
+use SportsImport\ExternalSource\SofaScore;
+use Sports\Competition;
+use SportsImport\ExternalSource\Game as ExternalSourceGame;
+use Sports\Poule;
+use Sports\Place;
+use Sports\Competitor;
+use Sports\State;
+use SportsImport\Structure as StructureBase;
 
 class Game extends SofaScoreHelper implements ExternalSourceGame
 {
@@ -105,24 +99,25 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
             // referee
             // field
 
-            $homeCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->homeTeam);
-            $homePlace = $this->getPlaceFromPoule($poule, $homeCompetitor);
-            if ($homePlace === null) {
-                continue;
-            }
-            $awayCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->awayTeam);
-            $awayPlace = $this->getPlaceFromPoule($poule, $awayCompetitor);
-            if ($awayPlace === null) {
-                continue;
-            }
-            $game->addPlace($homePlace, GameBase::HOME);
-            $game->addPlace($awayPlace, GameBase::AWAY);
-
-            if ($game->getState() === State::Finished and is_object($externalSourceGame->homeScore)) {
-                $home = $externalSourceGame->homeScore->current;
-                $away = $externalSourceGame->awayScore->current;
-                new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
-            }
+            // @TODO DEPRECATED
+//            $homeCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->homeTeam);
+//            $homePlace = $this->getPlaceFromPoule($poule, $homeCompetitor);
+//            if ($homePlace === null) {
+//                continue;
+//            }
+//            $awayCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->awayTeam);
+//            $awayPlace = $this->getPlaceFromPoule($poule, $awayCompetitor);
+//            if ($awayPlace === null) {
+//                continue;
+//            }
+//            $game->addPlace($homePlace, GameBase::HOME);
+//            $game->addPlace($awayPlace, GameBase::AWAY);
+//
+//            if ($game->getState() === State::Finished and is_object($externalSourceGame->homeScore)) {
+//                $home = $externalSourceGame->homeScore->current;
+//                $away = $externalSourceGame->awayScore->current;
+//                new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
+//            }
 
             $competitionGames[$game->getId()] = $game;
         }
@@ -145,12 +140,14 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
 
     protected function getPlaceFromPoule(Poule $poule, Competitor $competitor): ?Place
     {
-        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
-            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
-        });
-        if ($places->count() !== 1) {
-            return null;
-        }
-        return $places->first();
+        // @TODO DEPRECATED
+        return null;
+//        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
+//            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
+//        });
+//        if ($places->count() !== 1) {
+//            return null;
+//        }
+//        return $places->first();
     }
 }

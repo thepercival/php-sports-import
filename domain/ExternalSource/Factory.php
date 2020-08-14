@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 7-3-18
- * Time: 8:05
- */
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\CacheItemDb\Repository as CacheItemDbRepository;
-use Voetbal\ExternalSource;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
+use SportsImport\ExternalSource;
 use Psr\Log\LoggerInterface;
 
 class Factory
@@ -32,7 +26,7 @@ class Factory
     protected const SEASON = 4;
     protected const LEAGUE = 8;
     protected const COMPETITION = 16;
-    protected const COMPETITOR = 32;
+    protected const TEAMCOMPETITOR = 32;
 
     public function __construct(
         Repository $externalSourceRepos,
@@ -110,8 +104,8 @@ class Factory
         if ($implementation instanceof ExternalSource\Competition) {
             $implementations += static::COMPETITION;
         }
-        if ($implementation instanceof ExternalSource\Competitor) {
-            $implementations += static::COMPETITOR;
+        if ($implementation instanceof ExternalSource\Competitor\Team) {
+            $implementations += static::TEAMCOMPETITOR;
         }
         return $implementations;
     }

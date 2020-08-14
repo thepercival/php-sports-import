@@ -1,8 +1,8 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\Association as AssociationBase;
+use Sports\Association as AssociationBase;
 
 interface Association
 {

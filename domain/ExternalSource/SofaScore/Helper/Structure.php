@@ -1,21 +1,15 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 6-3-18
- * Time: 19:55
- */
 
-namespace Voetbal\ExternalSource\SofaScore\Helper;
+namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use Voetbal\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Voetbal\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use Voetbal\Competition;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
+use Sports\Competition;
 use Psr\Log\LoggerInterface;
-use Voetbal\ExternalSource\SofaScore;
-use Voetbal\Structure as StructureBase;
-use Voetbal\ExternalSource\Structure as ExternalSourceStructure;
-use Voetbal\Structure\Service as StructureService;
+use SportsImport\ExternalSource\SofaScore;
+use Sports\Structure as StructureBase;
+use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
+use Sports\Structure\Service as StructureService;
 
 class Structure extends SofaScoreHelper implements ExternalSourceStructure
 {
@@ -43,18 +37,18 @@ class Structure extends SofaScoreHelper implements ExternalSourceStructure
         if ($nrOfPlaces === 0 || $nrOfPoules === 0) {
             return null;
         }
-        $competitors = $this->parent->getCompetitors($competition);
+        // $competitors = $this->parent->getCompetitors($competition);
         $structure = $this->structureService->create($competition, $nrOfPlaces, $nrOfPoules);
-        $firstRoundNumber = $structure->getFirstRoundNumber();
-        foreach ($firstRoundNumber->getPoules() as $poule) {
-            foreach ($poule->getPlaces() as $place) {
-                $competitor = array_shift($competitors);
-                if ($competitor === null) {
-                    return null;
-                }
-                $place->setCompetitor($competitor);
-            }
-        }
+//        $firstRoundNumber = $structure->getFirstRoundNumber();
+//        foreach ($firstRoundNumber->getPoules() as $poule) {
+//            foreach ($poule->getPlaces() as $place) {
+//                $competitor = array_shift($competitors);
+//                if ($competitor === null) {
+//                    return null;
+//                }
+//                $place->setCompetitor($competitor);
+//            }
+//        }
 
         return $structure;
     }

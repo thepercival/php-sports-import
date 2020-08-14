@@ -1,8 +1,8 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\League as LeagueBase;
+use Sports\League as LeagueBase;
 
 interface League
 {

@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: coen
- * Date: 4-3-18
- * Time: 19:49
- */
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\ExternalSource as ExternalSourceBase;
+use SportsImport\ExternalSource as ExternalSourceBase;
 
 interface Implementation
 {

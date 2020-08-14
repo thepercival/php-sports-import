@@ -1,8 +1,8 @@
 <?php
 
-namespace Voetbal\ExternalSource;
+namespace SportsImport\ExternalSource;
 
-use Voetbal\Season as SeasonBase;
+use Sports\Season as SeasonBase;
 
 interface Season
 {

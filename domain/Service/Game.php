@@ -3,25 +3,23 @@
 namespace SportsImport\Service;
 
 use DateTimeImmutable;
+use Exception;
 use Sports\Competition;
 use Sports\Competitor;
-use SportsImport\ImporterInterface;
 use SportsImport\ExternalSource;
 use Sports\Game\Repository as GameRepository;
 use Sports\Game\Score\Repository as GameScoreRepository;
 use Sports\Structure\Repository as StructureRepository;
 use SportsImport\Attacher\Game\Repository as GameAttacherRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Competitor\Repository as CompetitorAttacherRepository;
 use Sports\Game as GameBase;
 use Sports\Game\Service as GameService;
 use SportsImport\Attacher\Game as GameAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Poule;
 use Sports\Place;
-use Sports\State as VoetbalState;
 
-class Game implements ImporterInterface
+class Game
 {
     /**
      * @var GameRepository
@@ -39,10 +37,6 @@ class Game implements ImporterInterface
      * @var CompetitionAttacherRepository
      */
     protected $competitionAttacherRepos;
-    /**
-     * @var CompetitorAttacherRepository
-     */
-    protected $competitorAttacherRepos;
     /**
      * @var StructureRepository
      */
@@ -64,7 +58,6 @@ class Game implements ImporterInterface
         StructureRepository $structureRepos,
         GameAttacherRepository $gameAttacherRepos,
         CompetitionAttacherRepository $competitionAttacherRepos,
-        CompetitorAttacherRepository $competitorAttacherRepos,
         LoggerInterface $logger
     ) {
         $this->logger = $logger;
@@ -73,7 +66,6 @@ class Game implements ImporterInterface
         $this->structureRepos = $structureRepos;
         $this->gameAttacherRepos = $gameAttacherRepos;
         $this->competitionAttacherRepos = $competitionAttacherRepos;
-        $this->competitorAttacherRepos = $competitorAttacherRepos;
         $this->gameService = new GameService();
     }
 //
@@ -84,12 +76,11 @@ class Game implements ImporterInterface
 
     /**
      * @param ExternalSource $externalSource
-     * @param array $externalSourceGames
-     * @throws \Exception
+     * @param array|GameBase[] $externalSourceGames
+     * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceGames)
     {
-        /** @var GameBase $externalSourceGame */
         foreach ($externalSourceGames as $externalSourceGame) {
             $externalId = $externalSourceGame->getId();
             $gameAttacher = $this->gameAttacherRepos->findOneByExternalId(
@@ -125,19 +116,21 @@ class Game implements ImporterInterface
         // referee
         // field
 
-        foreach ($externalSourceGame->getPlaces() as $externalSourceGamePlace) {
-            $competitor = $this->getCompetitorFromExternal($externalSource, $externalSourceGamePlace->getPlace()->getCompetitor());
-            $place = $this->getPlaceFromPoule($poule, $competitor);
-            if ($place === null) {
-                return null;
-            }
-            $game->addPlace($place, $externalSourceGamePlace->getHomeaway());
-        }
-
-        $this->gameService->addScores($game, $externalSourceGame->getScores()->toArray());
-
-        $this->gameRepos->save($game);
-        return $game;
+        return null;
+        // @TODO DEPRECATED
+//        foreach ($externalSourceGame->getPlaces() as $externalSourceGamePlace) {
+//            $externSourcePlace = $this->getPlaceFromExternal($externalSource, $externalSourceGamePlace->getPlace()->getCompetitor());
+//            $place = $this->getPlaceFromPoule($poule, $externSourcePlace);
+//            if ($place === null) {
+//                return null;
+//            }
+//            $game->addPlace($place, $externalSourceGamePlace->getHomeaway());
+//        }
+//
+//        $this->gameService->addScores($game, $externalSourceGame->getScores()->toArray());
+//
+//        $this->gameRepos->save($game);
+//        return $game;
     }
 
     protected function getPouleFromExternal(ExternalSource $externalSource, Poule $externalPoule): ?Poule
@@ -160,18 +153,22 @@ class Game implements ImporterInterface
 
     protected function getPlaceFromPoule(Poule $poule, Competitor $competitor): ?Place
     {
-        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
-            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
-        });
-        if ($places->count() !== 1) {
-            return null;
-        }
-        return $places->first();
+        return null;
+        // @TODO DEPRECATED
+//        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
+//            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
+//        });
+//        if ($places->count() !== 1) {
+//            return null;
+//        }
+//        return $places->first();
     }
 
-    protected function getCompetitorFromExternal(ExternalSource $externalSource, Competitor $externalCompetitor): ?Competitor
+    protected function getPlaceFromExternal(ExternalSource $externalSource, Place $externalPlace): ?Place
     {
-        return $this->competitorAttacherRepos->findImportable($externalSource, $externalCompetitor->getId());
+        return null;
+        // @TODO DEPRECATED
+        // return $this->placeAttacherRepos->findImportable($externalSource, $externalPlace->getId());
     }
 
     protected function editGame(GameBase $game, GameBase $externalSourceGame)
