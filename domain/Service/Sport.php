@@ -65,6 +65,10 @@ class Sport
 
     protected function createSport(SportBase $sport): SportBase
     {
+        $existingSport = $this->sportRepos->findOneBy( ["name" => $sport->getName()] );
+        if( $existingSport !== null ) {
+            return $existingSport;
+        }
         $newSport = new SportBase($sport->getName());
         $newSport->setTeam($sport->getTeam());
         $this->sportRepos->save($newSport);

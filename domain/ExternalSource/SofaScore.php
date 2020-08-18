@@ -34,7 +34,7 @@ class SofaScore implements
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
     ExternalSourceGame,
-    CacheInfo, ApiHelper
+    CacheInfo, ApiHelper, Proxy
 {
     public const SPORTFILTER = "football";
     public const NAME = "SofaScore";
@@ -325,5 +325,9 @@ class SofaScore implements
 
     public function getCacheInfo( int $dataTypeIdentifier = null): string {
         return $this->getApiHelper()->getCacheInfo( $dataTypeIdentifier );
+    }
+
+    public function setProxy(array $options) {
+        return $this->getApiHelper()->setProxy( $options );
     }
 }

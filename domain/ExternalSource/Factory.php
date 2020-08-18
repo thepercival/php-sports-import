@@ -6,7 +6,7 @@ use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource;
 use Psr\Log\LoggerInterface;
 
-class Factory
+class Factory implements Proxy
 {
     /**
      * @var Repository
@@ -20,6 +20,10 @@ class Factory
      * @var LoggerInterface
      */
     protected $logger;
+    /**
+     * @var array|string[]|null
+     */
+    protected $proxyOptions;
 
     protected const SPORT = 1;
     protected const ASSOCIATION = 2;
@@ -51,17 +55,30 @@ class Factory
 //        return null;
 //    }
 
+    /**
+     * @param array|string[] $options
+     */
+    public function setProxy(array $options) {
+        $this->proxyOptions = $options;
+    }
 
-    public function createByName(string $name)
+    public function createByName(string $name): ?Implementation
     {
         $externalSource = $this->externalSourceRepos->findOneBy(["name" => $name ]);
         if ($externalSource === null) {
             return null;
         }
-        return $this->create($externalSource);
+        $implementation = $this->create($externalSource);
+        if( $implementation === null ) {
+            return null;
+        }
+        if( is_array($this->proxyOptions) && ($implementation instanceof Proxy) ) {
+            $implementation->setProxy( $this->proxyOptions );
+        }
+        return $implementation;
     }
 
-    protected function create(ExternalSource $externalSource)
+    protected function create(ExternalSource $externalSource): ?Implementation
     {
         if ($externalSource->getName() === SofaScore::NAME) {
             return new SofaScore($externalSource, $this->cacheItemDbRepos, $this->logger);

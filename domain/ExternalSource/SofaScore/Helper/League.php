@@ -103,7 +103,7 @@ class League extends SofaScoreHelper implements ExternalSourceLeague
                 continue;
             }
             $name = $competition->tournament->name;
-            if ($this->hasName($this->leagues, $name)) {
+            if ($this->hasName($leagues, $name)) {
                 continue;
             }
             $league = new LeagueBase($association, $name);

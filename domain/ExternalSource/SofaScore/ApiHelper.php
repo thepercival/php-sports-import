@@ -17,7 +17,7 @@ use Sports\Competitor;
 use Sports\Sport;
 use Sports\Association;
 
-class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
+class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\Proxy
 {
     /**
      * @var ExternalSource
@@ -28,13 +28,17 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
      */
     private $cacheItemDbRepos;
     /**
+     * @var Range|null
+     */
+    private $sleepRangeInSeconds;
+    /**
      * @var Client
      */
     private $client;
     /**
-     * @var Range|null
+     * @var array| null
      */
-    private $sleepRangeInSeconds;
+    private $proxyOptions;
 
     public function __construct(
         ExternalSource $externalSource,
@@ -54,32 +58,57 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
 
     protected function getHeaders()
     {
+        $curlOptions = [
+            CURLOPT_RETURNTRANSFER => true,
+            // CURLOPT_SSL_VERIFYPEER => false,
+            // CURLOPT_SSL_VERIFYHOST => false,
+            // CURLOPT_HEADER => false,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 30
+        ];
+        if( $this->proxyOptions !== null ) {
+            $curlOptions[CURLOPT_PROXY] = $this->proxyOptions["username"] . ":" . $this->proxyOptions["password"]
+            . "@" . $this->proxyOptions["host"] . ":" . $this->proxyOptions["port"];
+        }
         return [
-            'curl' => [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_HEADER => false,
-                CURLOPT_TIMEOUT => 5,
-                CURLOPT_CONNECTTIMEOUT => 5
-            ],
-            'headers' => []
+            'curl' => $curlOptions,
+            'headers' => [/*"User:agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"*/]
         ];
     }
 
-    protected function getData(string $endpoint, string $cacheId, int $cacheMinutes)
+    public function setProxy(array $options)
+    {
+        $this->proxyOptions = [];
+        $this->proxyOptions["username"] = $options["username"];
+        $this->proxyOptions["password"] = $options["password"];
+        $this->proxyOptions["host"] = $options["host"];
+        $this->proxyOptions["port"] = $options["port"];
+    }
+
+    protected function getDataFromCache(string $cacheId)
     {
         $data = $this->cacheItemDbRepos->getItem( $cacheId );
         if ($data !== null) {
             return json_decode($data);
         }
+        return null;
+    }
 
-        if ($this->sleepRangeInSeconds === null) {
-            $this->sleepRangeInSeconds = new Range(5, 60);
-        } else {
-            sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
+    protected function getData(string $endpoint, string $cacheId, int $cacheMinutes)
+    {
+        $data = $this->getDataFromCache( $cacheId );
+        if ($data !== null) {
+            return $data;
         }
+//        if ($this->sleepRangeInSeconds === null) {
+//            $this->sleepRangeInSeconds = new Range(5, 60);
+//        } else {
+//            sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
+//        }
 
+//        return json_decode(
+//            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
+//        );
         $response = $this->getClient()->get(
             $endpoint,
             $this->getHeaders()
@@ -88,15 +117,42 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
             $this->cacheItemDbRepos->saveItem($cacheId, $response->getBody()->getContents(), $cacheMinutes)
         );
     }
+//
+//    protected function getDataHelper( $endpoint ): string {
+//        // get cURL resource
+//        $ch = curl_init();
+//
+//// set url
+//        $apiKey = "JXMWMHWBJQ0YC5JEOMD4SEMJRNOYBAHT1YR2ASEPQDRYLOZ2T3X42SJTLJU14PHJPYC7Z1TONDGW4C4I";
+//        curl_setopt($ch, CURLOPT_URL, 'https://app.scrapingbee.com/api/v1/?api_key='.$apiKey.'&url=' . $endpoint );
+//
+//// set method
+//        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+//
+//// return the transfer as a string
+//        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+//
+//
+//// send the request and save response to $response
+//        $response = curl_exec($ch);
+//
+//// stop if fails
+//        if (!$response) {
+//            throw new \Exception('Error: "' . curl_error($ch) . '" - Code: ' . curl_errno($ch), E_ERROR);
+//        }
+//
+////        echo 'HTTP Status Code: ' . curl_getinfo($ch, CURLINFO_HTTP_CODE) . PHP_EOL;
+////        echo 'Response Body: ' . $response . PHP_EOL;
+//
+//// close curl resource to free up system resources
+//        curl_close($ch);
+//
+//        return $response; // ->getBody()->getContents();
+//    }
 
     protected function getUrlPostfix()
     {
         return "?_=" . (new \DateTimeImmutable())->getTimestamp();
-    }
-
-    public function getCurrentDateAsString(): string
-    {
-        return $this->getDateAsString((new DateTimeImmutable())->modify("+15 days") );
     }
 
     public function getDateAsString( DateTimeImmutable $date ): string
@@ -115,40 +171,96 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
 
     /**
      * @param Sport $sport
-     * @param array|DateTimeImmutable[] $dates = null
      * @return stdClass
      */
-    public function getCompetitionsData(Sport $sport, array $dates = null ): stdClass
+    public function getCompetitionsData(Sport $sport ): stdClass
     {
-        if ($dates === null) {
-            $dates = $this->getDefaultDates();
-        }
         $datesData = new stdClass();
-        foreach( $dates as $date ) {
-            $dateApiData = $this->getData(
-                $this->getCompetitionsEndPoint($sport,$date),
-                $this->getCompetitionsCacheId( $sport,$date ),
-                $this->getCacheMinutes( ExternalSource::DATA_COMPETITIONS )
-            );
+        // non-cache
+        {
+            $dates = $this->getCompetitionDates();
+            foreach( $dates as $date ) {
+                $dateApiData = $this->getData(
+                    $this->getCompetitionsEndPoint($sport,$date),
+                    $this->getCompetitionsCacheId( $sport,$date ),
+                    $this->getCacheMinutes( ExternalSource::DATA_COMPETITIONS )
+                );
 
-            if( property_exists($datesData, "sportItem") === false ) {
-                $datesData->sportItem = $dateApiData->sportItem;
-            } else {
-                $datesData->sportItem->tournaments = array_merge( $datesData->sportItem->tournaments, $dateApiData->sportItem->tournaments );
+                if( property_exists($datesData, "sportItem") === false ) {
+                    $datesData->sportItem = $dateApiData->sportItem;
+                } else {
+                    $datesData->sportItem->tournaments = array_merge( $datesData->sportItem->tournaments, $dateApiData->sportItem->tournaments  );
+                }
             }
         }
+        // cache
+        {
+            $dates = $this->getCompetitionCacheDates();
+            foreach( $dates as $date ) {
+                $dateApiData = $this->getDataFromCache( $this->getCompetitionsEndPoint($sport,$date) );
+                if( $dateApiData === null ) {
+                    continue;
+                }
+                if( property_exists($datesData, "sportItem") === false ) {
+                    $datesData->sportItem = $dateApiData->sportItem;
+                } else {
+                    $datesData->sportItem->tournaments = array_merge( $datesData->sportItem->tournaments, $dateApiData->sportItem->tournaments );
+                }
+            }
+        }
+
         return $datesData;
     }
 
     /**
      * @return array|DateTimeImmutable[]
      */
-    protected function getDefaultDates(): array {
-        $today = (new DateTimeImmutable())->setTime(0, 0);
+    protected function getCompetitionDates(): array {
+        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
         return [
-            $today,
-            $today->modify("+5 days")
+            $firstSaturday,
+            $firstSaturday->modify("+28 days")
         ];
+    }
+
+    /**
+     * @return array|DateTimeImmutable[]
+     */
+    protected function getCompetitionCacheDates(): array {
+        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
+        return [
+            $firstSaturday->modify("-28 days"),
+            $firstSaturday->modify("+56 days")
+        ];
+    }
+
+    protected function getFirstSaturdayInEvenWeek(): DateTimeImmutable {
+        $today = (new DateTimeImmutable())->setTime(0, 0);
+
+        $delta = 0;
+        $weekNumber = (int) $today->format("W" );
+        if( ( $weekNumber % 2 ) === 1 ) {
+            $delta = 7;
+        }
+        $dayCorrectWeek = $today->modify("+" . $delta . " days");
+
+        $dayOfWeek = (int) $dayCorrectWeek->format("w");
+
+        $deltaSaturDay = 6 - $dayOfWeek;
+
+        $firstCorrectSaturday = $dayCorrectWeek->modify("+" . $deltaSaturDay . " days");
+
+        return $firstCorrectSaturday;
+    }
+
+    public function getCompetitionId(stdClass $externalCompetition): ?int {
+        if( !property_exists($externalCompetition, "season" ) ){
+            return null;
+        }
+        if( !property_exists($externalCompetition->season, "id" ) ){
+            return null;
+        }
+        return $externalCompetition->season->id;
     }
 
     public function getStructureData(Competition $competition): stdClass
@@ -195,7 +307,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
         if( $dataTypeIdentifier === ExternalSource::DATA_SPORTS ) {
             return 60 * 24 * 7;
         } else if( $dataTypeIdentifier === ExternalSource::DATA_COMPETITIONS ) {
-            return 60 * 24;
+            return 60 * 24 * 1000; // does not expire
         } else if( $dataTypeIdentifier === ExternalSource::DATA_STRUCTURES ) {
             return 60 * 24 * 7;
         }
@@ -252,12 +364,12 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
             return "u-tournament/**leagueId**/season/**competitionId**/matches/round/**batchNr**";
         }
 
-        throw new \Exception("unknown endpointsuffix");
+        return "no endpointsuffix";
     }
 
     protected function getCompetitionsEndPoint( Sport $sport, \DateTimeImmutable $dateTime ): string
     {
-        return $this->externalSource->getApiurl() . $this->getCompetitionsEndPointSuffix($sport, $dateTime );
+        return $this->externalSource->getApiurl() . $this->getCompetitionsEndPointSuffix($sport, $dateTime ) . $this->getUrlPostfix();
     }
 
     protected function getCompetitionsCacheId( Sport $sport, \DateTimeImmutable $dateTime ): string
@@ -274,7 +386,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
 
     protected function getStructureEndPoint( Competition $competition ): string
     {
-        return $this->externalSource->getApiurl() . $this->getStructureEndPointSuffix($competition );
+        return $this->externalSource->getApiurl() . $this->getStructureEndPointSuffix($competition ) . $this->getUrlPostfix();
     }
 
     protected function getStructureCacheId( Competition $competition ): string
@@ -291,7 +403,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper
 
     protected function getBatchGamesEndPoint( Competition $competition, int $batchNr ): string
     {
-        return $this->externalSource->getApiurl() . $this->getBatchGamesEndPointSuffix($competition, $batchNr );
+        return $this->externalSource->getApiurl() . $this->getBatchGamesEndPointSuffix($competition, $batchNr ) . $this->getUrlPostfix();
     }
 
     protected function getBatchGamesCacheId( Competition $competition, int $batchNr ): string

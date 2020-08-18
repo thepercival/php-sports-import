@@ -4,6 +4,8 @@ namespace SportsImport;
 
 use Psr\Log\LoggerInterface;
 
+use Sports\League;
+use Sports\Season;
 use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
 use SportsImport\ExternalSource\Sport as ExternalSourceSport;
 use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
@@ -90,13 +92,21 @@ class Service
         );
     }
 
-    public function importCompetitions( ExternalSourceImplementation $externalSourceImplementation ) {
+    public function importCompetition(
+        ExternalSourceImplementation $externalSourceImplementation,
+        League $league,
+        Season $season) {
         if (!($externalSourceImplementation instanceof ExternalSourceCompetition)) {
+            return;
+        }
+        $leagueAttacher = $this->leagueAttacherRepos->findBy($filter);
+        if( $leagueAttacher === null ) {
             return;
         }
         $this->competitionImportService->import(
             $externalSourceImplementation->getExternalSource(),
-            $externalSourceImplementation->getCompetitions()
+            $externalSourceImplementation->getSeason( $leagueAttacher->getExternalId() ),
+            $externalSourceImplementation->getSeason( $leagueAttacher->getExternalId() )
         );
     }
 

@@ -44,7 +44,7 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         return array_values($this->competitions);
     }
 
-    public function getCompetition($id = null): ?CompetitionBase
+    public function getCompetition($id): ?CompetitionBase
     {
         $this->initCompetitions();
         if (array_key_exists((int)$id, $this->competitions)) {
@@ -53,7 +53,7 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         return null;
     }
 
-    protected function initCompetitions()
+    protected function initCompetitions( bool $withCache = false )
     {
         if ($this->competitions !== null) {
             return;
@@ -98,10 +98,17 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
             if ($season === null) {
                 continue;
             }
+            $externalCompetitionId = $this->apiHelper->getCompetitionId($externalSourceCompetition);
+            if( $externalCompetitionId === null ) {
+                continue;
+            }
+            if( array_key_exists($externalCompetitionId, $this->competitions) ) {
+                continue;
+            }
 
             $newCompetition = new CompetitionBase($league, $season);
             $newCompetition->setStartDateTime($season->getStartDateTime());
-            $newCompetition->setId($externalSourceCompetition->season->id);
+            $newCompetition->setId($externalCompetitionId);
             $sportConfig = $this->sportConfigService->createDefault($sport, $newCompetition);
             $this->competitions[$newCompetition->getId()] = $newCompetition;
         }
