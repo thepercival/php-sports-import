@@ -63,33 +63,30 @@ class Competition
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|CompetitionBase[] $externalSourceCompetitions
+     * @param CompetitionBase $externalSourceCompetition
      * @throws \Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceCompetitions)
+    public function import(ExternalSource $externalSource, CompetitionBase $externalSourceCompetition)
     {
-        foreach ($externalSourceCompetitions as $externalSourceCompetition) {
-            $externalId = $externalSourceCompetition->getId();
-            $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
+        $externalId = $externalSourceCompetition->getId();
+        $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
+            $externalSource,
+            $externalId
+        );
+        if ($competitionAttacher === null) {
+            $competition = $this->createCompetition($externalSource, $externalSourceCompetition);
+            if ($competition === null) {
+                return;
+            }
+            $competitionAttacher = new CompetitionAttacher(
+                $competition,
                 $externalSource,
                 $externalId
             );
-            if ($competitionAttacher === null) {
-                $competition = $this->createCompetition($externalSource, $externalSourceCompetition);
-                if ($competition === null) {
-                    continue;
-                }
-                $competitionAttacher = new CompetitionAttacher(
-                    $competition,
-                    $externalSource,
-                    $externalId
-                );
-                $this->competitionAttacherRepos->save($competitionAttacher);
-            } else {
-                $this->editCompetition($competitionAttacher->getImportable(), $externalSourceCompetition);
-            }
+            $this->competitionAttacherRepos->save($competitionAttacher);
+        } else {
+            $this->editCompetition($competitionAttacher->getImportable(), $externalSourceCompetition);
         }
-        // bij syncen hoeft niet te verwijderden
     }
 
     protected function createCompetition(ExternalSource $externalSource, CompetitionBase $externalSourceCompetition): ?CompetitionBase

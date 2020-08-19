@@ -44,11 +44,18 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         return array_values($this->competitions);
     }
 
-    public function getCompetition($id): ?CompetitionBase
+    /**
+     * @param int|string $leagueId
+     * @param int|string $seasonId
+     * @return CompetitionBase|null
+     */
+    public function getCompetition($leagueId, $seasonId): ?CompetitionBase
     {
         $this->initCompetitions();
-        if (array_key_exists((int)$id, $this->competitions)) {
-            return $this->competitions[(int)$id];
+        foreach( $this->competitions as $competition ) {
+            if( $competition->getLeague()->getId() == $leagueId && $competition->getSeason()->getId() == $seasonId) {
+                return $competition;
+            }
         }
         return null;
     }

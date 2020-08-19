@@ -100,11 +100,11 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         if ($data !== null) {
             return $data;
         }
-//        if ($this->sleepRangeInSeconds === null) {
-//            $this->sleepRangeInSeconds = new Range(5, 60);
-//        } else {
-//            sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
-//        }
+        if ($this->sleepRangeInSeconds === null) {
+            $this->sleepRangeInSeconds = new Range(30, 60);
+        } else {
+            sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
+        }
 
 //        return json_decode(
 //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
@@ -279,27 +279,6 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             $this->getBatchGamesCacheId( $competition, $batchNr ),
             $this->getCacheMinutes( ExternalSource::DATA_GAMES )
         );
-    }
-
-    /**
-     * {
-     *   "name": "FC Smolevichi",
-     *   "slug": "fc-smolevichi",
-     *   "gender": "M",
-     *   "disabled": false,
-     *   "national": false,
-     *   "id": 42964,
-     *   "subTeams": []
-     * }
-     */
-    public function convertTeam(Association $association, stdClass $externalTeam): Team
-    {
-        $team = new Team($association, $externalTeam->name);
-        // @TODO DEPRECATED
-//        $team->setId($externalTeam->id);
-//        $team->setAbbreviation(substr($externalTeam->name, 0, Team::MAX_LENGTH_ABBREVIATION));
-//        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$competitor->getId().".png");
-        return $team;
     }
 
     public function getCacheMinutes( int $dataTypeIdentifier ): int {

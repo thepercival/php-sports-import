@@ -56,6 +56,7 @@ class TeamCompetitor
      */
     public function import(ExternalSource $externalSource, array $externalSourceTeamCompetitors)
     {
+        $updated = 0; $added = 0;
         foreach ($externalSourceTeamCompetitors as $externalSourceTeamCompetitor) {
             $externalId = $externalSourceTeamCompetitor->getId();
             $competitorAttacher = $this->teamCompetitorAttacherRepos->findOneByExternalId(
@@ -73,11 +74,13 @@ class TeamCompetitor
                     $externalId
                 );
                 $this->teamCompetitorAttacherRepos->save($competitorAttacher);
+                $added++;
             } else {
                 $this->editTeamCompetitor($competitorAttacher->getImportable(), $externalSourceTeamCompetitor);
+                $updated++;
             }
         }
-        // bij syncen hoeft niet te verwijderden
+        $this->logger->info("added: " . $added . ", updated: " . $updated );
     }
 
     protected function createTeamCompetitor(ExternalSource $externalSource, TeamCompetitorBase $externalSourceTeamCompetitor): ?TeamCompetitorBase
@@ -91,7 +94,7 @@ class TeamCompetitor
         }
         $competition = $this->competitionAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceTeamCompetitor->getTeam()->getAssociation()->getId()
+            $externalSourceTeamCompetitor->getCompetition()->getId()
         );
         if ($competition === null) {
             return null;

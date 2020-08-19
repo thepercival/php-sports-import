@@ -49,6 +49,7 @@ class Team
      */
     public function import(ExternalSource $externalSource, array $externalSourceTeams)
     {
+        $updated = 0; $added = 0;
         foreach ($externalSourceTeams as $externalSourceTeam) {
             $externalId = $externalSourceTeam->getId();
             $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
@@ -66,11 +67,13 @@ class Team
                     $externalId
                 );
                 $this->teamAttacherRepos->save($teamAttacher);
+                $added++;
             } else {
                 $this->editTeam($teamAttacher->getImportable(), $externalSourceTeam);
+                $updated++;
             }
         }
-        // bij syncen hoeft niet te verwijderden
+        $this->logger->info("added: " . $added . ", updated: " . $updated );
     }
 
     protected function createTeam(ExternalSource $externalSource, TeamBase $externalSourceTeam): ?TeamBase

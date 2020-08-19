@@ -11,8 +11,9 @@ interface Competition
      */
     public function getCompetitions(): array;
     /**
-     * @param mixed $id
+     * @param int|string $leagueId
+     * @param int|string $seasonId
      * @return CompetitionBase|null
      */
-    public function getCompetition($id): ?CompetitionBase;
+    public function getCompetition($leagueId, $seasonId): ?CompetitionBase;
 }

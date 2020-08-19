@@ -2,10 +2,12 @@
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Competitor;
 
+use Sports\Association;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\Competitor\Team as TeamCompetitorBase;
+use Sports\Team as TeamBase;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Competition;
@@ -13,11 +15,6 @@ use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
 
 class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
 {
-    /**
-     * @var array|TeamCompetitorBase[]|null
-     */
-    protected $teamCompetitors = [];
-
     public function __construct(
         SofaScore $parent,
         SofaScoreApiHelper $apiHelper,
@@ -42,7 +39,7 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
     {
         $competitionTeamCompetitors = $this->getTeamCompetitorsHelper($competition);
         if (array_key_exists($id, $competitionTeamCompetitors)) {
-            return $this->teamCompetitors[$id];
+            return $competitionTeamCompetitors[$id];
         }
         return null;
     }
@@ -54,33 +51,29 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
     protected function getTeamCompetitorsHelper(Competition $competition): array
     {
         $competitionTeamCompetitors = [];
-        $association = $competition->getLeague()->getAssociation();
 
         $apiData = $this->apiHelper->getStructureData($competition);
 
         $apiDataTeamCompetitors = $this->convertExternalSourceTeamCompetitors($apiData);
 
-        // @TODO DEPRECATED
-//        /** @var stdClass $externalSourceTeamCompetitor */
-//        foreach ($apiDataTeamCompetitors as $externalSourceTeamCompetitor) {
-//
-////            if( $externalSourceTeamCompetitor->tournament === null || !property_exists($externalSourceTeamCompetitor->tournament, "uniqueId") ) {
-////                continue;
-////            }
-//            if (array_key_exists($externalSourceTeamCompetitor->id, $this->teamCompetitors)) {
-//                $teamCompetitor = $this->teamCompetitors[$externalSourceTeamCompetitor->id];
-//                $competitionTeamCompetitors[$teamCompetitor->getId()] = $teamCompetitor;
-//                continue;
-//            }
-//
-//            $newTeamCompetitor = $this->apiHelper->convertTeamCompetitor($association, $externalSourceTeamCompetitor);
-//            $this->teamCompetitors[$newTeamCompetitor->getId()] = $newTeamCompetitor;
-//            $competitionTeamCompetitors[$newTeamCompetitor->getId()] = $newTeamCompetitor;
-//        }
+        $placeNr = 1;
+        $pouleNr = 1;
+        /** @var stdClass $externalSourceTeamCompetitor */
+        foreach ($apiDataTeamCompetitors as $externalSourceTeamCompetitor) {
+            if (array_key_exists($externalSourceTeamCompetitor->id, $competitionTeamCompetitors)) {
+                continue;
+            }
+            $newTeamCompetitor = $this->createTeamCompetitor($competition, $pouleNr, $placeNr++, $externalSourceTeamCompetitor);
+            $competitionTeamCompetitors[$newTeamCompetitor->getId()] = $newTeamCompetitor;
+        }
         return $competitionTeamCompetitors;
     }
 
-    protected function convertExternalSourceTeamCompetitors($apiData)
+    /**
+     * @param stdClass $apiData
+     * @return array|stdClass[]
+     */
+    protected function convertExternalSourceTeamCompetitors(stdClass $apiData): array
     {
         if (property_exists($apiData, 'teamCompetitors')) {
             return $apiData->teamCompetitors;
@@ -95,11 +88,52 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
             return $apiDataTeamCompetitors;
         }
         foreach ($standingsTables->tableRows as $tableRow) {
-            if (!property_exists($tableRow, 'teamCompetitor')) {
+            if (!property_exists($tableRow, 'team')) {
                 continue;
             }
-            $apiDataTeamCompetitors[] = $tableRow->teamCompetitor;
+            if( !property_exists($tableRow->team, "id") ) {
+                continue;
+            }
+            if( !property_exists($tableRow, "id") ) {
+                continue;
+            }
+            $apiDataTeamCompetitors[] = $tableRow;
         }
+        uasort( $apiDataTeamCompetitors, function( stdClass $a, stdClass $b): int {
+            return $a->id < $b->id ? -1 : 1;
+        });
         return $apiDataTeamCompetitors;
+    }
+
+    protected function createTeamCompetitor(
+        Competition $competition,
+        int $pouleNr, int $placeNr,
+        stdClass $externalSourceTeamCompetitor): TeamCompetitorBase
+    {
+        $association = $competition->getLeague()->getAssociation();
+        $team = $this->createTeam( $association, $externalSourceTeamCompetitor->team );
+        $teamCompetitor = new TeamCompetitorBase( $competition, $pouleNr, $placeNr, $team );
+        $teamCompetitor->setId( $externalSourceTeamCompetitor->id );
+        return $teamCompetitor;
+    }
+
+    /**
+     * {
+     *   "name": "FC Smolevichi",
+     *   "slug": "fc-smolevichi",
+     *   "gender": "M",
+     *   "disabled": false,
+     *   "national": false,
+     *   "id": 42964,
+     *   "subTeams": []
+     * }
+     */
+    protected function createTeam(Association $association, stdClass $externalTeam): TeamBase {
+
+        $team = new TeamBase($association, $externalTeam->name);
+        $team->setId($externalTeam->id);
+        $team->setAbbreviation(substr($externalTeam->name, 0, TeamBase::MAX_LENGTH_ABBREVIATION));
+        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$team->getId().".png");
+        return $team;
     }
 }
