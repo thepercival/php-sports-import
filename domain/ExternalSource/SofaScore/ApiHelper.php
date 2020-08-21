@@ -39,6 +39,10 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
      * @var array| null
      */
     private $proxyOptions;
+    /**
+     * @var array | Team[]
+     */
+    private $teamsCache = [];
 
     public function __construct(
         ExternalSource $externalSource,
@@ -66,9 +70,9 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             CURLOPT_TIMEOUT => 30,
             CURLOPT_CONNECTTIMEOUT => 30
         ];
-        if( $this->proxyOptions !== null ) {
+        if ($this->proxyOptions !== null) {
             $curlOptions[CURLOPT_PROXY] = $this->proxyOptions["username"] . ":" . $this->proxyOptions["password"]
-            . "@" . $this->proxyOptions["host"] . ":" . $this->proxyOptions["port"];
+                . "@" . $this->proxyOptions["host"] . ":" . $this->proxyOptions["port"];
         }
         return [
             'curl' => $curlOptions,
@@ -87,7 +91,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
 
     protected function getDataFromCache(string $cacheId)
     {
-        $data = $this->cacheItemDbRepos->getItem( $cacheId );
+        $data = $this->cacheItemDbRepos->getItem($cacheId);
         if ($data !== null) {
             return json_decode($data);
         }
@@ -96,7 +100,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
 
     protected function getData(string $endpoint, string $cacheId, int $cacheMinutes)
     {
-        $data = $this->getDataFromCache( $cacheId );
+        $data = $this->getDataFromCache($cacheId);
         if ($data !== null) {
             return $data;
         }
@@ -155,7 +159,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return "?_=" . (new \DateTimeImmutable())->getTimestamp();
     }
 
-    public function getDateAsString( DateTimeImmutable $date ): string
+    public function getDateAsString(DateTimeImmutable $date): string
     {
         return $date->format("Y-m-d");
     }
@@ -163,9 +167,9 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     public function getSportsData(): stdClass
     {
         return $this->getData(
-            $this->getEndPoint( ExternalSource::DATA_SPORTS ),
-            $this->getCacheId( ExternalSource::DATA_SPORTS ),
-            $this->getCacheMinutes( ExternalSource::DATA_SPORTS )
+            $this->getEndPoint(ExternalSource::DATA_SPORTS),
+            $this->getCacheId(ExternalSource::DATA_SPORTS),
+            $this->getCacheMinutes(ExternalSource::DATA_SPORTS)
         );
     }
 
@@ -173,38 +177,44 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
      * @param Sport $sport
      * @return stdClass
      */
-    public function getCompetitionsData(Sport $sport ): stdClass
+    public function getCompetitionsData(Sport $sport): stdClass
     {
         $datesData = new stdClass();
         // non-cache
         {
             $dates = $this->getCompetitionDates();
-            foreach( $dates as $date ) {
+            foreach ($dates as $date) {
                 $dateApiData = $this->getData(
-                    $this->getCompetitionsEndPoint($sport,$date),
-                    $this->getCompetitionsCacheId( $sport,$date ),
-                    $this->getCacheMinutes( ExternalSource::DATA_COMPETITIONS )
+                    $this->getCompetitionsEndPoint($sport, $date),
+                    $this->getCompetitionsCacheId($sport, $date),
+                    $this->getCacheMinutes(ExternalSource::DATA_COMPETITIONS)
                 );
 
-                if( property_exists($datesData, "sportItem") === false ) {
+                if (property_exists($datesData, "sportItem") === false) {
                     $datesData->sportItem = $dateApiData->sportItem;
                 } else {
-                    $datesData->sportItem->tournaments = array_merge( $datesData->sportItem->tournaments, $dateApiData->sportItem->tournaments  );
+                    $datesData->sportItem->tournaments = array_merge(
+                        $datesData->sportItem->tournaments,
+                        $dateApiData->sportItem->tournaments
+                    );
                 }
             }
         }
         // cache
         {
             $dates = $this->getCompetitionCacheDates();
-            foreach( $dates as $date ) {
-                $dateApiData = $this->getDataFromCache( $this->getCompetitionsEndPoint($sport,$date) );
-                if( $dateApiData === null ) {
+            foreach ($dates as $date) {
+                $dateApiData = $this->getDataFromCache($this->getCompetitionsEndPoint($sport, $date));
+                if ($dateApiData === null) {
                     continue;
                 }
-                if( property_exists($datesData, "sportItem") === false ) {
+                if (property_exists($datesData, "sportItem") === false) {
                     $datesData->sportItem = $dateApiData->sportItem;
                 } else {
-                    $datesData->sportItem->tournaments = array_merge( $datesData->sportItem->tournaments, $dateApiData->sportItem->tournaments );
+                    $datesData->sportItem->tournaments = array_merge(
+                        $datesData->sportItem->tournaments,
+                        $dateApiData->sportItem->tournaments
+                    );
                 }
             }
         }
@@ -215,7 +225,8 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     /**
      * @return array|DateTimeImmutable[]
      */
-    protected function getCompetitionDates(): array {
+    protected function getCompetitionDates(): array
+    {
         $firstSaturday = $this->getFirstSaturdayInEvenWeek();
         return [
             $firstSaturday,
@@ -226,7 +237,8 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     /**
      * @return array|DateTimeImmutable[]
      */
-    protected function getCompetitionCacheDates(): array {
+    protected function getCompetitionCacheDates(): array
+    {
         $firstSaturday = $this->getFirstSaturdayInEvenWeek();
         return [
             $firstSaturday->modify("-28 days"),
@@ -234,17 +246,18 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         ];
     }
 
-    protected function getFirstSaturdayInEvenWeek(): DateTimeImmutable {
+    protected function getFirstSaturdayInEvenWeek(): DateTimeImmutable
+    {
         $today = (new DateTimeImmutable())->setTime(0, 0);
 
         $delta = 0;
-        $weekNumber = (int) $today->format("W" );
-        if( ( $weekNumber % 2 ) === 1 ) {
+        $weekNumber = (int)$today->format("W");
+        if (($weekNumber % 2) === 1) {
             $delta = 7;
         }
         $dayCorrectWeek = $today->modify("+" . $delta . " days");
 
-        $dayOfWeek = (int) $dayCorrectWeek->format("w");
+        $dayOfWeek = (int)$dayCorrectWeek->format("w");
 
         $deltaSaturDay = 6 - $dayOfWeek;
 
@@ -253,11 +266,12 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return $firstCorrectSaturday;
     }
 
-    public function getCompetitionId(stdClass $externalCompetition): ?int {
-        if( !property_exists($externalCompetition, "season" ) ){
+    public function getCompetitionId(stdClass $externalCompetition): ?int
+    {
+        if (!property_exists($externalCompetition, "season")) {
             return null;
         }
-        if( !property_exists($externalCompetition->season, "id" ) ){
+        if (!property_exists($externalCompetition->season, "id")) {
             return null;
         }
         return $externalCompetition->season->id;
@@ -267,8 +281,8 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     {
         return $this->getData(
             $this->getStructureEndPoint($competition),
-            $this->getStructureCacheId( $competition ),
-            $this->getCacheMinutes( ExternalSource::DATA_STRUCTURES )
+            $this->getStructureCacheId($competition),
+            $this->getCacheMinutes(ExternalSource::DATA_STRUCTURES)
         );
     }
 
@@ -276,19 +290,27 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     {
         return $this->getData(
             $this->getBatchGamesEndPoint($competition, $batchNr),
-            $this->getBatchGamesCacheId( $competition, $batchNr ),
-            $this->getCacheMinutes( ExternalSource::DATA_GAMES )
+            $this->getBatchGamesCacheId($competition, $batchNr),
+            $this->getCacheMinutes(ExternalSource::DATA_GAMES)
         );
     }
 
-    public function getCacheMinutes( int $dataTypeIdentifier ): int {
-
-        if( $dataTypeIdentifier === ExternalSource::DATA_SPORTS ) {
+    public function getCacheMinutes(int $dataTypeIdentifier): int
+    {
+        if ($dataTypeIdentifier === ExternalSource::DATA_SPORTS) {
             return 60 * 24 * 7;
-        } else if( $dataTypeIdentifier === ExternalSource::DATA_COMPETITIONS ) {
-            return 60 * 24 * 1000; // does not expire
-        } else if( $dataTypeIdentifier === ExternalSource::DATA_STRUCTURES ) {
-            return 60 * 24 * 7;
+        } else {
+            if ($dataTypeIdentifier === ExternalSource::DATA_COMPETITIONS) {
+                return 60 * 24 * 1000; // does not expire
+            } else {
+                if ($dataTypeIdentifier === ExternalSource::DATA_STRUCTURES) {
+                    return 60 * 24 * 7;
+                } else {
+                    if ($dataTypeIdentifier === ExternalSource::DATA_GAMES) {
+                        return 60 * 24 * 7;
+                    }
+                }
+            }
         }
 
 //        public const ASSOCIATION_CACHE_MINUTES = 1440 * 7; // 60 * 24
@@ -300,97 +322,106 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return 0;
     }
 
-    public function getCacheInfo( int $dataTypeIdentifier = null): string
+    public function getCacheInfo(int $dataTypeIdentifier = null): string
     {
-        if( $dataTypeIdentifier === null ) {
+        if ($dataTypeIdentifier === null) {
             return "no report available yet";
         }
-        $cacheMinutes = $this->getCacheMinutes( $dataTypeIdentifier );
-        $expireDateTime = $this->cacheItemDbRepos->getExpireDateTime( $this->getCacheId( $dataTypeIdentifier ) );
-        if( $expireDateTime === null ) {
+        $cacheMinutes = $this->getCacheMinutes($dataTypeIdentifier);
+        $expireDateTime = $this->cacheItemDbRepos->getExpireDateTime($this->getCacheId($dataTypeIdentifier));
+        if ($expireDateTime === null) {
             return "cachereport => cached: no, minutes-cached: " . $cacheMinutes;
         }
-        $cachedDateTime = $expireDateTime->modify("- " . $this->getCacheMinutes( $dataTypeIdentifier ) . "minutes" );
+        $cachedDateTime = $expireDateTime->modify("- " . $this->getCacheMinutes($dataTypeIdentifier) . "minutes");
 
         $cachedAt = $cachedDateTime->format("'Y-m-d\TH:i:s\Z'");
         $expiredAt = $expireDateTime->format("'Y-m-d\TH:i:s\Z'");
-        return "cachereport => cached:" . $cachedAt .", minutes-cached: " . $cacheMinutes . ", expired: " . $expiredAt;
+        return "cachereport => cached:" . $cachedAt . ", minutes-cached: " . $cacheMinutes . ", expired: " . $expiredAt;
     }
 
-    public function getCacheId( int $dataTypeIdentifier ): string
+    public function getCacheId(int $dataTypeIdentifier): string
     {
         return $this->getEndPointSuffix($dataTypeIdentifier);
     }
 
-    public function getEndPoint( int $dataTypeIdentifier = null ): string
+    public function getEndPoint(int $dataTypeIdentifier = null): string
     {
         $endpoint = $this->externalSource->getApiurl();
-        if( $dataTypeIdentifier !== null ) {
-            $endpoint .= $this->getEndPointSuffix( $dataTypeIdentifier ) . $this->getUrlPostfix();
+        if ($dataTypeIdentifier !== null) {
+            $endpoint .= $this->getEndPointSuffix($dataTypeIdentifier) . $this->getUrlPostfix();
         }
         return $endpoint;
     }
 
-    public function getEndPointSuffix( int $dataTypeIdentifier ): string
+    public function getEndPointSuffix(int $dataTypeIdentifier): string
     {
-        if( $dataTypeIdentifier === ExternalSource::DATA_SPORTS ) {
+        if ($dataTypeIdentifier === ExternalSource::DATA_SPORTS) {
             return "event/count/by-sports/json";
-        } else if( $dataTypeIdentifier === ExternalSource::DATA_COMPETITIONS ) {
+        } elseif ($dataTypeIdentifier === ExternalSource::DATA_COMPETITIONS) {
             return "**sportId**//**date**/json";
-        } else if ( $dataTypeIdentifier === ExternalSource::DATA_STRUCTURES ) {
+        } elseif ($dataTypeIdentifier === ExternalSource::DATA_STRUCTURES) {
             return "u-tournament/**leagueId**/season/**competitionId**/json";
-        } else if ( $dataTypeIdentifier === ExternalSource::DATA_GAMES ) {
+        } elseif ($dataTypeIdentifier === ExternalSource::DATA_GAMES) {
             return "u-tournament/**leagueId**/season/**competitionId**/matches/round/**batchNr**";
         }
-
-        return "no endpointsuffix";
+//        "event/**gameId**/json";
+//        "event/**gameId**/statistics/players/json";
+        throw new \Exception("no endpointsuffix found for dataTypeIdentifier '". $dataTypeIdentifier ."'", E_ERROR );
     }
 
-    protected function getCompetitionsEndPoint( Sport $sport, \DateTimeImmutable $dateTime ): string
+    protected function getCompetitionsEndPoint(Sport $sport, \DateTimeImmutable $dateTime): string
     {
-        return $this->externalSource->getApiurl() . $this->getCompetitionsEndPointSuffix($sport, $dateTime ) . $this->getUrlPostfix();
+        return $this->externalSource->getApiurl() . $this->getCompetitionsEndPointSuffix(
+                $sport,
+                $dateTime
+            ) . $this->getUrlPostfix();
     }
 
-    protected function getCompetitionsCacheId( Sport $sport, \DateTimeImmutable $dateTime ): string
+    protected function getCompetitionsCacheId(Sport $sport, \DateTimeImmutable $dateTime): string
     {
-        return $this->getCompetitionsEndPointSuffix($sport, $dateTime );
+        return $this->getCompetitionsEndPointSuffix($sport, $dateTime);
     }
 
-    protected function getCompetitionsEndPointSuffix( Sport $sport, \DateTimeImmutable $dateTime ): string
+    protected function getCompetitionsEndPointSuffix(Sport $sport, \DateTimeImmutable $dateTime): string
     {
         $endpointSuffix = $this->getEndPointSuffix(ExternalSource::DATA_COMPETITIONS);
         $retVal = str_replace("**sportId**", $sport->getName(), $endpointSuffix);
         return str_replace("**date**", $this->getDateAsString($dateTime), $retVal);
     }
 
-    protected function getStructureEndPoint( Competition $competition ): string
+    protected function getStructureEndPoint(Competition $competition): string
     {
-        return $this->externalSource->getApiurl() . $this->getStructureEndPointSuffix($competition ) . $this->getUrlPostfix();
+        return $this->externalSource->getApiurl() . $this->getStructureEndPointSuffix(
+                $competition
+            ) . $this->getUrlPostfix();
     }
 
-    protected function getStructureCacheId( Competition $competition ): string
+    protected function getStructureCacheId(Competition $competition): string
     {
-        return $this->getStructureEndPointSuffix($competition );
+        return $this->getStructureEndPointSuffix($competition);
     }
 
-    protected function getStructureEndPointSuffix( Competition $competition ): string
+    protected function getStructureEndPointSuffix(Competition $competition): string
     {
         $endpointSuffix = $this->getEndPointSuffix(ExternalSource::DATA_STRUCTURES);
         $retVal = str_replace("**leagueId**", $competition->getLeague()->getId(), $endpointSuffix);
         return str_replace("**competitionId**", $competition->getId(), $retVal);
     }
 
-    protected function getBatchGamesEndPoint( Competition $competition, int $batchNr ): string
+    protected function getBatchGamesEndPoint(Competition $competition, int $batchNr): string
     {
-        return $this->externalSource->getApiurl() . $this->getBatchGamesEndPointSuffix($competition, $batchNr ) . $this->getUrlPostfix();
+        return $this->externalSource->getApiurl() . $this->getBatchGamesEndPointSuffix(
+                $competition,
+                $batchNr
+            ) . $this->getUrlPostfix();
     }
 
-    protected function getBatchGamesCacheId( Competition $competition, int $batchNr ): string
+    protected function getBatchGamesCacheId(Competition $competition, int $batchNr): string
     {
-        return $this->getBatchGamesEndPointSuffix($competition, $batchNr );
+        return $this->getBatchGamesEndPointSuffix($competition, $batchNr);
     }
 
-    protected function getBatchGamesEndPointSuffix( Competition $competition, int $batchNr ): string
+    protected function getBatchGamesEndPointSuffix(Competition $competition, int $batchNr): string
     {
         $endpointSuffix = $this->getEndPointSuffix(ExternalSource::DATA_GAMES);
         $retVal = str_replace("**leagueId**", $competition->getLeague()->getId(), $endpointSuffix);
@@ -398,6 +429,28 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return str_replace("**batchNr**", (string)$batchNr, $retVal);
     }
 
+    /**
+     * {
+     *   "name": "FC Smolevichi",
+     *   "slug": "fc-smolevichi",
+     *   "gender": "M",
+     *   "disabled": false,
+     *   "national": false,
+     *   "id": 42964,
+     *   "subTeams": []
+     * }
+     */
+    public function convertTeam(Association $association, stdClass $externalTeam ): Team {
+        if( array_key_exists( $externalTeam->id, $this->teamsCache ) ) {
+            return $this->teamsCache[$externalTeam->id];
+        }
+        $team = new Team($association, $externalTeam->name);
+        $team->setId($externalTeam->id);
+        $team->setAbbreviation(substr($externalTeam->name, 0, Team::MAX_LENGTH_ABBREVIATION));
+        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$team->getId().".png");
+        $this->teamsCache[$team->getId()] = $team;
+        return $team;
+    }
     /*
         public function getLeague(ExternalLeague $externalLeague): ?\stdClass
         {

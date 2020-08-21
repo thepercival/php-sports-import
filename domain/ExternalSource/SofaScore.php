@@ -316,9 +316,9 @@ class SofaScore implements
         return $this->helpers[SofaScore\Helper\Structure::class];
     }
 
-    public function getBatchNrs(Competition $competition, bool $forImport): array
+    public function getBatchNrs(Competition $competition): array
     {
-        return $this->getGameHelper()->getBatchNrs($competition, $forImport);
+        return $this->getGameHelper()->getBatchNrs($competition);
     }
 
     public function getGames(Competition $competition, int $batchNr): array

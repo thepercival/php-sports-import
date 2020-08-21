@@ -117,23 +117,7 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
         return $teamCompetitor;
     }
 
-    /**
-     * {
-     *   "name": "FC Smolevichi",
-     *   "slug": "fc-smolevichi",
-     *   "gender": "M",
-     *   "disabled": false,
-     *   "national": false,
-     *   "id": 42964,
-     *   "subTeams": []
-     * }
-     */
     protected function createTeam(Association $association, stdClass $externalTeam): TeamBase {
-
-        $team = new TeamBase($association, $externalTeam->name);
-        $team->setId($externalTeam->id);
-        $team->setAbbreviation(substr($externalTeam->name, 0, TeamBase::MAX_LENGTH_ABBREVIATION));
-        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$team->getId().".png");
-        return $team;
+        return $this->apiHelper->convertTeam($association, $externalTeam);
     }
 }

@@ -3,23 +3,28 @@
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use DateTimeImmutable;
+use Sports\Competitor\Team as TeamCompetitor;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\Game as GameBase;
 use Psr\Log\LoggerInterface;
-use SportsImport\Import\Service as ImportService;
+use Sports\Place\Location\Map as PlaceLocationMap;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Competition;
 use SportsImport\ExternalSource\Game as ExternalSourceGame;
 use Sports\Poule;
 use Sports\Place;
-use Sports\Competitor;
+use Sports\Team;
 use Sports\State;
-use SportsImport\Structure as StructureBase;
 
 class Game extends SofaScoreHelper implements ExternalSourceGame
 {
+    /**
+     * @var PlaceLocationMap|null
+     */
+    protected $placeLocationMap;
+
     public function __construct(
         SofaScore $parent,
         SofaScoreApiHelper $apiHelper,
@@ -32,19 +37,18 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         );
     }
 
-    // wedstrijden
-    // events->rounds heeft het aantal ronden, dit is per competitie op te vragen
-    // per wedstrijdronde de games invoeren, voor de ronden die nog niet ingevoerd zijn
-
-    // wedstrijden te updaten uit aparte url per wedstrijdronde
-    // roundMatches->tournaments[]->events[]
+    protected function getPlaceLocationMap( Competition $competition ): PlaceLocationMap {
+        if( $this->placeLocationMap === null ) {
+            $this->placeLocationMap = new PlaceLocationMap( $this->parent->getTeamCompetitors($competition) );
+        }
+        return $this->placeLocationMap;
+    }
 
     /**
      * @param Competition $competition
-     * @param bool $forImport
      * @return array|int[]
      */
-    public function getBatchNrs(Competition $competition, bool $forImport): array
+    public function getBatchNrs(Competition $competition ): array
     {
         $apiData = $this->apiHelper->getStructureData($competition);
 
@@ -57,21 +61,22 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         $gameRoundNumbers = array_map(function (stdClass $round) {
             return $round->round;
         }, $apiData->events->rounds);
-        if ($forImport !== true) {
-            return $gameRoundNumbers;
-        }
-        $nDayOfWeek = (int)(new \DateTimeImmutable())->format("w");
-        return array_filter($gameRoundNumbers, function (int $gameRoundNumber) use ($nDayOfWeek): bool {
-            return ($gameRoundNumber % 7) === $nDayOfWeek;
-        });
+        return $gameRoundNumbers;
     }
 
+    /**
+     * @param Competition $competition
+     * @param int $batchNr
+     * @return array|GameBase[]
+     * @throws \Exception
+     */
     public function getGames(Competition $competition, int $batchNr): array
     {
         $competitionGames = [];
         $association = $competition->getLeague()->getAssociation();
         $structure = $this->parent->getStructure($competition);
         $poule = $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
+        $placeLocationMap = $this->getPlaceLocationMap($competition);
 
         $apiData = $this->apiHelper->getBatchGameData($competition, $batchNr);
         if (!property_exists($apiData, "roundMatches")) {
@@ -99,25 +104,24 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
             // referee
             // field
 
-            // @TODO DEPRECATED
-//            $homeCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->homeTeam);
-//            $homePlace = $this->getPlaceFromPoule($poule, $homeCompetitor);
-//            if ($homePlace === null) {
-//                continue;
-//            }
-//            $awayCompetitor = $this->apiHelper->convertCompetitor($association, $externalSourceGame->awayTeam);
-//            $awayPlace = $this->getPlaceFromPoule($poule, $awayCompetitor);
-//            if ($awayPlace === null) {
-//                continue;
-//            }
-//            $game->addPlace($homePlace, GameBase::HOME);
-//            $game->addPlace($awayPlace, GameBase::AWAY);
-//
-//            if ($game->getState() === State::Finished and is_object($externalSourceGame->homeScore)) {
-//                $home = $externalSourceGame->homeScore->current;
-//                $away = $externalSourceGame->awayScore->current;
-//                new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
-//            }
+            $homeTeam = $this->apiHelper->convertTeam($association, $externalSourceGame->homeTeam);
+            $homePlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $homeTeam);
+            if ($homePlace === null) {
+                continue;
+            }
+            $awayTeam = $this->apiHelper->convertTeam($association, $externalSourceGame->awayTeam);
+            $awayPlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $awayTeam);
+            if ($awayPlace === null) {
+                continue;
+            }
+            $game->addPlace($homePlace, GameBase::HOME);
+            $game->addPlace($awayPlace, GameBase::AWAY);
+
+            if ($game->getState() === State::Finished and is_object($externalSourceGame->homeScore)) {
+                $home = $externalSourceGame->homeScore->current;
+                $away = $externalSourceGame->awayScore->current;
+                new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
+            }
 
             $competitionGames[$game->getId()] = $game;
         }
@@ -138,16 +142,20 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
     }
 
-    protected function getPlaceFromPoule(Poule $poule, Competitor $competitor): ?Place
+    protected function getPlaceFromPoule(Poule $poule, PlaceLocationMap $placeLocationMap, Team $team): ?Place
     {
-        // @TODO DEPRECATED
+        foreach( $poule->getPlaces() as $placeIt ) {
+            $teamCompetitor = $placeLocationMap->getCompetitor($placeIt);
+            if( $teamCompetitor === null ) {
+                return null;
+            }
+            if( !($teamCompetitor instanceof TeamCompetitor)) {
+                return null;
+            }
+            if( $teamCompetitor->getTeam() === $team ) {
+                return $placeIt;
+            }
+        }
         return null;
-//        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
-//            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
-//        });
-//        if ($places->count() !== 1) {
-//            return null;
-//        }
-//        return $places->first();
     }
 }

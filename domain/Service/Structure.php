@@ -4,7 +4,6 @@ namespace SportsImport\Service;
 
 use SportsImport\Attacher;
 use Sports\Structure\Repository as StructureRepository;
-use SportsImport\Attacher\Competitor\Repository as CompetitorAttacherRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\ExternalSource;
 use Sports\Structure as StructureBase;
@@ -37,7 +36,7 @@ class Structure
         $this->competitionAttacherRepos = $competitionAttacherRepos;
     }
 
-    public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure )
+    public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure ): ?StructureBase
     {
         /** @var Attacher|null $competitionAttacher */
         $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
@@ -45,42 +44,23 @@ class Structure
             $externalSourceStructure->getFirstRoundNumber()->getCompetition()->getId()
         );
         if ($competitionAttacher === null) {
-            return;
+            return null;
         }
         /** @var Competition $competition */
         $competition = $competitionAttacher->getImportable();
 
         $structure = $this->structureRepos->getStructure($competition);
         if ($structure !== null) {
-            return;
+            return null;
         }
 
-        // @TODO DEPRECATED
-//        $externalSourceCompetitors = $externalSourceStructure->getFirstRoundNumber()->getCompetitors();
-//
-//        $existingCompetitors = $this->getCompetitors($externalSource, $externalSourceCompetitors);
-//
-//        $structureCopier = new StructureCopier($competition, $existingCompetitors);
-//        $newStructure = $structureCopier->copy($externalSourceStructure);
-//
-//        $roundNumberAsValue = 1;
-//        $this->structureRepos->removeAndAdd($competition, $newStructure, $roundNumberAsValue);
-    }
+        $structureCopier = new StructureCopier($competition);
+        $newStructure = $structureCopier->copy($externalSourceStructure);
 
-    protected function getCompetitors(ExternalSource $externalSource, array $externalSourceCompetitors): array
-    {
-        // @TODO DEPRECATED
-        $competitors = [];
-//        foreach ($externalSourceCompetitors as $externalSourceCompetitor) {
-//            $competitorAttacher = $this->competitorAttacherRepos->findOneByExternalId(
-//                $externalSource,
-//                $externalSourceCompetitor->getId()
-//            );
-//            if ($competitorAttacher === null) {
-//                continue;
-//            }
-//            $competitors[] = $competitorAttacher->getImportable();
-//        }
-        return $competitors;
+        $roundNumberAsValue = 1;
+        $this->structureRepos->removeAndAdd($competition, $newStructure, $roundNumberAsValue);
+
+        $this->logger->info("added: 1" );
+        return $newStructure;
     }
 }

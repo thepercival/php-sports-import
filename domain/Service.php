@@ -7,7 +7,9 @@ use Psr\Log\LoggerInterface;
 use Sports\Competition;
 use Sports\League;
 use Sports\Season;
-use SportsImport\ExternalSource\Implementation;
+use Sports\Competition\Repository as CompetitionRepository;
+use Sports\Game\Repository as GameRepository;
+use Sports\State;
 use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
 use SportsImport\ExternalSource\Sport as ExternalSourceSport;
 use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
@@ -38,6 +40,9 @@ class Service
     protected SeasonAttacherRepository $seasonAttacherRepos;
     protected CompetitionAttacherRepository $competitionAttacherRepos;
 
+    protected CompetitionRepository $competitionRepos;
+    protected GameRepository $gameRepos;
+
     public function __construct(
         Service\Sport $sportImportService,
         Service\Association $associationImportService,
@@ -46,9 +51,13 @@ class Service
         Service\Competition $competitionImportService,
         Service\Team $teamImportService,
         Service\TeamCompetitor $teamCompetitorImportService,
+        Service\Structure $structureImportService,
+        Service\Game $gameImportService,
         LeagueAttacherRepository $leagueAttacherRepos,
         SeasonAttacherRepository $seasonAttacherRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos
+        CompetitionAttacherRepository $competitionAttacherRepos,
+        CompetitionRepository $competitionRepos,
+        GameRepository $gameRepos
     ) {
         $this->sportImportService = $sportImportService;
         $this->associationImportService = $associationImportService;
@@ -57,10 +66,13 @@ class Service
         $this->competitionImportService = $competitionImportService;
         $this->teamImportService = $teamImportService;
         $this->teamCompetitorImportService = $teamCompetitorImportService;
-        $this->associationImportService = $associationImportService;
+        $this->structureImportService = $structureImportService;
+        $this->gameImportService = $gameImportService;
         $this->leagueAttacherRepos = $leagueAttacherRepos;
         $this->seasonAttacherRepos = $seasonAttacherRepos;
         $this->competitionAttacherRepos = $competitionAttacherRepos;
+        $this->competitionRepos = $competitionRepos;
+        $this->gameRepos = $gameRepos;
     }
 
     public function importSports( ExternalSourceImplementation $externalSourceImplementation ) {
@@ -202,7 +214,8 @@ class Service
      * @param ExternalSourceImplementation $externalSourceImplementation
      */
     public function importGames(
-        ExternalSourceImplementation $externalSourceImplementation, League $league, Season $season)
+        ExternalSourceImplementation $externalSourceImplementation,
+        League $league, Season $season)
     {
         if (!($externalSourceImplementation instanceof ExternalSourceGame)
             || !($externalSourceImplementation instanceof ExternalSourceStructure)
@@ -219,14 +232,10 @@ class Service
         if ($nrOfPlaces === 0) {
             return;
         }
-        $batchNrs = $externalSourceImplementation->getBatchNrs($externalCompetition, true);
-        foreach ($batchNrs as $batchNr) {
-            // always import, do single import for for example superelf
-//                $finishedGames = $gameRepos->getCompetitionGames($competition, State::Finished, $batchNr);
-//                if ((count($finishedGames) * 2) === $nrOfPlaces) {
-//                    continue;
-//                }
-            // $importGameService->setPoule( );
+        $batchNrs = $externalSourceImplementation->getBatchNrs($externalCompetition);
+        $filteredBatchNrs = $this->getBatchNrsToImport($league, $season, $nrOfPlaces, $batchNrs);
+
+        foreach ($filteredBatchNrs as $batchNr) {
             $this->gameImportService->import(
                 $externalSourceImplementation->getExternalSource(),
                 $externalSourceImplementation->getGames($externalCompetition, $batchNr)
@@ -234,13 +243,31 @@ class Service
         }
     }
 
-    // wedstrijden
-    // events->rounds heeft het aantal ronden, dit is per competitie op te vragen
-    // per wedstrijdronde de games invoeren, voor de ronden die nog niet ingevoerd zijn
-    // 0 notstarted
-    // 70 canceled
-    // 100 finished
+    /**
+     * als batchNr is finished and more than 2 days old
+     *
+     * @param League $league
+     * @param Season $season
+     * @param int $nrOfPlaces
+     * @param array|int[] $batchNrs
+     * @return array|int[]
+     */
+    protected function getBatchNrsToImport( League $league, Season $season, int $nrOfPlaces, array $batchNrs ): array {
+        $batchNrsRet = [];
 
-    // wedstrijden te updaten uit aparte url per wedstrijdronde
-    // roundMatches->tournaments[]->events[]
+        foreach( $batchNrs as $batchNr ) {
+            $batchNrGamePlaces = $this->gameRepos->getNrOfCompetitionGamePlaces(
+                $this->competitionRepos->findExt($league, $season),
+                State::Finished,
+                $batchNr );
+            if( $batchNrGamePlaces >= ($nrOfPlaces-1) ) {
+                continue;
+            }
+            $batchNrsRet[] = $batchNr;
+            if( count( $batchNrsRet ) === 4 ) {
+                break;
+            }
+        }
+        return $batchNrsRet;
+    }
 }

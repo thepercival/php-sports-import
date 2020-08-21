@@ -10,20 +10,14 @@ interface Game
 {
     /**
      * @param Competition $competition
-     * @param bool $forImport
      * @return array|int[]
      */
-    public function getBatchNrs(Competition $competition, bool $forImport): array;
+    public function getBatchNrs(Competition $competition): array;
     /**
      * @param Competition $competition
-     * @return array
+     * @return array|GameBase[]
      */
     public function getGames(Competition $competition, int $batchNr): array;
-    /**
-     * @param Competition $competition
-     * @return array
-     */
-    // public function getGamesByPeriod( Competition $competition, Period $period ): array;
     /**
      * @param Competition $competition
      * @param mixed $id

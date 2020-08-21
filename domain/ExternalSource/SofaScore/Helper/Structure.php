@@ -17,6 +17,10 @@ class Structure extends SofaScoreHelper implements ExternalSourceStructure
      * @var StructureService
      */
     protected $structureService;
+    /**
+     * @var array|StructureBase[]
+     */
+    protected $structures = [];
 
     public function __construct(
         SofaScore $parent,
@@ -33,23 +37,15 @@ class Structure extends SofaScoreHelper implements ExternalSourceStructure
 
     public function getStructure(Competition $competition): ?StructureBase
     {
+        if( array_key_exists( $competition->getId(), $this->structures) ) {
+            return $this->structures[$competition->getId()];
+        }
         list($nrOfPlaces, $nrOfPoules) = $this->getPlacesAndPoules($competition);
         if ($nrOfPlaces === 0 || $nrOfPoules === 0) {
             return null;
         }
-        // $competitors = $this->parent->getCompetitors($competition);
         $structure = $this->structureService->create($competition, $nrOfPlaces, $nrOfPoules);
-//        $firstRoundNumber = $structure->getFirstRoundNumber();
-//        foreach ($firstRoundNumber->getPoules() as $poule) {
-//            foreach ($poule->getPlaces() as $place) {
-//                $competitor = array_shift($competitors);
-//                if ($competitor === null) {
-//                    return null;
-//                }
-//                $place->setCompetitor($competitor);
-//            }
-//        }
-
+        $this->structures[$competition->getId()] = $structure;
         return $structure;
     }
 

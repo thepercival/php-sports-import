@@ -116,21 +116,18 @@ class Game
         // referee
         // field
 
-        return null;
-        // @TODO DEPRECATED
-//        foreach ($externalSourceGame->getPlaces() as $externalSourceGamePlace) {
-//            $externSourcePlace = $this->getPlaceFromExternal($externalSource, $externalSourceGamePlace->getPlace()->getCompetitor());
-//            $place = $this->getPlaceFromPoule($poule, $externSourcePlace);
-//            if ($place === null) {
-//                return null;
-//            }
-//            $game->addPlace($place, $externalSourceGamePlace->getHomeaway());
-//        }
-//
-//        $this->gameService->addScores($game, $externalSourceGame->getScores()->toArray());
-//
-//        $this->gameRepos->save($game);
-//        return $game;
+        foreach ($externalSourceGame->getPlaces() as $externalSourceGamePlace) {
+            $place = $poule->getPlace($externalSourceGamePlace->getPlace()->getPlaceNr());
+            if ($place === null) {
+                return null;
+            }
+            $game->addPlace($place, $externalSourceGamePlace->getHomeaway());
+        }
+
+        $this->gameService->addScores($game, $externalSourceGame->getScores()->toArray());
+
+        $this->gameRepos->save($game);
+        return $game;
     }
 
     protected function getPouleFromExternal(ExternalSource $externalSource, Poule $externalPoule): ?Poule
@@ -149,26 +146,6 @@ class Game
             return null;
         }
         return $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
-    }
-
-    protected function getPlaceFromPoule(Poule $poule, Competitor $competitor): ?Place
-    {
-        return null;
-        // @TODO DEPRECATED
-//        $places = $poule->getPlaces()->filter(function (Place $place) use ($competitor): bool {
-//            return $place->getCompetitor() !== null && $place->getCompetitor()->getId() === $competitor->getId();
-//        });
-//        if ($places->count() !== 1) {
-//            return null;
-//        }
-//        return $places->first();
-    }
-
-    protected function getPlaceFromExternal(ExternalSource $externalSource, Place $externalPlace): ?Place
-    {
-        return null;
-        // @TODO DEPRECATED
-        // return $this->placeAttacherRepos->findImportable($externalSource, $externalPlace->getId());
     }
 
     protected function editGame(GameBase $game, GameBase $externalSourceGame)
