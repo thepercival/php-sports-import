@@ -20,9 +20,8 @@ interface Game
     public function getGames(Competition $competition, int $batchNr): array;
     /**
      * @param Competition $competition
-     * @param mixed $id
+     * @param string|int $id
      * @return GameBase|null
      */
-    // weet nog niet precies welke parameters
-    // public function getGame( Competition $competition, $id ): ?GameBase;
+    public function getGame( Competition $competition, $id ): ?GameBase;
 }

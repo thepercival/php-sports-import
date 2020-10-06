@@ -8,7 +8,8 @@ use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\Competition as CompetitionBase;
 use SportsImport\ExternalSource;
 use Psr\Log\LoggerInterface;
-use SportsImport\Import\Service as ImportService;
+use Sports\League;
+use Sports\Season;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Sport\Config\Service as SportConfigService;
 use Sports\Sport;
@@ -17,9 +18,9 @@ use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
 class Competition extends SofaScoreHelper implements ExternalSourceCompetition
 {
     /**
-     * @var array|CompetitionBase[]|null
+     * @var array|CompetitionBase[]
      */
-    protected $competitions;
+    protected $competitionCache;
     protected $sportConfigService;
 
     public function __construct(
@@ -28,6 +29,7 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         LoggerInterface $logger
     ) {
         $this->sportConfigService = new SportConfigService();
+        $this->competitionCache = [];
         parent::__construct(
             $parent,
             $apiHelper,
@@ -36,88 +38,63 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
     }
 
     /**
+     * @param Sport $sport
+     * @param League $league
      * @return array|CompetitionBase[]
      */
-    public function getCompetitions(): array
+    public function getCompetitions( Sport $sport, League $league ): array
     {
-        $this->initCompetitions();
-        return array_values($this->competitions);
+        $competitions = [];
+        $externalCompetitions = $this->apiHelper->getCompetitionsData($league);
+        foreach( $externalCompetitions as $externalCompetition ) {
+            $competition = $this->convertCompetition( $sport, $league, $externalCompetition );
+            if( $competition === null ) {
+                continue;
+            }
+            $competitions[$competition->getId()] = $competition;
+        }
+        return $competitions;
     }
 
     /**
-     * @param int|string $leagueId
-     * @param int|string $seasonId
+     * @param Sport $sport,
+     * @param League $league
+     * @param Season $season
      * @return CompetitionBase|null
      */
-    public function getCompetition($leagueId, $seasonId): ?CompetitionBase
-    {
-        $this->initCompetitions();
-        foreach( $this->competitions as $competition ) {
-            if( $competition->getLeague()->getId() == $leagueId && $competition->getSeason()->getId() == $seasonId) {
+    public function getCompetition( Sport $sport, League $league, Season $season): ?CompetitionBase {
+        $competitions = $this->getCompetitions( $sport, $league);
+        foreach( $competitions as $competition ) {
+            if( $competition->getLeague() === $league && $competition->getSeason() === $season) {
                 return $competition;
             }
         }
         return null;
     }
 
-    protected function initCompetitions( bool $withCache = false )
-    {
-        if ($this->competitions !== null) {
-            return;
-        }
-
-        $sports = $this->parent->getSports();
-        foreach ($sports as $sport) {
-            if ($sport->getName() !== SofaScore::SPORTFILTER) {
-                continue;
-            }
-            $apiData = $this->apiHelper->getCompetitionsData($sport);
-            $this->setCompetitions($sport, $apiData->sportItem->tournaments);
-        }
-    }
-
     /**
-     * {"name":"Premier Competition 19\/20","slug":"premier-competition-1920","year":"19\/20","id":23776}
+     *  {"name":"Premier League 20\/21","year":"20\/21","id":29415}
      *
      * @param Sport $sport
-     * @param array | stdClass[] $externalSourceCompetitions
+     * @param League $league
+     * @param stdClass $externalCompetition
+     * @return CompetitionBase|null
      */
-    protected function setCompetitions(Sport $sport, array $externalSourceCompetitions)
+    protected function convertCompetition(Sport $sport, League $league, stdClass $externalCompetition): ?CompetitionBase
     {
-        $this->competitions = [];
-        /** @var stdClass $externalSourceCompetition */
-        foreach ($externalSourceCompetitions as $externalSourceCompetition) {
-            if ($externalSourceCompetition->tournament === null || !property_exists($externalSourceCompetition->tournament, "uniqueId")) {
-                continue;
-            }
-            $league = $this->parent->getLeague($externalSourceCompetition->tournament->uniqueId);
-            if ($league === null) {
-                continue;
-            }
-
-            if ($externalSourceCompetition->season === null) {
-                continue;
-            }
-            if (strlen($externalSourceCompetition->season->year) === 0) {
-                continue;
-            }
-            $season = $this->parent->getSeason($externalSourceCompetition->season->year);
-            if ($season === null) {
-                continue;
-            }
-            $externalCompetitionId = $this->apiHelper->getCompetitionId($externalSourceCompetition);
-            if( $externalCompetitionId === null ) {
-                continue;
-            }
-            if( array_key_exists($externalCompetitionId, $this->competitions) ) {
-                continue;
-            }
-
-            $newCompetition = new CompetitionBase($league, $season);
-            $newCompetition->setStartDateTime($season->getStartDateTime());
-            $newCompetition->setId($externalCompetitionId);
-            $sportConfig = $this->sportConfigService->createDefault($sport, $newCompetition);
-            $this->competitions[$newCompetition->getId()] = $newCompetition;
+        if( array_key_exists( $externalCompetition->id, $this->competitionCache ) ) {
+            return $this->competitionCache[$externalCompetition->id];
         }
+        $season = $this->parent->getSeason( $externalCompetition->year );
+        if( $season === null ) {
+            return null;
+        }
+        $competition = new CompetitionBase($league, $season);
+        $competition->setStartDateTime($season->getStartDateTime());
+        $competition->setId($externalCompetition->id);
+        $this->sportConfigService->createDefault($sport, $competition);
+        $this->competitionCache[$competition->getId()] = $competition;
+        return $competition;
+
     }
 }

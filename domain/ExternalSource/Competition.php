@@ -3,17 +3,24 @@
 namespace SportsImport\ExternalSource;
 
 use Sports\Competition as CompetitionBase;
+use Sports\League;
+use Sports\Season;
+use Sports\Sport;
 
 interface Competition
 {
     /**
+     * @param Sport $sport,
+     * @param League $league
      * @return array|CompetitionBase[]
      */
-    public function getCompetitions(): array;
+    public function getCompetitions( Sport $sport, League $league): array;
+
     /**
-     * @param int|string $leagueId
-     * @param int|string $seasonId
+     * @param Sport $sport,
+     * @param League $league
+     * @param Season $season
      * @return CompetitionBase|null
      */
-    public function getCompetition($leagueId, $seasonId): ?CompetitionBase;
+    public function getCompetition( Sport $sport, League $league, Season $season): ?CompetitionBase;
 }

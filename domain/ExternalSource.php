@@ -60,6 +60,9 @@ class ExternalSource
     // const DATA_PERSONCOMPETITORS = 2;
     const DATA_STRUCTURES = 256;
     const DATA_GAMES = 512;
+    const DATA_GAME = 1024;
+    const DATA_GAME_LINEUPS = 2048;
+    const DATA_GAME_EVENTS = 4096;
 
     public function __construct($name, $website = null)
     {

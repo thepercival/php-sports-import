@@ -3,16 +3,19 @@
 namespace SportsImport\ExternalSource;
 
 use Sports\Association as AssociationBase;
+use Sports\Sport;
 
 interface Association
 {
     /**
+     * @param Sport $sport
      * @return array|AssociationBase[]
      */
-    public function getAssociations(): array;
+    public function getAssociations( Sport $sport ): array;
     /**
-     * @param mixed $id
+     * @param Sport $sport
+     * @param int|string $id
      * @return AssociationBase|null
      */
-    public function getAssociation($id): ?AssociationBase;
+    public function getAssociation(Sport $sport, $id): ?AssociationBase;
 }

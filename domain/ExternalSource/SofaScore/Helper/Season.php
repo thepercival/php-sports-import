@@ -3,6 +3,7 @@
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use League\Period\Period;
+use Sports\Sport;
 use stdClass;
 use Sports\Association as AssociationBase;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
@@ -16,15 +17,16 @@ use SportsImport\ExternalSource\Season as ExternalSourceSeason;
 class Season extends SofaScoreHelper implements ExternalSourceSeason
 {
     /**
-     * @var array|SeasonBase[]|null
+     * @var array|SeasonBase[]
      */
-    protected $seasons;
+    protected $seasonCache;
 
     public function __construct(
         SofaScore $parent,
         SofaScoreApiHelper $apiHelper,
         LoggerInterface $logger
     ) {
+        $this->seasonCache = [];
         parent::__construct(
             $parent,
             $apiHelper,
@@ -37,81 +39,51 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
      */
     public function getSeasons(): array
     {
-        $this->initSeasons();
-        return array_values($this->seasons);
+        $seasons = [];
+        $externalSeasons = $this->apiHelper->getSeasonsData();
+
+        foreach ($externalSeasons as $externalSeason) {
+            $season = $this->convertSeason($externalSeason);
+            $seasons[$season->getId()] = $season;
+        }
+        return $seasons;
     }
 
     public function getSeason($id = null): ?SeasonBase
     {
-        $this->initSeasons();
-        if (array_key_exists($id, $this->seasons)) {
-            return $this->seasons[$id];
+        if (array_key_exists($id, $this->seasonCache)) {
+            return $this->seasonCache[$id];
+        }
+        $seasons = $this->getSeasons();
+        if (array_key_exists($id, $seasons)) {
+            return $seasons[$id];
         }
         return null;
     }
 
-    protected function initSeasons()
+    protected function convertSeason(stdClass $externalSeason): SeasonBase
     {
-        if ($this->seasons !== null) {
-            return;
+        $name = $this->getName( $externalSeason->name );
+        if( array_key_exists( $name, $this->seasonCache ) ) {
+            return $this->seasonCache[$name];
         }
-        $this->setSeasons($this->getSeasonData());
-    }
-
-    /**
-     * @return array|stdClass[]
-     */
-    protected function getSeasonData(): array
-    {
-        $sports = $this->parent->getSports();
-        $seasonData = [];
-        foreach ($sports as $sport) {
-            if ($sport->getName() !== SofaScore::SPORTFILTER) {
-                continue;
-            }
-            $apiData = $this->apiHelper->getCompetitionsData($sport);
-            $seasonData = array_merge($seasonData, $apiData->sportItem->tournaments);
-        }
-        return $seasonData;
-    }
-
-    /**
-     * {"name":"Premier League 19\/20","slug":"premier-league-1920","year":"19\/20","id":23776}
-     *
-     * @param array|\stdClass[] $competitions
-     */
-    protected function setSeasons(array $competitions)
-    {
-        $this->seasons = [];
-        foreach ($competitions as $competition) {
-            if ($competition->season === null) {
-                continue;
-            }
-            if (strlen($competition->season->year) === 0) {
-                continue;
-            }
-            $name = $this->getName($competition->season->year);
-            if ($this->hasName($this->seasons, $name)) {
-                continue;
-            }
-            $season = $this->createSeason($competition->season->year, $name) ;
-            $this->seasons[$season->getId()] = $season;
-        }
-    }
-
-    protected function createSeason($id, $name): SeasonBase
-    {
         $season = new SeasonBase($name, $this->getPeriod($name));
-        $season->setId($id);
+        $season->setId($name);
+        $this->seasonCache[$season->getId()] = $season;
         return $season;
     }
 
     protected function getName(string $name): string
     {
-        if (strpos($name, "/") === false) {
+        $strposSlash = strpos($name, "/");
+        if ( $strposSlash === false) {
             return $name;
         }
-        return "20" . substr($name, 0, 2) . "/" . "20" . substr($name, 3, 2);
+        $newName = substr($name, 0, $strposSlash ) . "/" . "20" . substr($name, $strposSlash + 1);
+        if( $strposSlash === 2 ) {
+            $newName = "20" . $newName;
+        }
+        return $newName;
     }
 
     protected function getPeriod(string $name): Period

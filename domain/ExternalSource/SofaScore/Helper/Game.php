@@ -4,6 +4,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use DateTimeImmutable;
 use Sports\Competitor\Team as TeamCompetitor;
+use Sports\Association;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
@@ -37,9 +38,10 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         );
     }
 
-    protected function getPlaceLocationMap( Competition $competition ): PlaceLocationMap {
-        if( $this->placeLocationMap === null ) {
-            $this->placeLocationMap = new PlaceLocationMap( $this->parent->getTeamCompetitors($competition) );
+    protected function getPlaceLocationMap(Competition $competition): PlaceLocationMap
+    {
+        if ($this->placeLocationMap === null) {
+            $this->placeLocationMap = new PlaceLocationMap($this->parent->getTeamCompetitors($competition));
         }
         return $this->placeLocationMap;
     }
@@ -48,7 +50,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
      * @param Competition $competition
      * @return array|int[]
      */
-    public function getBatchNrs(Competition $competition ): array
+    public function getBatchNrs(Competition $competition): array
     {
         $apiData = $this->apiHelper->getStructureData($competition);
 
@@ -58,9 +60,12 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         if (!property_exists($apiData->events, "rounds")) {
             return [];
         }
-        $gameRoundNumbers = array_map(function (stdClass $round) {
-            return $round->round;
-        }, $apiData->events->rounds);
+        $gameRoundNumbers = array_map(
+            function (stdClass $round) {
+                return $round->round;
+            },
+            $apiData->events->rounds
+        );
         return $gameRoundNumbers;
     }
 
@@ -73,10 +78,8 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
     public function getGames(Competition $competition, int $batchNr): array
     {
         $competitionGames = [];
-        $association = $competition->getLeague()->getAssociation();
         $structure = $this->parent->getStructure($competition);
         $poule = $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
-        $placeLocationMap = $this->getPlaceLocationMap($competition);
 
         $apiData = $this->apiHelper->getBatchGameData($competition, $batchNr);
         if (!property_exists($apiData, "roundMatches")) {
@@ -92,40 +95,87 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         if (!property_exists($tournament, "events")) {
             return $competitionGames;
         }
-        /** @var stdClass $externalSourceGame */
-        foreach ($tournament->events as $externalSourceGame) {
-            $startDateTime = new DateTimeImmutable("@".$externalSourceGame->startTimestamp."");
-
-            $game = new GameBase($poule, $batchNr, $startDateTime);
-            if (property_exists($externalSourceGame, "status")) {
-                $game->setState($this->convertState($externalSourceGame->status->code));
-            }
-            $game->setId($externalSourceGame->id);
-            // referee
-            // field
-
-            $homeTeam = $this->apiHelper->convertTeam($association, $externalSourceGame->homeTeam);
-            $homePlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $homeTeam);
-            if ($homePlace === null) {
+        /** @var stdClass $externalSourceGameEvent */
+        foreach ($tournament->events as $externalSourceGameEvent) {
+            $externalSourceGame = new stdClass();
+            $externalSourceGame->event = $externalSourceGameEvent;
+            $game = $this->createGameFromExternal($competition, $poule, $externalSourceGame, $batchNr);
+            if ($game === null) {
                 continue;
             }
-            $awayTeam = $this->apiHelper->convertTeam($association, $externalSourceGame->awayTeam);
-            $awayPlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $awayTeam);
-            if ($awayPlace === null) {
-                continue;
-            }
-            $game->addPlace($homePlace, GameBase::HOME);
-            $game->addPlace($awayPlace, GameBase::AWAY);
-
-            if ($game->getState() === State::Finished and is_object($externalSourceGame->homeScore)) {
-                $home = $externalSourceGame->homeScore->current;
-                $away = $externalSourceGame->awayScore->current;
-                new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
-            }
-
             $competitionGames[$game->getId()] = $game;
         }
         return $competitionGames;
+    }
+
+    protected function createGameFromExternal(
+        Competition $competition,
+        Poule $poule,
+        stdClass $externalGame,
+        int $batchNr = null
+    ): ?GameBase {
+        $startDateTime = new DateTimeImmutable("@" . $externalGame->event->startTimestamp . "");
+
+        if ($batchNr === null) {
+            if (!property_exists($externalGame->event, "roundInfo")) {
+                return null;
+            }
+            $batchNr = $externalGame->event->roundInfo->round;
+        }
+        $game = new GameBase($poule, $batchNr, $startDateTime);
+        if (property_exists($externalGame->event, "status")) {
+            $game->setState($this->convertState($externalGame->event->status->code));
+        }
+        $game->setId($externalGame->event->id);
+        // referee
+        // field
+
+        $placeLocationMap = $this->getPlaceLocationMap($competition);
+        $association = $competition->getLeague()->getAssociation();
+        $homeTeam = $this->apiHelper->convertTeam($association, $externalGame->event->homeTeam);
+        $homePlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $homeTeam);
+        if ($homePlace === null) {
+            return null;
+        }
+        $awayTeam = $this->apiHelper->convertTeam($association, $externalGame->event->awayTeam);
+        $awayPlace = $this->getPlaceFromPoule($poule, $placeLocationMap, $awayTeam);
+        if ($awayPlace === null) {
+            return null;
+        }
+        $game->addPlace($homePlace, GameBase::HOME);
+        $game->addPlace($awayPlace, GameBase::AWAY);
+
+        if ($game->getState() === State::Finished and is_object($externalGame->event->homeScore)) {
+            $home = $externalGame->event->homeScore->current;
+            $away = $externalGame->event->awayScore->current;
+            new GameBase\Score($game, $home, $away, GameBase::PHASE_REGULARTIME);
+        }
+
+        if (property_exists($externalGame, "lineups")) {
+            $homeCompetitors =  $game->getCompetitors( $placeLocationMap, GameBase::HOME );
+            if( $homeCompetitors->count() === 1 ) {
+                $homeCompetitor = $homeCompetitors->first();
+                if( $homeCompetitor instanceof TeamCompetitor ) {
+                    $this->addGameParticipations( $game, $homeCompetitor, $externalGame->lineups->home->players );
+                }
+            }
+
+            // $this->addGameParticipations( $game, $externalGame->lineups->home );
+            // set lineups
+
+//            incidents[0]->incidentType substitution, period, card, goal, inGamePenalty
+//            substitution: playerIn, playerOut, time
+//            card: incidentClass(yellow), time(21), player
+//                goal: incidentClass(penalty, regular), player, assist1
+//                inGamePenalty: incidentClass(missed), description(Goalkeeper save), player
+        }
+
+        if (property_exists($externalGame, "incidents")) {
+            // set incidents
+        }
+
+
+        return $game;
     }
 
     protected function convertState(int $state): int
@@ -144,18 +194,58 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
 
     protected function getPlaceFromPoule(Poule $poule, PlaceLocationMap $placeLocationMap, Team $team): ?Place
     {
-        foreach( $poule->getPlaces() as $placeIt ) {
+        foreach ($poule->getPlaces() as $placeIt) {
             $teamCompetitor = $placeLocationMap->getCompetitor($placeIt);
-            if( $teamCompetitor === null ) {
+            if ($teamCompetitor === null) {
                 return null;
             }
-            if( !($teamCompetitor instanceof TeamCompetitor)) {
+            if (!($teamCompetitor instanceof TeamCompetitor)) {
                 return null;
             }
-            if( $teamCompetitor->getTeam() === $team ) {
+            if ($teamCompetitor->getTeam() === $team) {
                 return $placeIt;
             }
         }
         return null;
     }
+
+    public function getGame(Competition $competition, $id): ?GameBase
+    {
+        $externalGame = $this->apiHelper->getGameData($competition, $id);
+        $structure = $this->parent->getStructure($competition);
+        $poule = $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
+        return $this->createGameFromExternal($competition, $poule, $externalGame);
+    }
+
+    /**
+     * @param GameBase $game
+     * @param TeamCompetitor $teamCompetitor
+     * @param array|stdClass[] $players
+     */
+    public function addGameParticipations( GameBase $game, TeamCompetitor $teamCompetitor, array $players)
+    {
+        // @TODO DEPRECATED
+//        $addParticipation = function (stdClass $externPlayer ) use ($game, $teamCompetitor) {
+//
+//            if (count((array)$externPlayer->statistics) === 0) {
+//                return;
+//            }
+//            $oPerson = $this->createPerson($externPlayer->player);
+//
+//            $oPlayerPeriod = new Voetbal_Extern_PlayerPeriod($oTeam, $oPerson);
+//            $oPlayerPeriod->putLine($this->getLineFromPosition($oJsonPlayer->position));
+//            new Voetbal_Extern_Game_Participation($oGame, $oPlayerPeriod);
+//
+//        };
+//
+//        foreach( $players as $player ) {
+//            $addParticipation( $player );
+//        }
+////            lineups->home->players->[0]->player->name,slug,id,position GDMF
+//
+//
+//        $addParticipations($oGame->getHomeTeam(), $oJsonLineups->home->players);
+//        $addParticipations($oGame->getAwayTeam(), $oJsonLineups->away->players);
+    }
+
 }

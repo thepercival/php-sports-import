@@ -14,9 +14,9 @@ use stdClass;
 class Sport extends SofaScoreHelper implements ExternalSourceSport
 {
     /**
-     * @var array|SportBase[]|null
+     * @var array|SportBase[]
      */
-    protected $sports;
+    protected $sportCache;
     /**
      * @var SportBase
      */
@@ -27,6 +27,7 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         SofaScoreApiHelper $apiHelper,
         LoggerInterface $logger
     ) {
+        $this->sportCache = [];
         parent::__construct(
             $parent,
             $apiHelper,
@@ -36,12 +37,22 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
 
     public function getSports(): array
     {
-        $this->initSports();
-        return array_values($this->sports);
+        $externalSports = $this->apiHelper->getSportsData();
+        $sports = [];
+        foreach ($externalSports as $externalSportName => $value ) {
+            $externalSport = new stdClass();
+            $externalSport->name = $externalSportName;
+            $sport = $this->convertSport($externalSport) ;
+            $sports[$sport->getId()] = $sport;
+        }
+        return $sports;
     }
 
     public function getSport($id = null): ?SportBase
     {
+        if (array_key_exists($id, $this->sportCache)) {
+            return $this->sportCache[$id];
+        }
         $sports = $this->getSports();
         if (array_key_exists($id, $sports)) {
             return $sports[$id];
@@ -49,41 +60,15 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         return null;
     }
 
-    protected function initSports()
+    protected function convertSport(stdClass $externalSport): SportBase
     {
-        if ($this->sports !== null) {
-            return;
+        if( array_key_exists( $externalSport->name, $this->sportCache ) ) {
+            return $this->sportCache[$externalSport->name];
         }
-        $this->setSports($this->getSportData());
-    }
-
-    /**
-     * @return array|stdClass[]
-     */
-    protected function getSportData(): array
-    {
-        // $apiData = $this->apiHelper->getSportsData();
-        // return get_object_vars($apiData);
-        return ["football" => new stdClass() ];
-    }
-
-    protected function setSports(array $externalSourceSports)
-    {
-        $this->sports = [];
-        foreach ($externalSourceSports as $sportName => $value) {
-            if ($this->hasName($this->sports, $sportName)) {
-                continue;
-            }
-            $sport = $this->createSport($sportName) ;
-            $this->sports[$sport->getId()] = $sport;
-        }
-    }
-
-    protected function createSport(string $name): SportBase
-    {
-        $sport = new SportBase($name);
+        $sport = new SportBase($externalSport->name);
         $sport->setTeam(false);
-        $sport->setId($name);
+        $sport->setId($externalSport->name);
+        $this->sportCache[$sport->getId()] = $sport;
         return $sport;
     }
 }
