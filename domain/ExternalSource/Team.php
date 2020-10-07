@@ -14,7 +14,7 @@ interface Team
     public function getTeams(Competition $competition): array;
     /**
      * @param Competition $competition
-     * @param mixed $id
+     * @param string|int $id
      * @return TeamBase|null
      */
     public function getTeam(Competition $competition, $id): ?TeamBase;

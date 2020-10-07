@@ -42,7 +42,7 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         foreach ($externalSports as $externalSportName => $value ) {
             $externalSport = new stdClass();
             $externalSport->name = $externalSportName;
-            $sport = $this->convertSport($externalSport) ;
+            $sport = $this->convertToSport($externalSport) ;
             $sports[$sport->getId()] = $sport;
         }
         return $sports;
@@ -60,7 +60,7 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         return null;
     }
 
-    protected function convertSport(stdClass $externalSport): SportBase
+    protected function convertToSport(stdClass $externalSport): SportBase
     {
         if( array_key_exists( $externalSport->name, $this->sportCache ) ) {
             return $this->sportCache[$externalSport->name];

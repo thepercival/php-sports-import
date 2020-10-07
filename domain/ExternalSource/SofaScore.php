@@ -3,6 +3,9 @@
 namespace SportsImport\ExternalSource;
 
 use Sports\Competition as CompetitionBase;
+use Sports\Person;
+use Sports\Team\Role as TeamRole;
+use stdClass;
 use SportsImport\ExternalSource as ExternalSourceBase;
 use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
@@ -25,6 +28,8 @@ use Sports\Competitor\Team as TeamCompetitor;
 use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
 use Sports\Structure;
 use SportsImport\ExternalSource\Game as ExternalSourceGame;
+use SportsImport\ExternalSource\Team\Role as ExternalSourceTeamRole;
+use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 use Sports\Game;
 
 class SofaScore implements
@@ -35,6 +40,8 @@ class SofaScore implements
     ExternalSourceLeague,
     ExternalSourceCompetition,
     ExternalSourceTeam,
+    ExternalSourceTeamRole,
+    ExternalSourcePerson,
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
     ExternalSourceGame,
@@ -162,7 +169,7 @@ class SofaScore implements
 
     public function getLeague(Association $association, $id = null): ?League
     {
-        return $this->getLeagueHelper()->getLeague($id);
+        return $this->getLeagueHelper()->getLeague($association, $id);
     }
 
     protected function getLeagueHelper(): SofaScore\Helper\League
@@ -256,6 +263,37 @@ class SofaScore implements
     public function getGame(Competition $competition, $id): ?Game
     {
         return $this->getGameHelper()->getGame($competition, $id);
+    }
+
+    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {
+        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
+    }
+
+    protected function getTeamRoleHelper(): SofaScore\Helper\Team\Role
+    {
+        return $this->getHelper( SofaScore\Helper\Team\Role::class );
+    }
+
+    /**
+     * @param Game $game
+     * @param string|int $id
+     * @return Person|null
+     */
+    public function getPerson(Game $game, $id ): ?Person {
+        return $this->getPersonHelper()->getPerson( $game, $id );
+    }
+
+    /**
+     * @param stdClass $externalPlayer
+     * @return Person|null
+     */
+    public function convertToPerson( stdClass $externalPlayer ): ?Person {
+        return $this->getPersonHelper()->convertToPerson( $externalPlayer );
+    }
+
+    protected function getPersonHelper(): SofaScore\Helper\Person
+    {
+        return $this->getHelper( SofaScore\Helper\Person::class );
     }
 
     protected function getGameHelper(): SofaScore\Helper\Game

@@ -47,7 +47,7 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         $competitions = [];
         $externalCompetitions = $this->apiHelper->getCompetitionsData($league);
         foreach( $externalCompetitions as $externalCompetition ) {
-            $competition = $this->convertCompetition( $sport, $league, $externalCompetition );
+            $competition = $this->convertToCompetition( $sport, $league, $externalCompetition );
             if( $competition === null ) {
                 continue;
             }
@@ -80,12 +80,13 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
      * @param stdClass $externalCompetition
      * @return CompetitionBase|null
      */
-    protected function convertCompetition(Sport $sport, League $league, stdClass $externalCompetition): ?CompetitionBase
+    protected function convertToCompetition(Sport $sport, League $league, stdClass $externalCompetition): ?CompetitionBase
     {
         if( array_key_exists( $externalCompetition->id, $this->competitionCache ) ) {
             return $this->competitionCache[$externalCompetition->id];
         }
-        $season = $this->parent->getSeason( $externalCompetition->year );
+        $seasonId = $this->apiHelper->convertToSeasonId( $externalCompetition->year );
+        $season = $this->parent->getSeason( $seasonId );
         if( $season === null ) {
             return null;
         }

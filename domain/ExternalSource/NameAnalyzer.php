@@ -45,7 +45,7 @@ class NameAnalyzer
 
     public function getLastName(): string
     {
-        return $this->getLastName();
+        return $this->lastName;
     }
 
     protected function analyse(string $name)

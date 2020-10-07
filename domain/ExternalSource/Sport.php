@@ -11,7 +11,7 @@ interface Sport
      */
     public function getSports(): array;
     /**
-     * @param mixed $id
+     * @param string|int $id
      * @return SportBase|null
      */
     public function getSport($id): ?SportBase;

@@ -43,7 +43,7 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
         $externalSeasons = $this->apiHelper->getSeasonsData();
 
         foreach ($externalSeasons as $externalSeason) {
-            $season = $this->convertSeason($externalSeason);
+            $season = $this->convertToSeason($externalSeason);
             $seasons[$season->getId()] = $season;
         }
         return $seasons;
@@ -61,9 +61,9 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
         return null;
     }
 
-    protected function convertSeason(stdClass $externalSeason): SeasonBase
+    protected function convertToSeason(stdClass $externalSeason): SeasonBase
     {
-        $name = $this->getName( $externalSeason->name );
+        $name = $this->apiHelper->convertToSeasonId( $externalSeason->name );
         if( array_key_exists( $name, $this->seasonCache ) ) {
             return $this->seasonCache[$name];
         }
@@ -71,19 +71,6 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
         $season->setId($name);
         $this->seasonCache[$season->getId()] = $season;
         return $season;
-    }
-
-    protected function getName(string $name): string
-    {
-        $strposSlash = strpos($name, "/");
-        if ( $strposSlash === false) {
-            return $name;
-        }
-        $newName = substr($name, 0, $strposSlash ) . "/" . "20" . substr($name, $strposSlash + 1);
-        if( $strposSlash === 2 ) {
-            $newName = "20" . $newName;
-        }
-        return $newName;
     }
 
     protected function getPeriod(string $name): Period

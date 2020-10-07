@@ -161,9 +161,26 @@ class Service
         return $externalSport;
     }
 
+    public function getExternalSeason(
+        ExternalSourceImplementation $externalSourceImplementation, Season $season ): Season
+    {
+        if (!($externalSourceImplementation instanceof ExternalSourceSeason)) {
+            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement seasons" , E_ERROR );
+        }
+        $seasonAttacher = $this->seasonAttacherRepos->findOneByImportable(
+            $externalSourceImplementation->getExternalSource(), $season );
+        if( $seasonAttacher === null ) {
+            throw new \Exception("for external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" and season \"" . $season->getName() . "\" there is no externalId" , E_ERROR );
+        }
+        $externalSeason = $externalSourceImplementation->getSeason( $seasonAttacher->getExternalId() );
+        if( $externalSeason === null ) {
+            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" could not find a season for externalId \"" . $seasonAttacher->getExternalId() . "\"" , E_ERROR );
+        }
+        return $externalSeason;
+    }
 
     public function getExternalAssociation(
-        ExternalSourceImplementation $externalSourceImplementation, Sport $sport, Association $association): ?Association
+        ExternalSourceImplementation $externalSourceImplementation, Sport $sport, Association $association): Association
     {
         if (!($externalSourceImplementation instanceof ExternalSourceAssociation)) {
             throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement associations" , E_ERROR );
@@ -183,21 +200,13 @@ class Service
         return $externalAssociation;
     }
 
-
-    public function getExternalCompetition(
+    public function getExternalLeague(
         ExternalSourceImplementation $externalSourceImplementation,
-        Sport $sport, Association $association, League $league, Season $season): Competition
+        Sport $sport, Association $association, League $league): League
     {
         if (!($externalSourceImplementation instanceof ExternalSourceLeague)) {
             throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement leagues" , E_ERROR );
         }
-        if (!($externalSourceImplementation instanceof ExternalSourceSeason)) {
-            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement seasons" , E_ERROR );
-        }
-        if (!($externalSourceImplementation instanceof ExternalSourceCompetition)) {
-            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement competitions" , E_ERROR );
-        }
-        $externalSport = $this->getExternalSport( $externalSourceImplementation, $sport );
         $externalAssociation = $this->getExternalAssociation( $externalSourceImplementation, $sport, $association );
 
         $leagueAttacher = $this->leagueAttacherRepos->findOneByImportable(
@@ -209,15 +218,23 @@ class Service
         if( $externalLeague === null ) {
             throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" could not find a league for externalId \"" . $leagueAttacher->getExternalId() . "\"" , E_ERROR );
         }
-        $seasonAttacher = $this->seasonAttacherRepos->findOneByImportable(
-            $externalSourceImplementation->getExternalSource(), $season );
-        if( $seasonAttacher === null ) {
-            throw new \Exception("for external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" and season \"" . $season->getName() . "\" there is no externalId" , E_ERROR );
+        return $externalLeague;
+    }
+
+    public function getExternalCompetition(
+        ExternalSourceImplementation $externalSourceImplementation,
+        Sport $sport, Association $association, League $league, Season $season): Competition
+    {
+        if (!($externalSourceImplementation instanceof ExternalSourceSeason)) {
+            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement seasons" , E_ERROR );
         }
-        $externalSeason = $externalSourceImplementation->getSeason( $seasonAttacher->getExternalId() );
-        if( $externalSeason === null ) {
-            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" could not find a season for externalId \"" . $seasonAttacher->getExternalId() . "\"" , E_ERROR );
+        if (!($externalSourceImplementation instanceof ExternalSourceCompetition)) {
+            throw new \Exception("external source \"" . $externalSourceImplementation->getExternalSource()->getName() ."\" does not implement competitions" , E_ERROR );
         }
+        $externalSport = $this->getExternalSport( $externalSourceImplementation, $sport );
+        $externalLeague = $this->getExternalLeague( $externalSourceImplementation, $sport, $association, $league );
+        $externalSeason = $this->getExternalSeason( $externalSourceImplementation, $season );
+
         $externalCompetition = $externalSourceImplementation->getCompetition(
             $externalSport, $externalLeague, $externalSeason
         );

@@ -3,8 +3,11 @@
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use DateTimeImmutable;
+use League\Period\Period;
 use Sports\Competitor\Team as TeamCompetitor;
 use Sports\Association;
+use Sports\Person;
+use Sports\Team\Role\Player as TeamPlayer;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
@@ -13,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Sports\Place\Location\Map as PlaceLocationMap;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Competition;
+use Sports\Game\Participation as GameParticipation;
 use SportsImport\ExternalSource\Game as ExternalSourceGame;
 use Sports\Poule;
 use Sports\Place;
@@ -21,6 +25,10 @@ use Sports\State;
 
 class Game extends SofaScoreHelper implements ExternalSourceGame
 {
+    /**
+     * @var array|GameBase[]
+     */
+    protected $gameCache;
     /**
      * @var PlaceLocationMap|null
      */
@@ -31,6 +39,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         SofaScoreApiHelper $apiHelper,
         LoggerInterface $logger
     ) {
+        $this->gameCache = [];
         parent::__construct(
             $parent,
             $apiHelper,
@@ -81,25 +90,13 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         $structure = $this->parent->getStructure($competition);
         $poule = $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
 
-        $apiData = $this->apiHelper->getBatchGameData($competition, $batchNr);
-        if (!property_exists($apiData, "roundMatches")) {
-            return $competitionGames;
-        }
-        if (!property_exists($apiData->roundMatches, "tournaments")) {
-            return $competitionGames;
-        }
-        if (count($apiData->roundMatches->tournaments) !== 1) {
-            return $competitionGames;
-        }
-        $tournament = reset($apiData->roundMatches->tournaments);
-        if (!property_exists($tournament, "events")) {
-            return $competitionGames;
-        }
-        /** @var stdClass $externalSourceGameEvent */
-        foreach ($tournament->events as $externalSourceGameEvent) {
+        $externalGames = $this->apiHelper->getBatchGameData($competition, $batchNr);
+
+        /** @var stdClass $externalGame */
+        foreach ($externalGames as $externalGame) {
             $externalSourceGame = new stdClass();
-            $externalSourceGame->event = $externalSourceGameEvent;
-            $game = $this->createGameFromExternal($competition, $poule, $externalSourceGame, $batchNr);
+            $externalSourceGame->event = $externalGame;
+            $game = $this->convertToGame($competition, $poule, $externalSourceGame, $batchNr);
             if ($game === null) {
                 continue;
             }
@@ -108,12 +105,16 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         return $competitionGames;
     }
 
-    protected function createGameFromExternal(
+    protected function convertToGame(
         Competition $competition,
         Poule $poule,
         stdClass $externalGame,
         int $batchNr = null
     ): ?GameBase {
+        if( array_key_exists( $externalGame->event->id, $this->gameCache ) ) {
+            return $this->gameCache[$externalGame->event->id];
+        }
+
         $startDateTime = new DateTimeImmutable("@" . $externalGame->event->startTimestamp . "");
 
         if ($batchNr === null) {
@@ -160,9 +161,6 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
                 }
             }
 
-            // $this->addGameParticipations( $game, $externalGame->lineups->home );
-            // set lineups
-
 //            incidents[0]->incidentType substitution, period, card, goal, inGamePenalty
 //            substitution: playerIn, playerOut, time
 //            card: incidentClass(yellow), time(21), player
@@ -174,7 +172,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
             // set incidents
         }
 
-
+        $this->gameCache[$game->getId()] = $game;
         return $game;
     }
 
@@ -214,7 +212,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         $externalGame = $this->apiHelper->getGameData($competition, $id);
         $structure = $this->parent->getStructure($competition);
         $poule = $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
-        return $this->createGameFromExternal($competition, $poule, $externalGame);
+        return $this->convertToGame($competition, $poule, $externalGame);
     }
 
     /**
@@ -224,28 +222,22 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
      */
     public function addGameParticipations( GameBase $game, TeamCompetitor $teamCompetitor, array $players)
     {
-        // @TODO DEPRECATED
-//        $addParticipation = function (stdClass $externPlayer ) use ($game, $teamCompetitor) {
-//
-//            if (count((array)$externPlayer->statistics) === 0) {
-//                return;
-//            }
-//            $oPerson = $this->createPerson($externPlayer->player);
-//
-//            $oPlayerPeriod = new Voetbal_Extern_PlayerPeriod($oTeam, $oPerson);
-//            $oPlayerPeriod->putLine($this->getLineFromPosition($oJsonPlayer->position));
-//            new Voetbal_Extern_Game_Participation($oGame, $oPlayerPeriod);
-//
-//        };
-//
-//        foreach( $players as $player ) {
-//            $addParticipation( $player );
-//        }
-////            lineups->home->players->[0]->player->name,slug,id,position GDMF
-//
-//
-//        $addParticipations($oGame->getHomeTeam(), $oJsonLineups->home->players);
-//        $addParticipations($oGame->getAwayTeam(), $oJsonLineups->away->players);
+        $addParticipation = function (stdClass $externPlayer ) use ($game, $teamCompetitor): void {
+
+            if (count((array)$externPlayer->statistics) === 0) {
+                return;
+            }
+            $person = $this->parent->convertToPerson( $externPlayer->player );
+
+            $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $game->getPeriod(), $this->apiHelper->convertLine( $externPlayer->player->position ) );
+
+            new GameParticipation( $game, $teamPlayer, 0, 0);
+        };
+
+        foreach( $players as $player ) {
+            $addParticipation( $player );
+        }
+//            lineups->home->players->[0]->player->name,slug,id,position GDMF
     }
 
 }

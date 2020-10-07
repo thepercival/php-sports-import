@@ -11,7 +11,7 @@ interface Season
      */
     public function getSeasons(): array;
     /**
-     * @param mixed $id
+     * @param string|int $id
      * @return SeasonBase|null
      */
     public function getSeason($id): ?SeasonBase;

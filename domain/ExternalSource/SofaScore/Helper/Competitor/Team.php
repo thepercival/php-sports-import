@@ -15,11 +15,17 @@ use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
 
 class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
 {
+    /**
+     * @var array | TeamCompetitorBase[]
+     */
+    protected $teamCompetitorCache;
+
     public function __construct(
         SofaScore $parent,
         SofaScoreApiHelper $apiHelper,
         LoggerInterface $logger
     ) {
+        $this->teamCompetitorCache = [];
         parent::__construct(
             $parent,
             $apiHelper,
@@ -63,7 +69,7 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
             if (array_key_exists($externalSourceTeamCompetitor->id, $competitionTeamCompetitors)) {
                 continue;
             }
-            $newTeamCompetitor = $this->createTeamCompetitor($competition, $pouleNr, $placeNr++, $externalSourceTeamCompetitor);
+            $newTeamCompetitor = $this->convertToTeamCompetitor($competition, $pouleNr, $placeNr++, $externalSourceTeamCompetitor);
             $competitionTeamCompetitors[$newTeamCompetitor->getId()] = $newTeamCompetitor;
         }
         return $competitionTeamCompetitors;
@@ -105,15 +111,19 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
         return $apiDataTeamCompetitors;
     }
 
-    protected function createTeamCompetitor(
+    protected function convertToTeamCompetitor(
         Competition $competition,
         int $pouleNr, int $placeNr,
         stdClass $externalSourceTeamCompetitor): TeamCompetitorBase
     {
+        if( array_key_exists( $externalSourceTeamCompetitor->id, $this->teamCompetitorCache ) ) {
+            return $this->teamCompetitorCache[$externalSourceTeamCompetitor->id];
+        }
         $association = $competition->getLeague()->getAssociation();
         $team = $this->createTeam( $association, $externalSourceTeamCompetitor->team );
         $teamCompetitor = new TeamCompetitorBase( $competition, $pouleNr, $placeNr, $team );
         $teamCompetitor->setId( $externalSourceTeamCompetitor->id );
+        $this->teamCompetitorCache[$teamCompetitor->getId()] = $teamCompetitor;
         return $teamCompetitor;
     }
 

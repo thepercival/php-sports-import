@@ -43,7 +43,7 @@ class League extends SofaScoreHelper implements ExternalSourceLeague
 
         $leagues = [];
         foreach( $externalLeagues as $externalLeague ) {
-            $league = $this->convertLeague( $association, $externalLeague );
+            $league = $this->convertToLeague( $association, $externalLeague );
             $leagues[$league->getId()] = $league;
         }
 
@@ -68,7 +68,7 @@ class League extends SofaScoreHelper implements ExternalSourceLeague
         return null;
     }
 
-    protected function convertLeague(Association $association, stdClass $externalLeague ): LeagueBase
+    protected function convertToLeague(Association $association, stdClass $externalLeague ): LeagueBase
     {
         if( array_key_exists( $externalLeague->id, $this->leagueCache ) ) {
             return $this->leagueCache[$externalLeague->id];
