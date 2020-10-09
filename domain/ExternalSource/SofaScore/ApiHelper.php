@@ -356,6 +356,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
                 return 60 * 24 * 7;
             case ExternalSource::DATA_GAME_LINEUPS:
             case ExternalSource::DATA_GAME:
+            case ExternalSource::DATA_GAME_EVENTS:
                 return 55;
             default:
                 return 0;

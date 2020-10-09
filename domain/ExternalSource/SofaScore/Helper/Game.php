@@ -5,8 +5,10 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 use DateTimeImmutable;
 use League\Period\Period;
 use Sports\Competitor\Team as TeamCompetitor;
-use Sports\Association;
+use Sports\Game\Event\Goal as GoalEvent;
+use Sports\Game\Event\Card as CardEvent;
 use Sports\Person;
+use Sports\Sport;
 use Sports\Team\Role\Player as TeamPlayer;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
@@ -153,23 +155,25 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         }
 
         if (property_exists($externalGame, "lineups")) {
-            $homeCompetitors =  $game->getCompetitors( $placeLocationMap, GameBase::HOME );
-            if( $homeCompetitors->count() === 1 ) {
-                $homeCompetitor = $homeCompetitors->first();
-                if( $homeCompetitor instanceof TeamCompetitor ) {
-                    $this->addGameParticipations( $game, $homeCompetitor, $externalGame->lineups->home->players );
+            $addParticipations = function( bool $homeAway ) use ( $game, $placeLocationMap, $externalGame ): void {
+                $competitors =  $game->getCompetitors( $placeLocationMap, $homeAway );
+                if( $competitors->count() === 1 ) {
+                    $competitor = $competitors->first();
+                    if( $competitor instanceof TeamCompetitor ) {
+                        $externalPlayers = $externalGame->lineups->home->players;
+                        if( $homeAway === GameBase::AWAY ) {
+                            $externalPlayers = $externalGame->lineups->away->players;
+                        }
+                        $this->addGameParticipations( $game, $competitor, $externalPlayers );
+                    }
                 }
-            }
-
-//            incidents[0]->incidentType substitution, period, card, goal, inGamePenalty
-//            substitution: playerIn, playerOut, time
-//            card: incidentClass(yellow), time(21), player
-//                goal: incidentClass(penalty, regular), player, assist1
-//                inGamePenalty: incidentClass(missed), description(Goalkeeper save), player
+            };
+            $addParticipations( GameBase::HOME );
+            $addParticipations( GameBase::AWAY );
         }
 
         if (property_exists($externalGame, "incidents")) {
-            // set incidents
+            $this->addGameEvents( $game, $externalGame->incidents );
         }
 
         $this->gameCache[$game->getId()] = $game;
@@ -220,24 +224,99 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
      * @param TeamCompetitor $teamCompetitor
      * @param array|stdClass[] $players
      */
-    public function addGameParticipations( GameBase $game, TeamCompetitor $teamCompetitor, array $players)
+    protected function addGameParticipations( GameBase $game, TeamCompetitor $teamCompetitor, array $players)
     {
         $addParticipation = function (stdClass $externPlayer ) use ($game, $teamCompetitor): void {
-
             if (count((array)$externPlayer->statistics) === 0) {
                 return;
             }
             $person = $this->parent->convertToPerson( $externPlayer->player );
-
             $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $game->getPeriod(), $this->apiHelper->convertLine( $externPlayer->player->position ) );
-
             new GameParticipation( $game, $teamPlayer, 0, 0);
         };
 
         foreach( $players as $player ) {
             $addParticipation( $player );
         }
-//            lineups->home->players->[0]->player->name,slug,id,position GDMF
     }
 
+    /**
+     * @param GameBase $game
+     * @param array|stdClass[] $events
+     */
+    protected function addGameEvents( GameBase $game, array $events)
+    {
+        $createCardEvent = function( GameBase $game, stdClass $event ): void {
+            $person = $this->parent->convertToPerson( $event->player );
+            $participation = $game->getParticipation( $person );
+            if( $participation === null ) {
+                throw new \Exception( $person->getName() . "(".$person->getId().") kon niet worden gevonden als spelers", E_ERROR );
+            }
+            $card = null;
+            if( $event->incidentClass === "yellow" || $event->incidentClass === "yellowRed" ) {
+                $card = Sport::WARNING;
+            } else if( $event->incidentClass === "red" ) {
+                $card = Sport::SENDOFF;
+            } else {
+                throw new \Exception( "kon het kaarttype \"".$event->incidentClass."\" niet vaststellen", E_ERROR );
+            }
+            new CardEvent( $event->time, $participation, $card );
+        };
+
+        $createGoalEvent = function( GameBase $game, stdClass $event ): void {
+            $person = $this->parent->convertToPerson( $event->player );
+            $participation = $game->getParticipation( $person );
+            if( $participation === null ) {
+                throw new \Exception( $person->getName() . "(".$person->getId().") kon niet worden gevonden als spelers", E_ERROR );
+            }
+            $goalEvent = new GoalEvent( $event->time, $participation );
+            if( $event->incidentType === "goal" ) {
+                if( $event->incidentClass === "owngoal" ) {
+                    $goalEvent->setOwn( true );
+                } else if( $event->incidentClass === "penalty" ) {
+                    $goalEvent->setPenalty( true );
+                } else if( property_exists( $event, "assist1") ) {
+                    $personAssist = $this->parent->convertToPerson( $event->assist1 );
+                    $assist = $game->getParticipation( $personAssist );
+                    if( $assist === null ) {
+                        throw new \Exception( $personAssist->getName() . "(".$personAssist->getId().") kon niet worden gevonden als spelers", E_ERROR );
+                    }
+                    $goalEvent->setAssistGameParticipation($assist);
+                }
+            } else if ( $event->incidentType === "penalty" ) {
+                if( $event->incidentClass === "penalty" ) {
+                    $goalEvent->setPenalty( true );
+                }
+            }
+        };
+
+        $updateGameParticipations = function( GameBase $game, stdClass $event ): void {
+            $personOut = $this->parent->convertToPerson( $event->playerOut );
+            $participationOut = $game->getParticipation( $personOut );
+            if( $participationOut === null ) {
+                throw new \Exception( $personOut->getName() . "(".$personOut->getId().") kon niet worden gevonden als spelers", E_ERROR );
+            }
+            $personIn = $this->parent->convertToPerson( $event->playerIn );
+            $participationIn = $game->getParticipation( $personIn );
+            if( $participationIn === null ) {
+                throw new \Exception( $personIn->getName() . "(".$personIn->getId().") kon niet worden gevonden als spelers", E_ERROR );
+            }
+            $participationOut->setEndMinute( $event->time );
+            $participationIn->setBeginMinute( $event->time );
+        };
+
+        uasort( $events, function ( $eventA, $eventB ): int {
+            return $eventA->time < $eventB->time ? -1 : 1;
+        });
+
+        foreach( $events as $event ) {
+            if( $event->incidentType === "card" ) {
+                $createCardEvent( $game, $event );
+            } else if( $event->incidentType === "goal" or $event->incidentType === "penalty" ) {
+                $createGoalEvent( $game, $event );
+            } else if( $event->incidentType === "substitution" ) {
+                $updateGameParticipations( $game, $event );
+            }
+        }
+    }
 }

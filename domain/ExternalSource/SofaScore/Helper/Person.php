@@ -62,13 +62,15 @@ class Person extends SofaScoreHelper implements ExternalSourcePerson
      * @throws \Exception
      */
     public function convertToPerson( stdClass $externalPerson ): PersonBase {
-        if( array_key_exists( $externalPerson->id, $this->personCache ) ) {
-            return $this->personCache[$externalPerson->id];
+        if( array_key_exists( $externalPerson->slug, $this->personCache ) ) {
+            return $this->personCache[$externalPerson->slug];
         }
         $nameAnalyzer = new NameAnalyzer( $externalPerson->name );
         $person = new PersonBase( $nameAnalyzer->getFirstName(), $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName() );
         $person->setId( $externalPerson->slug );
-        $person->setDateOfBirth(new DateTimeImmutable( "@" . $externalPerson->dateOfBirthTimestamp ) );
+        if( property_exists($externalPerson, "dateOfBirthTimestamp")) {
+            $person->setDateOfBirth(new DateTimeImmutable( "@" . $externalPerson->dateOfBirthTimestamp ) );
+        }
         $this->personCache[$person->getId()] = $person;
         return $person;
     }
