@@ -3,6 +3,7 @@
 namespace SportsImport\ExternalSource\SofaScore;
 
 use DateTimeImmutable;
+use Psr\Log\LoggerInterface;
 use Sports\League;
 use Sports\Person;
 use Sports\Team;
@@ -21,14 +22,9 @@ use Sports\Association;
 
 class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\Proxy
 {
-    /**
-     * @var ExternalSource
-     */
-    private $externalSource;
-    /**
-     * @var CacheItemDbRepository
-     */
-    private $cacheItemDbRepos;
+    private ExternalSource $externalSource;
+    private CacheItemDbRepository $cacheItemDbRepos;
+    private LoggerInterface $logger;
     /**
      * @var Range|null
      */
@@ -50,10 +46,12 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
 
     public function __construct(
         ExternalSource $externalSource,
-        CacheItemDbRepository $cacheItemDbRepos
+        CacheItemDbRepository $cacheItemDbRepos,
+        LoggerInterface $logger
     ) {
         $this->cacheItemDbRepos = $cacheItemDbRepos;
         $this->externalSource = $externalSource;
+        $this->logger = $logger;
     }
 
     protected function getClient()
@@ -116,7 +114,9 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
 //        return json_decode(
 //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
 //        );
-        $response = $this->getClient()->get(
+        $this->logger->info( $endpoint );
+        $client = $this->getClient();
+        $response = $client->get(
             $endpoint,
             $this->getHeaders()
         );
@@ -350,6 +350,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
                 return 60 * 24 * 30 * 6;
             case ExternalSource::DATA_ASSOCIATIONS:
             case ExternalSource::DATA_COMPETITIONS:
+            case ExternalSource::DATA_LEAGUES:
                 return 60 * 24 * 30;
             case ExternalSource::DATA_STRUCTURES:
             case ExternalSource::DATA_GAMES:

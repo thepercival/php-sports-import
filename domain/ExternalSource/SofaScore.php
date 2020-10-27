@@ -337,7 +337,8 @@ class SofaScore implements
         }
         $this->helpers[SofaScore\ApiHelper::class] = new SofaScore\ApiHelper(
             $this->getExternalSource(),
-            $this->cacheItemDbRepos
+            $this->cacheItemDbRepos,
+            $this->logger
         );
         return $this->helpers[SofaScore\ApiHelper::class];
     }

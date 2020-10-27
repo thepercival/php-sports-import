@@ -8,6 +8,7 @@ use Sports\League;
 use Sports\Person as PersonBase;
 use Sports\Sport;
 use Sports\Team\Role as TeamRole;
+use Sports\Team\Player;
 use SportsImport\ExternalSource\NameAnalyzer;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
@@ -94,7 +95,7 @@ class Role extends SofaScoreHelper implements ExternalSourceTeamRole
             return null;
         }
         $line = 1;
-        $teamRole = new TeamRole\Player( $team, $person, $game->getPeriod(), $line );
+        $teamRole = new Player( $team, $person, $game->getPeriod(), $line );
         $teamRole->setId( $externalTeamRole->slug );
         $teamRole->setShirtNumber( $externalTeamRole->shirt );
         $this->teamRoleCache[$teamRole->getId()] = $teamRole;

@@ -3,52 +3,41 @@
 namespace SportsImport\Service;
 
 use DateTimeImmutable;
+use Doctrine\Common\Collections\Collection;
 use Exception;
-use Sports\Competition;
+use Sports\Person;
 use Sports\Competitor;
+use Sports\Team\Player;
 use SportsImport\ExternalSource;
 use Sports\Game\Repository as GameRepository;
 use Sports\Game\Score\Repository as GameScoreRepository;
 use Sports\Structure\Repository as StructureRepository;
 use SportsImport\Attacher\Game\Repository as GameAttacherRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
+use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
+use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use Sports\Game as GameBase;
-use Sports\Game\Service as GameService;
+use Sports\Game\Score\Creator as GameScoreCreator;
 use SportsImport\Attacher\Game as GameAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Poule;
 use Sports\Place;
+use Sports\Team;
+use Sports\Game\Event\Goal;
+use Sports\Game\Event\Card;
+use Sports\Output\Game as GameOutput;
 
 class Game
 {
-    /**
-     * @var GameRepository
-     */
-    protected $gameRepos;
-    /**
-     * @var GameScoreRepository
-     */
-    protected $gameScoreRepos;
-    /**
-     * @var GameAttacherRepository
-     */
-    protected $gameAttacherRepos;
-    /**
-     * @var CompetitionAttacherRepository
-     */
-    protected $competitionAttacherRepos;
-    /**
-     * @var StructureRepository
-     */
-    protected $structureRepos;
-    /**
-     * @var GameService
-     */
-    protected $gameService;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    protected GameRepository $gameRepos;
+    protected GameScoreRepository $gameScoreRepos;
+    protected GameAttacherRepository $gameAttacherRepos;
+    protected CompetitionAttacherRepository $competitionAttacherRepos;
+    protected PersonAttacherRepository $personAttacherRepos;
+    protected TeamAttacherRepository $teamAttacherRepos;
+    protected StructureRepository $structureRepos;
+    protected GameScoreCreator $gameScoreCreator;
+    private LoggerInterface $logger;
 
     // public const MAX_DAYS_BACK = 8;
 
@@ -58,6 +47,8 @@ class Game
         StructureRepository $structureRepos,
         GameAttacherRepository $gameAttacherRepos,
         CompetitionAttacherRepository $competitionAttacherRepos,
+        PersonAttacherRepository $personAttacherRepos,
+        TeamAttacherRepository $teamAttacherRepos,
         LoggerInterface $logger
     ) {
         $this->logger = $logger;
@@ -66,7 +57,9 @@ class Game
         $this->structureRepos = $structureRepos;
         $this->gameAttacherRepos = $gameAttacherRepos;
         $this->competitionAttacherRepos = $competitionAttacherRepos;
-        $this->gameService = new GameService();
+        $this->personAttacherRepos = $personAttacherRepos;
+        $this->teamAttacherRepos = $teamAttacherRepos;
+        $this->gameScoreCreator = new GameScoreCreator();
     }
 //
 //    protected function getDeadLine(): DateTimeImmutable {
@@ -76,19 +69,29 @@ class Game
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|GameBase[] $externalSourceGames
+     * @param array|GameBase[] $externalGames
      * @throws Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceGames)
+    public function importSchedule(ExternalSource $externalSource, array $externalGames)
     {
-        foreach ($externalSourceGames as $externalSourceGame) {
-            $externalId = $externalSourceGame->getId();
+        foreach ($externalGames as $externalGame) {
+            $poule = $this->getPouleFromExternal($externalSource, $externalGame->getPoule());
+            if ($poule === null) {
+                continue;
+            }
+            /** @var Competitor[]|Collection $teamCompetitors */
+            $teamCompetitors = $poule->getRound()->getNumber()->getCompetition()->getTeamCompetitors();
+            $placeLocationMap = new Place\Location\Map( $teamCompetitors->toArray() );
+            $gameOutput = new GameOutput( $placeLocationMap, $this->logger);
+
+            $externalId = $externalGame->getId();
             $gameAttacher = $this->gameAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
             );
+
             if ($gameAttacher === null) {
-                $game = $this->createGame($externalSource, $externalSourceGame);
+                $game = $this->createGame($poule, $externalSource, $externalGame);
                 if ($game === null) {
                     continue;
                 }
@@ -98,25 +101,29 @@ class Game
                     $externalId
                 );
                 $this->gameAttacherRepos->save($gameAttacher);
-            } else {
-                $this->editGame($gameAttacher->getImportable(), $externalSourceGame);
+
+                $gameOutput->output( $game, "created => ");
+                continue;
             }
+            $game = $gameAttacher->getImportable();
+            if ($game === null) {
+                continue;
+            }
+            if( $game->getStartDateTime() != $externalGame->getStartDateTime() ) {
+                $gameOutput->output( $game, "reschedule => ");
+            }
+            $game->setStartDateTime($externalGame->getStartDateTime());
+            $this->gameRepos->save($game);
         }
-        // bij syncen hoeft niet te verwijderden
     }
 
-    protected function createGame(ExternalSource $externalSource, GameBase $externalSourceGame): ?GameBase
+    protected function createGame(Poule $poule, ExternalSource $externalSource, GameBase $externalGame): ?GameBase
     {
-        $poule = $this->getPouleFromExternal($externalSource, $externalSourceGame->getPoule());
-        if ($poule === null) {
-            return null;
-        }
-        $game = new GameBase($poule, $externalSourceGame->getBatchNr(), $externalSourceGame->getStartDateTime());
-        $game->setState($externalSourceGame->getState());
-        // referee
-        // field
+        $game = new GameBase($poule, $externalGame->getBatchNr(), $externalGame->getStartDateTime());
+        $game->setStartDateTime($externalGame->getStartDateTime());
+        $game->setState($externalGame->getState());
 
-        foreach ($externalSourceGame->getPlaces() as $externalSourceGamePlace) {
+        foreach ($externalGame->getPlaces() as $externalSourceGamePlace) {
             $place = $poule->getPlace($externalSourceGamePlace->getPlace()->getPlaceNr());
             if ($place === null) {
                 return null;
@@ -124,10 +131,69 @@ class Game
             $game->addPlace($place, $externalSourceGamePlace->getHomeaway());
         }
 
-        $this->gameService->addScores($game, $externalSourceGame->getScores()->toArray());
-
         $this->gameRepos->save($game);
         return $game;
+    }
+
+    /**
+     * @param ExternalSource $externalSource
+     * @param GameBase $externalGame
+     */
+    public function importDetails(ExternalSource $externalSource, GameBase $externalGame )
+    {
+        $externalId = $externalGame->getId();
+        $gameAttacher = $this->gameAttacherRepos->findOneByExternalId(
+            $externalSource,
+            $externalId
+        );
+        $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
+        $game = $gameAttacher->getImportable();
+        if ($game === null) {
+            $placeLocationMap = new Place\Location\Map( $externalCompetition->getTeamCompetitors()->toArray() );
+            $gameOutput = new GameOutput( $placeLocationMap, $this->logger);
+            $gameOutput->output( $externalGame, "no game found for external  ");
+            $this->logger->warning( "no game found for external gameid " . $externalId . " and external source \"" . $externalSource->getName() ."\"") ;
+        }
+
+        $game->setState($externalGame->getState());
+
+        $this->removeDetails( $game );
+
+        $this->gameScoreCreator->addScores($game, $game->getScores()->toArray());
+
+       foreach( $externalGame->getParticipations() as $externalParticipation ) {
+           $player = $this->getPlayerFromExternal($game, $externalSource, $externalParticipation->getPlayer() );
+           if ($player === null) {
+               continue;
+           }
+           $gameParticipation = new GameBase\Participation(
+               $game, $player,
+               $externalParticipation->getBeginMinute(),
+               $externalParticipation->getEndMinute()
+           );
+
+           foreach ($externalParticipation->getCards() as $card) {
+               new Card($card->getMinute(), $gameParticipation, $card->getType());
+           }
+           foreach ($externalParticipation->getGoals() as $externalGoal) {
+               $goal = new Goal($externalGoal->getMinute(), $gameParticipation);
+               $goal->setPenalty($externalGoal->getPenalty());
+               $goal->setOwn($externalGoal->getOwn());
+               if ($externalGoal->getAssistGameParticipation() === null) {
+                   continue;
+               }
+               $assistPlayer = $this->getPlayerFromExternal($game, $externalSource, $externalGoal->getAssistGameParticipation()->getPlayer() );
+               if ($assistPlayer === null) {
+                   continue;
+               }
+               $assistGameParticipation = $game->getParticipation($assistPlayer->getPerson() );
+               if ($assistGameParticipation === null) {
+                   continue;
+               }
+               $goal->setAssistGameParticipation($assistGameParticipation);
+           }
+       }
+       $this->gameRepos->save($game);
     }
 
     protected function getPouleFromExternal(ExternalSource $externalSource, Poule $externalPoule): ?Poule
@@ -139,23 +205,75 @@ class Game
             $externalCompetition->getId()
         );
         if ($competition === null) {
+            $this->logger->warning("no competition found for external competition " . $externalCompetition->getName() );
             return null;
         }
         $structure = $this->structureRepos->getStructure($competition);
         if ($structure === null) {
+            $this->logger->warning("no structure found for external competition " . $externalCompetition->getName() );
             return null;
         }
         return $structure->getFirstRoundNumber()->getRounds()->first()->getPoules()->first();
     }
 
-    protected function editGame(GameBase $game, GameBase $externalSourceGame)
+    protected function getPlayerFromExternal(GameBase $game, ExternalSource $externalSource, Player $externalPlayer): ?Player
     {
-        $game->setState($externalSourceGame->getState());
-        $game->setStartDateTime($externalSourceGame->getStartDateTime());
-        // referee
-        // field
+        $externalTeam = $externalPlayer->getTeam();
+        $team = $this->getTeamFromExternal( $externalSource, $externalTeam );
+        if( $team === null ) {
+            return null;
+        }
+
+        $externalPerson = $externalPlayer->getPerson();
+        $person = $this->getPersonFromExternal( $externalSource, $externalPerson );
+        if( $person === null ) {
+            return null;
+        }
+
+        $player = $person->getPlayer( $team, $game->getStartDateTime() );
+        if ($player === null) {
+            $this->logger->warning("no player found for external person " . $externalPerson->getName() . " and datetime " . $game->getStartDateTime()->format( DateTimeImmutable::ATOM)  );
+            return null;
+        }
+        return $player;
+    }
+
+    protected function getPersonFromExternal(ExternalSource $externalSource, Person $externalPerson): ?Person
+    {
+        $person = $this->personAttacherRepos->findImportable(
+            $externalSource,
+            $externalPerson->getId()
+        );
+        if ($person === null) {
+            $this->logger->warning("no person found for external person " . $externalPerson->getName() );
+            return null;
+        }
+        return $person;
+    }
+
+    protected function getTeamFromExternal(ExternalSource $externalSource, Team $externalTeam): ?Team
+    {
+        $team = $this->teamAttacherRepos->findImportable(
+            $externalSource,
+            $externalTeam->getId()
+        );
+        if ($team === null) {
+            $this->logger->warning("no team found for external team " . $externalTeam->getName() );
+            return null;
+        }
+        return $team;
+    }
+
+
+    public function removeDetails( GameBase $game )
+    {
+        while( $game->getParticipations()->count() > 0 ) {
+            $gameParticipation = $game->getParticipations()->first();
+            $game->getParticipations()->removeElement($gameParticipation);
+        }
+
         $this->gameScoreRepos->removeScores($game);
-        $this->gameService->addScores($game, $game->getScores()->toArray());
+        $this->gameScoreCreator->addScores($game, $game->getScores()->toArray());
 
         $this->gameRepos->save($game);
     }

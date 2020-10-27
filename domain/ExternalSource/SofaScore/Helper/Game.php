@@ -9,7 +9,7 @@ use Sports\Game\Event\Goal as GoalEvent;
 use Sports\Game\Event\Card as CardEvent;
 use Sports\Person;
 use Sports\Sport;
-use Sports\Team\Role\Player as TeamPlayer;
+use Sports\Team\Player as TeamPlayer;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
@@ -231,7 +231,9 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
                 return;
             }
             $person = $this->parent->convertToPerson( $externPlayer->player );
-            $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $game->getPeriod(), $this->apiHelper->convertLine( $externPlayer->player->position ) );
+            $seasonEndDateTime = $game->getPoule()->getRound()->getNumber()->getCompetition()->getSeason()->getEndDateTime();
+            $period = new Period( $game->getStartDateTime(), $seasonEndDateTime );
+            $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $period, $this->apiHelper->convertLine( $externPlayer->player->position ) );
             new GameParticipation( $game, $teamPlayer, 0, 0);
         };
 

@@ -38,10 +38,11 @@ class Structure
 
     public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure ): ?StructureBase
     {
+        $externalCompetition = $externalSourceStructure->getFirstRoundNumber()->getCompetition();
         /** @var Attacher|null $competitionAttacher */
         $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
             $externalSource,
-            $externalSourceStructure->getFirstRoundNumber()->getCompetition()->getId()
+            $externalCompetition->getId()
         );
         if ($competitionAttacher === null) {
             return null;
@@ -60,7 +61,7 @@ class Structure
         $roundNumberAsValue = 1;
         $this->structureRepos->removeAndAdd($competition, $newStructure, $roundNumberAsValue);
 
-        $this->logger->info("added: 1" );
+        $this->logger->info("structure added for external competition " . $externalCompetition->getName() );
         return $newStructure;
     }
 }
