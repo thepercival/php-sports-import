@@ -272,10 +272,12 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
                 throw new \Exception( $person->getName() . "(".$person->getId().") kon niet worden gevonden als spelers", E_ERROR );
             }
             $goalEvent = new GoalEvent( $event->time, $participation );
-            if( $event->incidentType === "goal" ) {
-                if( $event->incidentClass === "owngoal" ) {
+            $incidentType = strtolower($event->incidentType);
+            $incidentClass = strtolower($event->incidentClass);
+            if( $incidentType === "goal" ) {
+                if( $incidentClass === "owngoal" ) {
                     $goalEvent->setOwn( true );
-                } else if( $event->incidentClass === "penalty" ) {
+                } else if( $incidentClass === "penalty" ) {
                     $goalEvent->setPenalty( true );
                 } else if( property_exists( $event, "assist1") ) {
                     $personAssist = $this->parent->convertToPerson( $event->assist1 );
@@ -285,8 +287,8 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
                     }
                     $goalEvent->setAssistGameParticipation($assist);
                 }
-            } else if ( $event->incidentType === "penalty" ) {
-                if( $event->incidentClass === "penalty" ) {
+            } else if ( $incidentType === "penalty" ) {
+                if( $incidentClass === "penalty" ) {
                     $goalEvent->setPenalty( true );
                 }
             }
@@ -312,11 +314,12 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         });
 
         foreach( $events as $event ) {
-            if( $event->incidentType === "card" ) {
+            $incidentType = strtolower($event->incidentType);
+            if( $incidentType === "card" ) {
                 $createCardEvent( $game, $event );
-            } else if( $event->incidentType === "goal" or $event->incidentType === "penalty" ) {
+            } else if( $incidentType === "goal" or $incidentType === "penalty" ) {
                 $createGoalEvent( $game, $event );
-            } else if( $event->incidentType === "substitution" ) {
+            } else if( $incidentType === "substitution" ) {
                 $updateGameParticipations( $game, $event );
             }
         }
