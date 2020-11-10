@@ -47,7 +47,6 @@ class SofaScore implements
     ExternalSourceGame,
     CacheInfo, ApiHelper, Proxy
 {
-    public const SPORTFILTER = "football";
     public const NAME = "SofaScore";
 
     /**

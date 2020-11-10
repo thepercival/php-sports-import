@@ -8,7 +8,7 @@ use SportsImport\ExternalSource\Sport as ExternalSourceSport;
 use Sports\Sport as SportBase;
 use SportsImport\ExternalSource\SofaScore;
 use Psr\Log\LoggerInterface;
-use SportsImport\Import\Service as ImportService;
+use Sports\Sport\Custom as SportCustom;
 use stdClass;
 
 class Sport extends SofaScoreHelper implements ExternalSourceSport
@@ -68,7 +68,15 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         $sport = new SportBase($externalSport->name);
         $sport->setTeam(false);
         $sport->setId($externalSport->name);
+        $sport->setCustomId( $this->getCustomId($externalSport->name) );
         $this->sportCache[$sport->getId()] = $sport;
         return $sport;
+    }
+
+    protected function getCustomId( string $sportName ): ?int {
+        if( $sportName === "football" ) {
+            return SportCustom::Football;
+        }
+        return null;
     }
 }

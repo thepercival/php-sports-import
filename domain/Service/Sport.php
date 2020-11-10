@@ -78,6 +78,7 @@ class Sport
     protected function editSport(SportBase $sport, SportBase $externalSourceSport)
     {
         $sport->setName($externalSourceSport->getName());
+        $sport->setCustomId($externalSourceSport->getCustomId());
         $this->sportRepos->save($sport);
     }
 }
