@@ -18,4 +18,5 @@ interface Team
      * @return TeamBase|null
      */
     public function getTeam(Competition $competition, $id): ?TeamBase;
+    public function getImageTeam( string $teamExternalId ): string;
 }

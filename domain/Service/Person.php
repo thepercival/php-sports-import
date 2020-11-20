@@ -12,6 +12,7 @@ use SportsImport\Attacher\Person as PersonAttacher;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use Sports\Team\Role\Combiner as RoleCombiner;
 use SportsImport\ExternalSource;
+use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 
 class Person {
     protected PersonRepository $personRepos;
@@ -68,7 +69,6 @@ class Person {
         );
         $person->setDateOfBirth( $externalPerson->getDateOfBirth() );
 
-
         $this->personRepos->save($person);
         return $person;
     }
@@ -92,5 +92,52 @@ class Person {
 
         $roleCombiner = new RoleCombiner( $person );
         $roleCombiner->combineWithPast( $newTeam, $newPeriod, $newLine );
+    }
+
+    public function importImage(
+        ExternalSourcePerson $externalSourcePerson, ExternalSource $externalSource,
+        PersonBase $person,
+        string $localOutputPath, string $publicOutputPath, int $maxWidth = null
+    ): bool
+    {
+        $personExternalId = $this->personAttacherRepos->findExternalId( $externalSource, $person );
+        if( $personExternalId === null ) {
+            return false;
+        }
+        $personImageId = substr( $personExternalId, strpos( $personExternalId, "/") + 1 );
+        $localFilePath = $localOutputPath . $personImageId . ".png";
+
+        if( file_exists( $localFilePath ) ) {
+            $timestamp = filectime ( $localFilePath );
+            $modifyDate = null;
+            if( $timestamp !== false ) {
+                $modifyDate = new \DateTimeImmutable( '@' . $timestamp );
+            }
+            if( $modifyDate !== null && $modifyDate->modify("+2 years") > (new \DateTimeImmutable()) ) {
+                return false;
+            }
+        }
+
+        try {
+            $imgStream = $externalSourcePerson->getImagePerson( $personExternalId );
+            $im = imagecreatefromstring($imgStream);
+            if ($im === false) {
+                return false;
+            }
+            if( $maxWidth !== null ) {
+                // make smaller if greater than maxWidth
+            }
+            imagepng($im, $localFilePath);
+            imagedestroy($im);
+
+            $publicFilePath = $publicOutputPath . $personImageId . ".png";
+            $person->setImageUrl( $publicFilePath );
+            $this->personRepos->save( $person );
+            return true;
+        }
+        catch( \Exception $e ) {
+
+        }
+        return false;
     }
 }

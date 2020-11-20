@@ -233,7 +233,8 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
             $person = $this->parent->convertToPerson( $externPlayer->player );
             $seasonEndDateTime = $game->getPoule()->getRound()->getNumber()->getCompetition()->getSeason()->getEndDateTime();
             $period = new Period( $game->getStartDateTime(), $seasonEndDateTime );
-            $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $period, $this->apiHelper->convertLine( $externPlayer->player->position ) );
+            $line = $this->apiHelper->convertLine( $externPlayer->player->position );
+            $teamPlayer = new TeamPlayer( $teamCompetitor->getTeam(), $person, $period, $line );
             new GameParticipation( $game, $teamPlayer, 0, 0);
         };
 

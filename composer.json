@@ -25,7 +25,8 @@
     "thepercival/php-sports-helpers": "^1.0",
     "thepercival/php-sports": "^1.0",
     "ext-curl": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-gd": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^8.2",

@@ -44,4 +44,8 @@ class Team extends SofaScoreHelper implements ExternalSourceTeam
         }
         return null;
     }
+
+    public function getImageTeam( string $teamExternalId ): string {
+        return $this->apiHelper->getTeamImageData( $teamExternalId );
+    }
 }

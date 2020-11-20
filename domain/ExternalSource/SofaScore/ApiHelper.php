@@ -3,11 +3,12 @@
 namespace SportsImport\ExternalSource\SofaScore;
 
 use DateTimeImmutable;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Sports\League;
-use Sports\Person;
+use Sports\Sport\Custom as SportCustom;
 use Sports\Team;
-use SportsImport\Competitor as CompetitorBase;
+use Sports\Sport\Formation\Line as FormationLine;
 use SportsImport\ExternalSource;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\CacheInfo;
@@ -25,6 +26,7 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
     private ExternalSource $externalSource;
     private CacheItemDbRepository $cacheItemDbRepos;
     private LoggerInterface $logger;
+    private const NrOfRetries = 2;
     /**
      * @var Range|null
      */
@@ -100,14 +102,14 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return null;
     }
 
-    protected function getData(string $endpoint, string $cacheId, int $cacheMinutes)
+    protected function getData(string $endpoint, string $cacheId, int $cacheMinutes, int $nrOfRetries = 0)
     {
         $data = $this->getDataFromCache($cacheId);
         if ($data !== null) {
             return $data;
         }
         if ($this->sleepRangeInSeconds === null) {
-            $this->sleepRangeInSeconds = new Range(6, 10);
+            $this->sleepRangeInSeconds = new Range(3, 5);
         } else {
             sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
         }
@@ -120,9 +122,37 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             $endpoint,
             $this->getHeaders()
         );
+        if( $response->getStatusCode() !== 200 ) {
+            if( $nrOfRetries < self::NrOfRetries ) {
+                return $this->getData( $endpoint, $cacheId, $cacheMinutes, ++$nrOfRetries );
+            }
+            throw new Exception("could not get sofascore-data after retries: " . $response->getBody(), E_ERROR );
+        }
         return json_decode(
             $this->cacheItemDbRepos->saveItem($cacheId, $response->getBody()->getContents(), $cacheMinutes)
         );
+    }
+
+    protected function getImgData(string $endpoint )
+    {
+        if ($this->sleepRangeInSeconds === null) {
+            $this->sleepRangeInSeconds = new Range(3, 5);
+        } else {
+            sleep(rand($this->sleepRangeInSeconds->min, $this->sleepRangeInSeconds->max));
+        }
+//        return json_decode(
+//            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
+//        );
+        $this->logger->info( $endpoint );
+        $client = $this->getClient();
+        $response = $client->get(
+            $endpoint,
+            $this->getHeaders()
+        );
+        if( $response->getStatusCode() !== 200 ) {
+            return null;
+        }
+        return $response->getBody()->getContents();
     }
 
     public function getDateAsString(DateTimeImmutable $date): string
@@ -236,49 +266,49 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return $dateApiData->seasons;
     }
 
-    /**
-     * @return array|DateTimeImmutable[]
-     */
-    protected function getCompetitionDates(): array
-    {
-        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
-        return [
-            $firstSaturday,
-            $firstSaturday->modify("+28 days")
-        ];
-    }
+//    /**
+//     * @return array|DateTimeImmutable[]
+//     */
+//    protected function getCompetitionDates(): array
+//    {
+//        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
+//        return [
+//            $firstSaturday,
+//            $firstSaturday->modify("+28 days")
+//        ];
+//    }
 
-    /**
-     * @return array|DateTimeImmutable[]
-     */
-    protected function getCompetitionCacheDates(): array
-    {
-        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
-        return [
-            $firstSaturday->modify("-28 days"),
-            $firstSaturday->modify("+56 days")
-        ];
-    }
-
-    protected function getFirstSaturdayInEvenWeek(): DateTimeImmutable
-    {
-        $today = (new DateTimeImmutable())->setTime(0, 0);
-
-        $delta = 0;
-        $weekNumber = (int)$today->format("W");
-        if (($weekNumber % 2) === 1) {
-            $delta = 7;
-        }
-        $dayCorrectWeek = $today->modify("+" . $delta . " days");
-
-        $dayOfWeek = (int)$dayCorrectWeek->format("w");
-
-        $deltaSaturDay = 6 - $dayOfWeek;
-
-        $firstCorrectSaturday = $dayCorrectWeek->modify("+" . $deltaSaturDay . " days");
-
-        return $firstCorrectSaturday;
-    }
+//    /**
+//     * @return array|DateTimeImmutable[]
+//     */
+//    protected function getCompetitionCacheDates(): array
+//    {
+//        $firstSaturday = $this->getFirstSaturdayInEvenWeek();
+//        return [
+//            $firstSaturday->modify("-28 days"),
+//            $firstSaturday->modify("+56 days")
+//        ];
+//    }
+//
+//    protected function getFirstSaturdayInEvenWeek(): DateTimeImmutable
+//    {
+//        $today = (new DateTimeImmutable())->setTime(0, 0);
+//
+//        $delta = 0;
+//        $weekNumber = (int)$today->format("W");
+//        if (($weekNumber % 2) === 1) {
+//            $delta = 7;
+//        }
+//        $dayCorrectWeek = $today->modify("+" . $delta . " days");
+//
+//        $dayOfWeek = (int)$dayCorrectWeek->format("w");
+//
+//        $deltaSaturDay = 6 - $dayOfWeek;
+//
+//        $firstCorrectSaturday = $dayCorrectWeek->modify("+" . $deltaSaturDay . " days");
+//
+//        return $firstCorrectSaturday;
+//    }
 
     public function getCompetitionId(stdClass $externalCompetition): ?int
     {
@@ -343,9 +373,27 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return $gameData;
     }
 
+    public function getPersonImageData(string $personExternalId ): string {
+        $imgData = $this->getImgData(
+            $this->getPersonImageEndPoint($personExternalId)
+        );
+        return $imgData;
+    }
+
+    public function getTeamImageData(string $teamExternalId ): string {
+        $imgData = $this->getImgData(
+            $this->getTeamImageEndPoint($teamExternalId)
+        );
+        return $imgData;
+    }
+
     public function getCacheMinutes(int $dataTypeIdentifier): int
     {
         switch ($dataTypeIdentifier) {
+            case ExternalSource::DATA_PERSON_IMAGE:
+                return 60 * 24 * 365 * 2;
+            case ExternalSource::DATA_TEAM_IMAGE:
+                return 60 * 24 * 365;
             case ExternalSource::DATA_SPORTS:
                 return 60 * 24 * 30 * 6;
             case ExternalSource::DATA_ASSOCIATIONS:
@@ -423,8 +471,11 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             return "event/**gameId**/lineups";
         } elseif ($dataTypeIdentifier === ExternalSource::DATA_GAME_EVENTS) {
             return "event/**gameId**/incidents";
+        } elseif ($dataTypeIdentifier === ExternalSource::DATA_PERSON_IMAGE) {
+            return "images/player/image_**personId**.png";
+        } elseif ($dataTypeIdentifier === ExternalSource::DATA_TEAM_IMAGE) {
+            return "images/team-logo/football_**teamId**.png";
         }
-
         throw new \Exception("no endpointsuffix found for dataTypeIdentifier '". $dataTypeIdentifier ."'", E_ERROR );
     }
 
@@ -615,6 +666,43 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         return str_replace("**gameId**", $gameId, $endpointSuffix);
     }
 
+    protected function getPersonImageEndPoint( string $personExternalId ): string
+    {
+        return self::OLDAPIURL /*$this->externalSource->getApiurl()*/ . $this->getPersonImageEndPointSuffix(
+                $personExternalId
+            );
+    }
+
+    protected function getPersonImageCacheId(string $personExternalId ): string
+    {
+        return $this->getPersonImageEndPointSuffix( $personExternalId );
+    }
+
+    protected function getPersonImageEndPointSuffix(string $personExternalId ): string
+    {
+        $personImageId = substr( $personExternalId, strpos( $personExternalId, "/") + 1 );
+        $endpointSuffix = $this->getEndPointSuffix(ExternalSource::DATA_PERSON_IMAGE);
+        return str_replace("**personId**", $personImageId, $endpointSuffix);
+    }
+
+    protected function getTeamImageEndPoint( string $personExternalId ): string
+    {
+        return self::OLDAPIURL /*$this->externalSource->getApiurl()*/ . $this->getTeamImageEndPointSuffix(
+                $personExternalId
+            );
+    }
+
+    protected function getTeamImageCacheId(string $personExternalId ): string
+    {
+        return $this->getTeamImageEndPointSuffix( $personExternalId );
+    }
+
+    protected function getTeamImageEndPointSuffix(string $teamExternalId ): string
+    {
+        $endpointSuffix = $this->getEndPointSuffix(ExternalSource::DATA_TEAM_IMAGE);
+        return str_replace("**teamId**", $teamExternalId, $endpointSuffix);
+    }
+
 
     /**
      * {
@@ -631,9 +719,9 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
         if( array_key_exists( $externalTeam->id, $this->teamsCache ) ) {
             return $this->teamsCache[$externalTeam->id];
         }
-        $team = new Team($association, $externalTeam->name);
+        $team = new Team($association, $externalTeam->shortName);
         $team->setId($externalTeam->id);
-        $abbreviation = $externalTeam->name;
+        $abbreviation = $externalTeam->shortName;
         $startPos = 0;
         if( strpos( strtolower($abbreviation) , "fc ") !== false ) {
             $startPos = 3;
@@ -650,13 +738,13 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
      */
     public function convertLine(string $line ): int {
         if( $line === "G" ) {
-            return Team::LINE_KEEPER;
+            return SportCustom::Football_Line_GoalKepeer;
         } elseif( $line === "D" ) {
-            return Team::LINE_DEFENSE;
+            return SportCustom::Football_Line_Defense;
         } elseif( $line === "M" ) {
-            return Team::LINE_MIDFIELD;
+            return SportCustom::Football_Line_Midfield;
         } else if( $line === "F" ) {
-            return Team::LINE_FORWARD;
+            return SportCustom::Football_Line_Forward;
         }
         return 0;
     }

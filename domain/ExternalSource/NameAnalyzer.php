@@ -15,14 +15,7 @@ class NameAnalyzer
         "den",
         "te",
         "ten",
-        "ter",
-        "Van",
-        "Der",
-        "De",
-        "Den",
-        "Te",
-        "Ten",
-        "Ter"
+        "ter"
     );
 
     public function __construct(string $name)
@@ -55,11 +48,11 @@ class NameAnalyzer
             if ($nI === 0 and count($arrNameParts) > 1) {
                 $this->firstName = $arrNameParts[$nI];
             } elseif ($nI < (count($arrNameParts) - 1)) {
-                if (in_array($arrNameParts[$nI], static::$defaultNameInsertions, true) === true) {
-                    if ($this->nameInsertions !== "") {
+                if ($this->inDefaultNameInsertions($arrNameParts[$nI])) {
+                    if ($this->nameInsertions !== null) {
                         $this->nameInsertions .= " ";
                     }
-                    $this->nameInsertions .= $arrNameParts[$nI];
+                    $this->nameInsertions .= strtolower($arrNameParts[$nI]);
                 } else {
                     if ($this->lastName !== "") {
                         $this->lastName .= " ";
@@ -75,5 +68,18 @@ class NameAnalyzer
                 }
             }
         }
+    }
+
+    /**
+     * @param string $needle
+     * @return bool
+     */
+    protected function inDefaultNameInsertions( string $needle ): bool {
+        foreach( static::$defaultNameInsertions as $value ) {
+            if( strtolower($value) === $needle ) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -40,7 +40,7 @@ class SofaScore implements
     ExternalSourceLeague,
     ExternalSourceCompetition,
     ExternalSourceTeam,
-    ExternalSourceTeamRole,
+    // ExternalSourceTeamRole,
     ExternalSourcePerson,
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
@@ -215,6 +215,10 @@ class SofaScore implements
         return $this->getHelper( SofaScore\Helper\Team::class )->getTeam($competition, $id);
     }
 
+    public function getImageTeam( string $teamExternalId ): string {
+        return $this->getTeamHelper()->getImageTeam( $teamExternalId );
+    }
+
     protected function getTeamHelper(): SofaScore\Helper\Team
     {
         return $this->getHelper( SofaScore\Helper\Team::class );
@@ -264,9 +268,9 @@ class SofaScore implements
         return $this->getGameHelper()->getGame($competition, $id);
     }
 
-    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {
-        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
-    }
+//    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {
+//        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
+//    }
 
     protected function getTeamRoleHelper(): SofaScore\Helper\Team\Role
     {
@@ -282,12 +286,12 @@ class SofaScore implements
         return $this->getPersonHelper()->getPerson( $game, $id );
     }
 
-    /**
-     * @param stdClass $externalPlayer
-     * @return Person|null
-     */
-    public function convertToPerson( stdClass $externalPlayer ): ?Person {
-        return $this->getPersonHelper()->convertToPerson( $externalPlayer );
+    public function convertToPerson( stdClass $externalPerson ): ?Person {
+        return $this->getPersonHelper()->convertToPerson( $externalPerson );
+    }
+
+    public function getImagePerson( string $personExternalId ): string {
+        return $this->getPersonHelper()->getImagePerson( $personExternalId );
     }
 
     protected function getPersonHelper(): SofaScore\Helper\Person

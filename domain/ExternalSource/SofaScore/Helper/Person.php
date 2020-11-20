@@ -58,16 +58,20 @@ class Person extends SofaScoreHelper implements ExternalSourcePerson
      * }
      *
      * @param stdClass $externalPerson
-     * @return PersonBase
+     * @return ?PersonBase
      * @throws \Exception
      */
-    public function convertToPerson( stdClass $externalPerson ): PersonBase {
+    public function convertToPerson( stdClass $externalPerson ): ?PersonBase{
         $externalId = $externalPerson->slug . "/" . $externalPerson->id;
         if( array_key_exists( $externalId, $this->personCache ) ) {
             return $this->personCache[$externalId];
         }
         $nameAnalyzer = new NameAnalyzer( $externalPerson->name );
-        $person = new PersonBase( $nameAnalyzer->getFirstName(), $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName() );
+        $firstName = $nameAnalyzer->getFirstName();
+        if( $firstName === null ) {
+            $firstName = "Onbekend";
+        }
+        $person = new PersonBase( $firstName, $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName() );
         $person->setId( $externalId );
         if( property_exists($externalPerson, "dateOfBirthTimestamp")) {
             $person->setDateOfBirth(new DateTimeImmutable( "@" . $externalPerson->dateOfBirthTimestamp ) );
@@ -76,4 +80,7 @@ class Person extends SofaScoreHelper implements ExternalSourcePerson
         return $person;
     }
 
+    public function getImagePerson( string $personExternalId ): string {
+        return $this->apiHelper->getPersonImageData( $personExternalId );
+    }
 }

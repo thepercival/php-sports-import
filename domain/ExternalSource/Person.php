@@ -20,9 +20,8 @@ interface Person
 //     * @return PersonBase|null
 //     */
 //    public function getPerson( Game $game, $id ): ?PersonBase;
-    /**
-     * @param stdClass $externalPlayer
-     * @return PersonBase|null
-     */
-    public function convertToPerson( stdClass $externalPlayer ): ?PersonBase;
+
+    public function convertToPerson( stdClass $externalPerson ): ?PersonBase;
+
+    public function getImagePerson( string $personExternalId ): string;
 }
