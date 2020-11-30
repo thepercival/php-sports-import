@@ -26,6 +26,8 @@ use Sports\Team;
 use Sports\Game\Event\Goal;
 use Sports\Game\Event\Card;
 use Sports\Output\Game as GameOutput;
+use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
+use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
 
 class Game
 {
@@ -38,6 +40,11 @@ class Game
     protected StructureRepository $structureRepos;
     protected GameScoreCreator $gameScoreCreator;
     private LoggerInterface $logger;
+
+    /**
+     * @var ImportGameEvent | ImportGameDetailsEvent | null
+     */
+    protected $eventSender;
 
     // public const MAX_DAYS_BACK = 8;
 
@@ -66,6 +73,12 @@ class Game
 //        return (new DateTimeImmutable())->modify("-" . static::MAX_DAYS_BACK . " days");
 //    }
 
+    /**
+     * @param ImportGameEvent | ImportGameDetailsEvent $eventSender
+     */
+    public function setEventSender( $eventSender ) {
+        $this->eventSender = $eventSender;
+    }
 
     /**
      * @param ExternalSource $externalSource
@@ -159,7 +172,7 @@ class Game
 
         $this->removeDetails( $game );
 
-        $this->gameScoreCreator->addScores($game, $game->getScores()->toArray());
+        $this->gameScoreCreator->addScores($game, $externalGame->getScores()->toArray());
 
        foreach( $externalGame->getParticipations() as $externalParticipation ) {
            $player = $this->getPlayerFromExternal($game, $externalSource, $externalParticipation->getPlayer() );
@@ -194,6 +207,9 @@ class Game
            }
        }
        $this->gameRepos->save($game);
+       if( $this->eventSender !== null && $this->eventSender instanceof ImportGameDetailsEvent ) {
+           $this->eventSender->sendUpdateGameDetailsEvent( $game );
+       }
     }
 
     protected function getPouleFromExternal(ExternalSource $externalSource, Poule $externalPoule): ?Poule
@@ -265,7 +281,7 @@ class Game
     }
 
 
-    public function removeDetails( GameBase $game )
+    protected function removeDetails( GameBase $game )
     {
         while( $game->getParticipations()->count() > 0 ) {
             $gameParticipation = $game->getParticipations()->first();
@@ -273,7 +289,6 @@ class Game
         }
 
         $this->gameScoreRepos->removeScores($game);
-        $this->gameScoreCreator->addScores($game, $game->getScores()->toArray());
 
         $this->gameRepos->save($game);
     }

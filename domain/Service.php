@@ -2,6 +2,7 @@
 
 namespace SportsImport;
 
+use App\QueueService;
 use Doctrine\Common\Collections\Collection;
 use League\Period\Period;
 use Psr\Log\LoggerInterface;
@@ -39,6 +40,8 @@ use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepositor
 use SportsImport\Attacher\Game\Repository as GameAttacherRepository;
 use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
+use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
 
 class Service
 {
@@ -61,6 +64,11 @@ class Service
     protected GameAttacherRepository $gameAttacherRepos;
     protected PersonAttacherRepository $personAttacherRepos;
     protected TeamAttacherRepository $teamAttacherRepos;
+
+    /**
+     * @var ImportGameEvent | ImportGameDetailsEvent | null
+     */
+    protected $eventSender;
 
     protected CompetitionRepository $competitionRepos;
     protected GameRepository $gameRepos;
@@ -110,6 +118,13 @@ class Service
         $this->competitionRepos = $competitionRepos;
         $this->gameRepos = $gameRepos;
         $this->logger = $logger;
+    }
+
+    /**
+     * @param ImportGameEvent | ImportGameDetailsEvent $eventSender
+     */
+    public function setEventSender( $eventSender ) {
+        $this->eventSender = $eventSender;
     }
 
     public function importSports( ExternalSourceImplementation $externalSourceImplementation ) {
@@ -370,6 +385,11 @@ class Service
             $this->logger->warning("no structure found for external competition " . $externalCompetition->getName() );
             return;
         }
+        if( $this->eventSender !== null ) {
+            if( $this->eventSender instanceof ImportGameEvent ) {
+                $this->gameImportService->setEventSender( $this->eventSender );
+            }
+        }
 
         $competition = $this->competitionRepos->findOneExt($league, $season);
         if ($competition->getTeamCompetitors()->count() === 0) {
@@ -417,7 +437,11 @@ class Service
             $this->logger->warning("no competitors found for external competition " . $externalCompetition->getName() );
         }
         $games = $this->gameRepos->getCompetitionGames( $competition, null,null, $period );
-
+        if( $this->eventSender !== null ) {
+            if( $this->eventSender instanceof ImportGameDetailsEvent ) {
+                $this->gameImportService->setEventSender( $this->eventSender );
+            }
+        }
         foreach ($games as $game) {
             try {
                 $externalGame = $this->getExternalGame( $externalSourceImplementation, $externalCompetition, $game );
