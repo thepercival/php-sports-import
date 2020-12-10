@@ -122,11 +122,18 @@ class Game
             if ($game === null) {
                 continue;
             }
+            $rescheduled = false;
+            $oldStartDateTime = $game->getStartDateTime();
             if( $game->getStartDateTime() != $externalGame->getStartDateTime() ) {
-                $gameOutput->output( $game, "reschedule => ");
+                $rescheduled = true;
             }
             $game->setStartDateTime($externalGame->getStartDateTime());
             $this->gameRepos->save($game);
+            if( $rescheduled ) {
+                if( $this->eventSender !== null && $this->eventSender instanceof ImportGameEvent ) {
+                    $this->eventSender->sendUpdateGameEvent( $game, $oldStartDateTime );
+                }
+            }
         }
     }
 
@@ -145,6 +152,9 @@ class Game
         }
 
         $this->gameRepos->save($game);
+        if( $this->eventSender !== null && $this->eventSender instanceof ImportGameEvent ) {
+            $this->eventSender->sendUpdateGameEvent( $game );
+        }
         return $game;
     }
 

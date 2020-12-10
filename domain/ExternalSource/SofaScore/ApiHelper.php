@@ -7,6 +7,7 @@ use Exception;
 use Psr\Log\LoggerInterface;
 use Sports\League;
 use Sports\Sport\Custom as SportCustom;
+use Sports\State;
 use Sports\Team;
 use Sports\Sport\Formation\Line as FormationLine;
 use SportsImport\ExternalSource;
@@ -14,6 +15,7 @@ use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\CacheInfo;
 use stdClass;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use SportsImport\Service as ImportService;
 use SportsHelpers\Range;
 use Sports\Competition;
@@ -118,15 +120,16 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
 //        );
         $this->logger->info( $endpoint );
         $client = $this->getClient();
-        $response = $client->get(
-            $endpoint,
-            $this->getHeaders()
-        );
-        if( $response->getStatusCode() !== 200 ) {
+        try {
+            $response = $client->get(
+                $endpoint,
+                $this->getHeaders()
+            );
+        } catch( RequestException $e ) {
             if( $nrOfRetries < self::NrOfRetries ) {
                 return $this->getData( $endpoint, $cacheId, $cacheMinutes, ++$nrOfRetries );
             }
-            throw new Exception("could not get sofascore-data after retries: " . $response->getBody(), E_ERROR );
+            throw new Exception("could not get sofascore-data after retries: cacheid => " . $cacheId, E_ERROR );
         }
         return json_decode(
             $this->cacheItemDbRepos->saveItem($cacheId, $response->getBody()->getContents(), $cacheMinutes)
@@ -355,6 +358,10 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             $this->getGameCacheId($competition, $gameId),
             $this->getCacheMinutes(ExternalSource::DATA_GAME)
         );
+
+        if( $this->convertState($gameData->event->status->code) !== State::Finished ) {
+            return $gameData;
+        }
 
         $gameData->lineups = $this->getData(
             $this->getGameLineupsEndPoint($gameId),
@@ -759,5 +766,19 @@ class ApiHelper implements CacheInfo, ExternalSource\ApiHelper, ExternalSource\P
             $newName = "20" . $newName;
         }
         return $newName;
+    }
+
+    public function convertState(int $state): int
+    {
+        if ($state === 0) { // not started
+            return State::Created;
+        } elseif ($state === 60) { // postponed
+            return State::Canceled;
+        } elseif ($state === 70) { // canceled
+            return State::Canceled;
+        } elseif ($state === 100) { // finished
+            return State::Finished;
+        }
+        throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
     }
 }

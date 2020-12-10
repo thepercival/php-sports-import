@@ -442,9 +442,14 @@ class Service
                 $this->gameImportService->setEventSender( $this->eventSender );
             }
         }
-        foreach ($games as $game) {
-            try {
+        $game = null;
+        try {
+            foreach ($games as $game) {
                 $externalGame = $this->getExternalGame( $externalSourceImplementation, $externalCompetition, $game );
+                if( $externalGame->getState() !== State::Finished ) {
+                    $this->logger->info("game " . $externalGame->getId() . " is not finished");
+                    continue;
+                }
                 $this->personImportService->importByGame(
                     $externalSourceImplementation->getExternalSource(),
                     $externalGame
@@ -454,11 +459,12 @@ class Service
                     $externalSourceImplementation->getExternalSource(),
                     $externalGame
                 );
-            } catch( \Exception $e ) {
-                $placeLocationMap = new PlaceLocationMap( $competition->getTeamCompetitors()->toArray() );
-                $gameOutput = new GameOutput( $placeLocationMap, $this->logger);
-                $gameOutput->output( $game, $e->getMessage() );
             }
+        } catch( \Exception $e ) {
+            // all batch should be stopped, because of editing playerperiods
+            $placeLocationMap = new PlaceLocationMap( $competition->getTeamCompetitors()->toArray() );
+            $gameOutput = new GameOutput( $placeLocationMap, $this->logger);
+            $gameOutput->output( $game, $e->getMessage() );
         }
     }
 
@@ -544,6 +550,18 @@ class Service
         $batchNrsRet = [];
 
         foreach( $batchNrs as $batchNr ) {
+            $hasBatchNrGames = $this->gameRepos->hasCompetitionGames(
+                $competition, null, $batchNr );
+            if( $hasBatchNrGames ) {
+                continue;
+            }
+            $batchNrsRet[] = $batchNr;
+            if( count( $batchNrsRet ) === 4 ) {
+                return $batchNrsRet;
+            }
+        }
+
+        foreach( $batchNrs as $batchNr ) {
             $batchNrGamePlaces = $this->gameRepos->getNrOfCompetitionGamePlaces(
                 $competition,
                 State::Finished,
@@ -553,7 +571,7 @@ class Service
             }
             $batchNrsRet[] = $batchNr;
             if( count( $batchNrsRet ) === 4 ) {
-                break;
+                return $batchNrsRet;
             }
         }
         return $batchNrsRet;

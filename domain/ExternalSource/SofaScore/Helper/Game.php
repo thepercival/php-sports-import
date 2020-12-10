@@ -127,7 +127,7 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
         }
         $game = new GameBase($poule, $batchNr, $startDateTime);
         if (property_exists($externalGame->event, "status")) {
-            $game->setState($this->convertState($externalGame->event->status->code));
+            $game->setState($this->apiHelper->convertState($externalGame->event->status->code));
         }
         $game->setId($externalGame->event->id);
         // referee
@@ -178,20 +178,6 @@ class Game extends SofaScoreHelper implements ExternalSourceGame
 
         $this->gameCache[$game->getId()] = $game;
         return $game;
-    }
-
-    protected function convertState(int $state): int
-    {
-        if ($state === 0) { // not started
-            return State::Created;
-        } elseif ($state === 60) { // postponed
-            return State::Canceled;
-        } elseif ($state === 70) { // canceled
-            return State::Canceled;
-        } elseif ($state === 100) { // finished
-            return State::Finished;
-        }
-        throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
     }
 
     protected function getPlaceFromPoule(Poule $poule, PlaceLocationMap $placeLocationMap, Team $team): ?Place

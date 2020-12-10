@@ -54,14 +54,14 @@ class NameAnalyzer
                     }
                     $this->nameInsertions .= strtolower($arrNameParts[$nI]);
                 } else {
-                    if ($this->lastName !== "") {
+                    if ($this->lastName !== null) {
                         $this->lastName .= " ";
                     }
                     $this->lastName .= $arrNameParts[$nI];
                 }
             } else {
                 if ($nI === (count($arrNameParts) - 1)) {
-                    if ($this->lastName !== "") {
+                    if ($this->lastName !== null) {
                         $this->lastName .= " ";
                     }
                     $this->lastName .= $arrNameParts[$nI];
