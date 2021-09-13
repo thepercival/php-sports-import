@@ -12,27 +12,11 @@ use Psr\Log\LoggerInterface;
 
 class Association
 {
-    /**
-     * @var AssociationRepository
-     */
-    protected $associationRepos;
-    /**
-     * @var AssociationAttacherRepository
-     */
-    protected $associationAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        AssociationRepository $associationRepos,
-        AssociationAttacherRepository $associationAttacherRepos,
-        LoggerInterface $logger
+        protected AssociationRepository $associationRepos,
+        protected AssociationAttacherRepository $associationAttacherRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->associationRepos = $associationRepos;
-        $this->associationAttacherRepos = $associationAttacherRepos;
     }
 
     /**
@@ -40,10 +24,13 @@ class Association
      * @param array|AssociationBase[] $externalSourceAssociations
      * @throws \Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceAssociations)
+    public function import(ExternalSource $externalSource, array $externalSourceAssociations): void
     {
         foreach ($externalSourceAssociations as $externalSourceAssociation) {
             $externalId = $externalSourceAssociation->getId();
+            if( $externalId === null ) {
+                continue;
+            }
             $associationAttacher = $this->associationAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -53,7 +40,7 @@ class Association
                 $associationAttacher = new AssociationAttacher(
                     $association,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->associationAttacherRepos->save($associationAttacher);
             } else {
@@ -63,22 +50,26 @@ class Association
         // bij syncen hoeft niet te verwijderden
     }
 
-    protected function createAssociation(ExternalSource $externalSource, AssociationBase $association): AssociationBase
+    protected function createAssociation(ExternalSource $externalSource, AssociationBase $externalAssociation): AssociationBase
     {
-        $newAssociation = new AssociationBase($association->getName());
+        $newAssociation = new AssociationBase($externalAssociation->getName());
         $parentAssociation = null;
-        if ($association->getParent() !== null) {
-            $parentAssociation = $this->associationAttacherRepos->findImportable(
-                $externalSource,
-                $association->getParent()->getId()
-            );
+        $externalParentAssociation = $externalAssociation->getParent();
+        if ($externalParentAssociation !== null) {
+            $parentExternalId = $externalParentAssociation->getId();
+            if ($parentExternalId !== null) {
+                $parentAssociation = $this->associationAttacherRepos->findImportable(
+                    $externalSource,
+                    $parentExternalId
+                );
+            }
         }
         $newAssociation->setParent($parentAssociation);
         $this->associationRepos->save($newAssociation);
         return $newAssociation;
     }
 
-    protected function editAssociation(AssociationBase $association, AssociationBase $externalSourceAssociation)
+    protected function editAssociation(AssociationBase $association, AssociationBase $externalSourceAssociation): void
     {
         $association->setName($externalSourceAssociation->getName());
         $this->associationRepos->save($association);

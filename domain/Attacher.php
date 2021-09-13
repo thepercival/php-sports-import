@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport;
 
@@ -12,29 +13,18 @@ class Attacher
      */
     protected $id;
     /**
-     * @var Identifiable
-     */
-    protected $importable;
-    /**
-     * @var ExternalSource
-     */
-    protected $externalSource;
-    /**
-     * @var string
-     */
-    protected $externalId;
-    /**
      * @var int
      */
     protected $importableId;
 
     const MAX_LENGTH_EXTERNALID = 100;
 
-    public function __construct(Identifiable $importable, ExternalSource $externalSource, $externalId)
+    public function __construct(
+        protected Identifiable $importable,
+        protected ExternalSource $externalSource,
+        protected string $externalId
+    )
     {
-        $this->setImportable($importable);
-        $this->externalSource = $externalSource;
-        $this->setExternalId($externalId);
     }
 
     /**
@@ -61,30 +51,11 @@ class Attacher
     }
 
     /**
-     * @param string $externalId
-     */
-    public function setExternalId($externalId)
-    {
-        if (strlen($externalId) > static::MAX_LENGTH_EXTERNALID) {
-            throw new \InvalidArgumentException("de externe id mag maximaal ".static::MAX_LENGTH_EXTERNALID." karakters bevatten", E_ERROR);
-        }
-        $this->externalId = $externalId;
-    }
-
-    /**
      * @return Identifiable
      */
     public function getImportable()
     {
         return $this->importable;
-    }
-
-    /**
-     * @param Identifiable $importable
-     */
-    public function setImportable(Identifiable $importable)
-    {
-        $this->importable = $importable;
     }
 
     public function getExternalSource(): ExternalSource

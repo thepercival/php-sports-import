@@ -7,32 +7,13 @@ use Sports\Sport\Repository as SportRepository;
 use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use Sports\Sport as SportBase;
 use SportsImport\Attacher\Sport as SportAttacher;
-use Psr\Log\LoggerInterface;
 
 class Sport
 {
-    /**
-     * @var SportRepository
-     */
-    protected $sportRepos;
-    /**
-     * @var SportAttacherRepository
-     */
-    protected $sportAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        SportRepository $sportRepos,
-        SportAttacherRepository $sportAttacherRepos,
-        LoggerInterface $logger/*,
-        array $settings*/
+        protected SportRepository $sportRepos,
+        protected SportAttacherRepository $sportAttacherRepos
     ) {
-        $this->logger = $logger;
-        $this->sportRepos = $sportRepos;
-        $this->sportAttacherRepos = $sportAttacherRepos;
     }
 
     /**
@@ -40,10 +21,13 @@ class Sport
      * @param array|SportBase[] $externalSourceSports
      * @throws \Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceSports)
+    public function import(ExternalSource $externalSource, array $externalSourceSports): void
     {
         foreach ($externalSourceSports as $externalSourceSport) {
             $externalId = $externalSourceSport->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $sportAttacher = $this->sportAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -53,7 +37,7 @@ class Sport
                 $sportAttacher = new SportAttacher(
                     $sport,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->sportAttacherRepos->save($sportAttacher);
             } else {
@@ -65,20 +49,23 @@ class Sport
 
     protected function createSport(SportBase $sport): SportBase
     {
-        $existingSport = $this->sportRepos->findOneBy( ["name" => $sport->getName()] );
-        if( $existingSport !== null ) {
+        $existingSport = $this->sportRepos->findOneBy(["name" => $sport->getName()]);
+        if ($existingSport !== null) {
             return $existingSport;
         }
-        $newSport = new SportBase($sport->getName());
-        $newSport->setTeam($sport->getTeam());
-        $this->sportRepos->save($newSport);
-        return $newSport;
+        $newSport = new SportBase(
+            $sport->getName(),
+            $sport->getTeam(),
+            $sport->getDefaultGameMode(),
+            $sport->getDefaultNrOfSidePlaces()
+        );
+        return $this->sportRepos->save($newSport);
     }
 
-    protected function editSport(SportBase $sport, SportBase $externalSourceSport)
+    protected function editSport(SportBase $sport, SportBase $externalSourceSport): SportBase
     {
         $sport->setName($externalSourceSport->getName());
         $sport->setCustomId($externalSourceSport->getCustomId());
-        $this->sportRepos->save($sport);
+        return $this->sportRepos->save($sport);
     }
 }

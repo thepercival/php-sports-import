@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Service;
 
@@ -12,27 +13,11 @@ use Psr\Log\LoggerInterface;
 
 class Season
 {
-    /**
-     * @var SeasonRepository
-     */
-    protected $seasonRepos;
-    /**
-     * @var SeasonAttacherRepository
-     */
-    protected $seasonAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        SeasonRepository $seasonRepos,
-        SeasonAttacherRepository $seasonAttacherRepos,
-        LoggerInterface $logger
+        protected SeasonRepository $seasonRepos,
+        protected SeasonAttacherRepository $seasonAttacherRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->seasonRepos = $seasonRepos;
-        $this->seasonAttacherRepos = $seasonAttacherRepos;
     }
 
     /**
@@ -40,10 +25,13 @@ class Season
      * @param array|SeasonBase[] $externalSourceSeasons
      * @throws Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceSeasons)
+    public function import(ExternalSource $externalSource, array $externalSourceSeasons): void
     {
         foreach ($externalSourceSeasons as $externalSourceSeason) {
             $externalId = $externalSourceSeason->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $seasonAttacher = $this->seasonAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -53,7 +41,7 @@ class Season
                 $seasonAttacher = new SeasonAttacher(
                     $season,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->seasonAttacherRepos->save($seasonAttacher);
             } else {
@@ -66,11 +54,10 @@ class Season
     protected function createSeason(SeasonBase $season): SeasonBase
     {
         $newSeason = new SeasonBase($season->getName(), $season->getPeriod());
-        $this->seasonRepos->save($newSeason);
-        return $newSeason;
+        return $this->seasonRepos->save($newSeason);
     }
 
-    protected function editSeason(SeasonBase $season, SeasonBase $externalSourceSeason)
+    protected function editSeason(SeasonBase $season, SeasonBase $externalSourceSeason): void
     {
         $season->setName($externalSourceSeason->getName());
         $this->seasonRepos->save($season);

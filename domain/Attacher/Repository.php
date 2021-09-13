@@ -2,11 +2,14 @@
 
 namespace SportsImport\Attacher;
 
+use Doctrine\ORM\EntityRepository;
 use SportsImport\ExternalSource;
-use SportsImport\Attacher as AttacherBase;
 use SportsHelpers\Identifiable;
 
-class Repository extends \Sports\Repository
+/**
+ * @template-extends EntityRepository<mixed>
+ */
+class Repository extends EntityRepository
 {
     public function findOneByExternalId(ExternalSource $externalSource, $externalId)
     {

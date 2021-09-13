@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Attacher;
 
@@ -10,13 +11,11 @@ use SportsImport\Attacher\Association as AssociationAttacher;
 use SportsImport\Attacher\Season as SeasonAttacher;
 use SportsImport\Attacher\League as LeagueAttacher;
 use SportsImport\Attacher\Competition as CompetitionAttacher;
-use SportsImport\Attacher\CompetitorDep as CompetitorAttacher;
 use Sports\Sport;
 use Sports\Association;
 use Sports\Season;
 use Sports\League;
 use Sports\Competition;
-use Sports\Competitor;
 
 class Factory
 {
@@ -52,13 +51,13 @@ class Factory
                 $externalSource,
                 $externalId
             );
-        } elseif ($importable instanceof Competitor) {
+        } /*elseif ($importable instanceof Competitor) {
             return new CompetitorAttacher(
                 $importable,
                 $externalSource,
                 $externalId
             );
-        }
+        }*/
         return null;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace SportsImport\Service;
 
+use Exception;
 use SportsImport\Attacher;
 use Sports\Structure\Repository as StructureRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
@@ -13,30 +14,15 @@ use Psr\Log\LoggerInterface;
 
 class Structure
 {
-    /**
-     * @var StructureRepository
-     */
-    protected $structureRepos;
-    /**
-     * @var CompetitionAttacherRepository
-     */
-    protected $competitionAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        StructureRepository $structureRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos,
-        LoggerInterface $logger
+        private StructureCopier $structureCopier,
+        private StructureRepository $structureRepos,
+        private CompetitionAttacherRepository $competitionAttacherRepos,
+        private LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->structureRepos = $structureRepos;
-        $this->competitionAttacherRepos = $competitionAttacherRepos;
     }
 
-    public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure ): ?StructureBase
+    public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure): ?StructureBase
     {
         $externalCompetition = $externalSourceStructure->getFirstRoundNumber()->getCompetition();
         /** @var Attacher|null $competitionAttacher */
@@ -51,17 +37,13 @@ class Structure
         $competition = $competitionAttacher->getImportable();
 
         $structure = $this->structureRepos->getStructure($competition);
-        if ($structure !== null) {
-            return null;
-        }
 
-        $structureCopier = new StructureCopier($competition);
-        $newStructure = $structureCopier->copy($externalSourceStructure);
+        $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
 
         $roundNumberAsValue = 1;
         $this->structureRepos->removeAndAdd($competition, $newStructure, $roundNumberAsValue);
 
-        $this->logger->info("structure added for external competition " . $externalCompetition->getName() );
+        $this->logger->info("structure added for external competition " . $externalCompetition->getName());
         return $newStructure;
     }
 }

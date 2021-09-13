@@ -2,10 +2,19 @@
 
 namespace SportsImport\Attacher\Association;
 
-use SportsImport\Attacher\Association as AssociationAttacher;
-use SportsImport\ExternalSource;
-use SportsImport\Import\Idable as Importable;
+use Doctrine\ORM\EntityRepository;
+use Sports\Association;
+use SportsHelpers\Repository as BaseRepository;
+use SportsImprt\Attacher\Repository as AttacherRepository;
+use SportsHelpers\Repository\SaveRemove;
+use SportsHelpers\Repository\SaveRemove as SaveRemoveRepository;
 
-class Repository extends \SportsImport\Attacher\Repository
+/**
+ * @template-extends EntityRepository<Association>
+ * @template-implements SaveRemoveRepository<Association>
+ */
+class Repository extends EntityRepository implements SaveRemoveRepository
 {
+    use BaseRepository;
+    use AttacherRepository;
 }

@@ -2,8 +2,7 @@
 
 namespace SportsImport\Service;
 
-use League\Period\Period;
-use Sports\Game;
+use Sports\Game\Against as AgainstGame;
 use Sports\Person as PersonBase;
 use Sports\Team\Player;
 use Sports\Person\Repository as PersonRepository;
@@ -14,32 +13,24 @@ use Sports\Team\Role\Combiner as RoleCombiner;
 use SportsImport\ExternalSource;
 use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 
-class Person {
-    protected PersonRepository $personRepos;
-    protected PersonAttacherRepository $personAttacherRepos;
-    protected TeamAttacherRepository $teamAttacherRepos;
-
+class Person
+{
     public function __construct(
-        PersonRepository $personRepos,
-        PersonAttacherRepository $personAttacherRepos,
-        TeamAttacherRepository $teamAttacherRepos
+        protected PersonRepository $personRepos,
+        protected PersonAttacherRepository $personAttacherRepos,
+        protected TeamAttacherRepository $teamAttacherRepos
     ) {
-        $this->personRepos = $personRepos;
-        $this->personAttacherRepos = $personAttacherRepos;
-        $this->teamAttacherRepos = $teamAttacherRepos;
     }
 
-    /**
-     * @param ExternalSource $externalSource
-     * @param Game $externalGame
-     * @throws \Exception
-     */
-    public function importByGame( ExternalSource $externalSource, Game $externalGame)
+    public function importByAgainstGame(ExternalSource $externalSource, AgainstGame $externalGame): void
     {
         foreach ($externalGame->getParticipations() as $externalParticipation) {
             $externalPerson = $externalParticipation->getPlayer()->getPerson();
 
             $externalId = $externalPerson->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $personAttacher = $this->personAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -50,7 +41,7 @@ class Person {
                 $personAttacher = new PersonAttacher(
                     $person,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->personAttacherRepos->save($personAttacher);
             } else {
@@ -67,76 +58,80 @@ class Person {
             $externalPerson->getNameInsertion(),
             $externalPerson->getLastName()
         );
-        $person->setDateOfBirth( $externalPerson->getDateOfBirth() );
-
-        $this->personRepos->save($person);
-        return $person;
+        $dateOfBirth = $externalPerson->getDateOfBirth();
+        if ($dateOfBirth !== null) {
+            $person->setDateOfBirth($dateOfBirth);
+        }
+        return $this->personRepos->save($person);
     }
 
     protected function updatePlayerPeriods(
         ExternalSource $externalSource,
         PersonBase $person,
         Player $externalPlayer
-        )
-    {
+    ): void {
         $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
             $externalSource,
             $externalPlayer->getTeam()->getId()
         );
-        if( $teamAttacher === null ) {
-            throw new \Exception("no team found for externalsource \"".$externalSource->getName()."\" and extern teamid " . $externalPlayer->getTeam()->getId(), E_ERROR );
+        if ($teamAttacher === null) {
+            throw new \Exception('no team found for externalsource "'.$externalSource->getName().'" and extern teamid ' . (string)$externalPlayer->getTeam()->getId(), E_ERROR);
         }
         $newTeam = $teamAttacher->getImportable();
         $newLine = $externalPlayer->getLine();
         $newPeriod = $externalPlayer->getPeriod();
 
-        $roleCombiner = new RoleCombiner( $person );
-        $roleCombiner->combineWithPast( $newTeam, $newPeriod, $newLine );
+        $roleCombiner = new RoleCombiner($person);
+        $roleCombiner->combineWithPast($newTeam, $newPeriod, $newLine);
     }
 
     public function importImage(
-        ExternalSourcePerson $externalSourcePerson, ExternalSource $externalSource,
+        ExternalSourcePerson $externalSourcePerson,
+        ExternalSource $externalSource,
         PersonBase $person,
-        string $localOutputPath, string $publicOutputPath, int $maxWidth = null
-    ): bool
-    {
-        $personExternalId = $this->personAttacherRepos->findExternalId( $externalSource, $person );
-        if( $personExternalId === null ) {
+        string $localOutputPath,
+        string $publicOutputPath,
+        int $maxWidth = null
+    ): bool {
+        $personExternalId = $this->personAttacherRepos->findExternalId($externalSource, $person);
+        if ($personExternalId === null) {
             return false;
         }
-        $personImageId = substr( $personExternalId, strpos( $personExternalId, "/") + 1 );
+        $externalSeparatorPos = strpos($personExternalId, "/");
+        if ($externalSeparatorPos === false) {
+            return false;
+        }
+        $personImageId = substr($personExternalId, $externalSeparatorPos + 1);
         $localFilePath = $localOutputPath . $personImageId . ".png";
 
-        if( file_exists( $localFilePath ) ) {
-            $timestamp = filectime ( $localFilePath );
+        if (file_exists($localFilePath)) {
+            $timestamp = filectime($localFilePath);
             $modifyDate = null;
-            if( $timestamp !== false ) {
-                $modifyDate = new \DateTimeImmutable( '@' . $timestamp );
+            if ($timestamp !== false) {
+                $modifyDate = new \DateTimeImmutable('@' . $timestamp);
             }
-            if( $modifyDate !== null && $modifyDate->modify("+2 years") > (new \DateTimeImmutable()) ) {
+            if ($modifyDate !== null && $modifyDate->modify("+2 years") > (new \DateTimeImmutable())) {
                 return false;
             }
         }
 
         try {
-            $imgStream = $externalSourcePerson->getImagePerson( $personExternalId );
+            $imgStream = $externalSourcePerson->getImagePerson($personExternalId);
             $im = imagecreatefromstring($imgStream);
             if ($im === false) {
                 return false;
             }
-            if( $maxWidth !== null ) {
+            if ($maxWidth !== null) {
                 // make smaller if greater than maxWidth
             }
             imagepng($im, $localFilePath);
             imagedestroy($im);
 
             $publicFilePath = $publicOutputPath . $personImageId . ".png";
-            $person->setImageUrl( $publicFilePath );
-            $this->personRepos->save( $person );
+            $person->setImageUrl($publicFilePath);
+            $this->personRepos->save($person);
             return true;
-        }
-        catch( \Exception $e ) {
-
+        } catch (\Exception $e) {
         }
         return false;
     }

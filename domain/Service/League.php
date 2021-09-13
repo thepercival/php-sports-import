@@ -8,37 +8,14 @@ use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
 use Sports\League as LeagueBase;
 use SportsImport\Attacher\League as LeagueAttacher;
-use Psr\Log\LoggerInterface;
 
 class League
 {
-    /**
-     * @var LeagueRepository
-     */
-    protected $leagueRepos;
-    /**
-     * @var LeagueAttacherRepository
-     */
-    protected $leagueAttacherRepos;
-    /**
-     * @var AssociationAttacherRepository
-     */
-    protected $associationAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        LeagueRepository $leagueRepos,
-        LeagueAttacherRepository $leagueAttacherRepos,
-        AssociationAttacherRepository $associationAttacherRepos,
-        LoggerInterface $logger
+        protected LeagueRepository $leagueRepos,
+        protected LeagueAttacherRepository $leagueAttacherRepos,
+        protected AssociationAttacherRepository $associationAttacherRepos
     ) {
-        $this->logger = $logger;
-        $this->leagueRepos = $leagueRepos;
-        $this->leagueAttacherRepos = $leagueAttacherRepos;
-        $this->associationAttacherRepos = $associationAttacherRepos;
     }
 
     /**
@@ -46,10 +23,13 @@ class League
      * @param array|LeagueBase[] $externalSourceLeagues
      * @throws \Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceLeagues)
+    public function import(ExternalSource $externalSource, array $externalSourceLeagues): void
     {
         foreach ($externalSourceLeagues as $externalSourceLeague) {
             $externalId = $externalSourceLeague->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $leagueAttacher = $this->leagueAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -62,7 +42,7 @@ class League
                 $leagueAttacher = new LeagueAttacher(
                     $league,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->leagueAttacherRepos->save($leagueAttacher);
             } else {
@@ -86,7 +66,7 @@ class League
         return $league;
     }
 
-    protected function editLeague(LeagueBase $league, LeagueBase $externalSourceLeague)
+    protected function editLeague(LeagueBase $league, LeagueBase $externalSourceLeague): void
     {
         $league->setName($externalSourceLeague->getName());
         $this->leagueRepos->save($league);

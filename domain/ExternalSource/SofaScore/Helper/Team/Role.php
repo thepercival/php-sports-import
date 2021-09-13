@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Team;
 
@@ -6,7 +7,7 @@ use Sports\Team\Role as TeamRole;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Psr\Log\LoggerInterface;
-use Sports\Place\Location\Map as PlaceLocationMap;
+use Sports\Competitor\Map as CompetitorMap;
 use SportsImport\ExternalSource\SofaScore;
 
 
@@ -16,10 +17,7 @@ class Role extends SofaScoreHelper // implements ExternalSourceTeamRole
      * @var array|TeamRole[]
      */
     protected $teamRoleCache;
-    /**
-     * @var PlaceLocationMap|null
-     */
-    protected $placeLocationMap;
+    protected CompetitorMap|null $placeLocationMap = null;
 
     public function __construct(
         SofaScore $parent,

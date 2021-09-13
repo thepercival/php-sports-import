@@ -14,7 +14,7 @@
 	"email": "coendunnink@gmail.com"
   },
   "require": {
-    "php": ">=7.4",
+    "php": ">=8.0",
     "vlucas/phpdotenv": "^4.1",
     "league/period": "^4.9",
     "doctrine/orm": "^2.7",
@@ -29,13 +29,16 @@
     "ext-gd": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^8.2",
+    "phpunit/phpunit": "^9.5",
     "phpstan/phpstan": "^0.12",
     "phpstan/phpstan-doctrine": "^0.12",
     "phpstan/extension-installer": "^1.0",
-    "phpstan/phpstan-phpunit": "^0.12.8",
+    "phpstan/phpstan-phpunit": "^0.12",
     "friendsofphp/php-cs-fixer": "^2.16",
-    "phpstan/phpstan-strict-rules": "^0.12.2"
+    "phpstan/phpstan-strict-rules": "^0.12",
+    "vimeo/psalm": "^4.6",
+    "psalm/plugin-phpunit": "^0.15",
+    "weirdan/doctrine-psalm-plugin": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -54,9 +57,10 @@
   "scripts": {
     "start": "php -S localhost:2990 -t public/",
     "test": [
-      "vendor/bin/phpunit --configuration tests/phpunit.xml tests/cases/"
+      "XDEBUG_MODE=coverage vendor/bin/phpunit --configuration tests/phpunit.xml"
     ],
-    "stan": "vendor/bin/phpstan analyse --level=5 domain tests/cases/ tests/helpers/",
+    "stan": "XDEBUG_MODE=off vendor/bin/phpstan analyse",
+    "psalm": "XDEBUG_MODE=off vendor/bin/psalm --output-format=phpstorm --show-info=true --no-diff",
     "cs-fix": "php-cs-fixer fix .",
     "copy-vob": [
       "rm -rf ../vobetting-api/vendor/thepercival/php-sports-import",

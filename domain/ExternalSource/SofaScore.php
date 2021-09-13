@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
 
@@ -27,10 +28,10 @@ use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
 use Sports\Competitor\Team as TeamCompetitor;
 use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
 use Sports\Structure;
-use SportsImport\ExternalSource\Game as ExternalSourceGame;
+use SportsImport\ExternalSource\Game\Against as ExternalSourceAgainstGame;
 use SportsImport\ExternalSource\Team\Role as ExternalSourceTeamRole;
 use SportsImport\ExternalSource\Person as ExternalSourcePerson;
-use Sports\Game;
+use Sports\Game\Against as AgainstGame;
 
 class SofaScore implements
     ExternalSourceImplementation,
@@ -44,7 +45,7 @@ class SofaScore implements
     ExternalSourcePerson,
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
-    ExternalSourceGame,
+    ExternalSourceAgainstGame,
     CacheInfo, ApiHelper, Proxy
 {
     public const NAME = "SofaScore";
@@ -263,9 +264,9 @@ class SofaScore implements
         return $this->getGameHelper()->getGames($competition, $batchNr);
     }
 
-    public function getGame(Competition $competition, $id): ?Game
+    public function getAgainstGame(Competition $competition, $id): AgainstGame|null
     {
-        return $this->getGameHelper()->getGame($competition, $id);
+        return $this->getGameHelper()->getAgainstGame($competition, $id);
     }
 
 //    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {

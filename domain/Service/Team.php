@@ -14,33 +14,12 @@ use SportsImport\ExternalSource\Team as ExternalSourceTeam;
 
 class Team
 {
-    /**
-     * @var TeamRepository
-     */
-    protected $teamRepos;
-    /**
-     * @var TeamAttacherRepository
-     */
-    protected $teamAttacherRepos;
-    /**
-     * @var AssociationAttacherRepository
-     */
-    protected $associationAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        TeamRepository $teamRepos,
-        TeamAttacherRepository $teamAttacherRepos,
-        AssociationAttacherRepository $associationAttacherRepos,
-        LoggerInterface $logger
+        protected TeamRepository $teamRepos,
+        protected TeamAttacherRepository $teamAttacherRepos,
+        protected AssociationAttacherRepository $associationAttacherRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->teamRepos = $teamRepos;
-        $this->teamAttacherRepos = $teamAttacherRepos;
-        $this->associationAttacherRepos = $associationAttacherRepos;
     }
 
     /**
@@ -48,11 +27,14 @@ class Team
      * @param array|TeamBase[] $externalSourceTeams
      * @throws Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceTeams)
+    public function import(ExternalSource $externalSource, array $externalSourceTeams): void
     {
         $updated = 0; $added = 0;
         foreach ($externalSourceTeams as $externalSourceTeam) {
             $externalId = $externalSourceTeam->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -65,7 +47,7 @@ class Team
                 $teamAttacher = new TeamAttacher(
                     $team,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->teamAttacherRepos->save($teamAttacher);
                 $added++;
@@ -94,12 +76,12 @@ class Team
         return $team;
     }
 
-    protected function editTeam(TeamBase $team, TeamBase $externalSourceTeam)
+    protected function editTeam(TeamBase $team, TeamBase $externalSourceTeam): TeamBase
     {
         $team->setName($externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
         $team->setImageUrl($externalSourceTeam->getImageUrl());
-        $this->teamRepos->save($team);
+        return $this->teamRepos->save($team);
     }
 
     public function importImage(

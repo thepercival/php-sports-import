@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-  <entity name="SportsImport\Attacher\League" table="externalleagues" repository-class="SportsImport\Attacher\League\Repository">
+  <entity name="SportsImport\Attacher\League" table="externalLeagues" repository-class="SportsImport\Attacher\League\Repository">
     <id name="id" type="integer" column="id">
       <generator strategy="AUTO"/>
     </id>

@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Service;
 
+use Exception;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
@@ -14,51 +16,28 @@ use Sports\Competitor\Team as TeamCompetitorBase;
 
 class TeamCompetitor
 {
-    /**
-     * @var TeamCompetitorRepository
-     */
-    protected $teamCompetitorRepos;
-    /**
-     * @var TeamCompetitorAttacherRepository
-     */
-    protected $teamCompetitorAttacherRepos;
-    /**
-     * @var CompetitionAttacherRepository
-     */
-    protected $competitionAttacherRepos;
-    /**
-     * @var TeamAttacherRepository
-     */
-    protected $teamAttacherRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
     public function __construct(
-        TeamCompetitorRepository $teamCompetitorRepos,
-        TeamCompetitorAttacherRepository $teamCompetitorAttacherRepos,
-        CompetitionAttacherRepository $competitionAttacherRepos,
-        TeamAttacherRepository $teamAttacherRepos,
-        LoggerInterface $logger
+        protected TeamCompetitorRepository $teamCompetitorRepos,
+        protected TeamCompetitorAttacherRepository $teamCompetitorAttacherRepos,
+        protected CompetitionAttacherRepository $competitionAttacherRepos,
+        protected TeamAttacherRepository $teamAttacherRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->teamCompetitorRepos = $teamCompetitorRepos;
-        $this->teamCompetitorAttacherRepos = $teamCompetitorAttacherRepos;
-        $this->competitionAttacherRepos = $competitionAttacherRepos;
-        $this->teamAttacherRepos = $teamAttacherRepos;
     }
 
     /**
      * @param ExternalSource $externalSource
      * @param array|TeamCompetitorBase[] $externalSourceTeamCompetitors
-     * @throws \Exception
+     * @throws Exception
      */
-    public function import(ExternalSource $externalSource, array $externalSourceTeamCompetitors)
+    public function import(ExternalSource $externalSource, array $externalSourceTeamCompetitors): void
     {
         $updated = 0; $added = 0;
         foreach ($externalSourceTeamCompetitors as $externalSourceTeamCompetitor) {
             $externalId = $externalSourceTeamCompetitor->getId();
+            if ($externalId === null) {
+                continue;
+            }
             $competitorAttacher = $this->teamCompetitorAttacherRepos->findOneByExternalId(
                 $externalSource,
                 $externalId
@@ -71,7 +50,7 @@ class TeamCompetitor
                 $competitorAttacher = new TeamCompetitorAttacher(
                     $teamCompetitor,
                     $externalSource,
-                    $externalId
+                    (string)$externalId
                 );
                 $this->teamCompetitorAttacherRepos->save($competitorAttacher);
                 $added++;
@@ -112,10 +91,10 @@ class TeamCompetitor
         return $teamCompetitor;
     }
 
-    protected function editTeamCompetitor(TeamCompetitorBase $teamCompetitor, TeamCompetitorBase $externalSourceTeamCompetitor)
+    protected function editTeamCompetitor(TeamCompetitorBase $teamCompetitor, TeamCompetitorBase $externalSourceTeamCompetitor): TeamCompetitorBase
     {
         $teamCompetitor->setRegistered($externalSourceTeamCompetitor->getRegistered());
         $teamCompetitor->setInfo($externalSourceTeamCompetitor->getInfo());
-        $this->teamCompetitorRepos->save($teamCompetitor);
+        return $this->teamCompetitorRepos->save($teamCompetitor);
     }
 }

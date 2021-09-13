@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
 
@@ -7,12 +8,8 @@ use Sports\Sport as SportBase;
 interface Sport
 {
     /**
-     * @return array|SportBase[]
+     * @return list<SportBase>
      */
     public function getSports(): array;
-    /**
-     * @param string|int $id
-     * @return SportBase|null
-     */
-    public function getSport($id): ?SportBase;
+    public function getSport(string|int $id): SportBase|null;
 }
