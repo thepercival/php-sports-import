@@ -16,7 +16,7 @@ interface Against
     /**
      * @param Competition $competition
      * @param int $batchNr
-     * @return list<AgainstGame>
+     * @return array<int|string, AgainstGame>
      */
     public function getAgainstGames(Competition $competition, int $batchNr): array;
     public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null;

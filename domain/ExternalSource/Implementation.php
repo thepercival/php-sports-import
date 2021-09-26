@@ -8,5 +8,4 @@ use SportsImport\ExternalSource as ExternalSourceBase;
 interface Implementation
 {
     public function getExternalSource(): ExternalSourceBase;
-    public function setExternalSource(ExternalSourceBase $externalSource);
 }

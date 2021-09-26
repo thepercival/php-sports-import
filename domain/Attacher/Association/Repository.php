@@ -1,20 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Attacher\Association;
 
-use Doctrine\ORM\EntityRepository;
-use Sports\Association;
-use SportsHelpers\Repository as BaseRepository;
-use SportsImprt\Attacher\Repository as AttacherRepository;
-use SportsHelpers\Repository\SaveRemove;
-use SportsHelpers\Repository\SaveRemove as SaveRemoveRepository;
+use SportsImport\Attacher\Association as AssociationAttacher;
+use SportsImport\Attacher\Repository as AttacherRepository;
+use Sports\Association as AssociationBase;
 
 /**
- * @template-extends EntityRepository<Association>
- * @template-implements SaveRemoveRepository<Association>
+ * @template-extends AttacherRepository<AssociationAttacher,AssociationBase>
  */
-class Repository extends EntityRepository implements SaveRemoveRepository
+class Repository extends AttacherRepository
 {
-    use BaseRepository;
-    use AttacherRepository;
 }

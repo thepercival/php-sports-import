@@ -1,41 +1,21 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use League\Period\Period;
-use Sports\Sport;
 use stdClass;
-use Sports\Association as AssociationBase;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\Season as SeasonBase;
-use SportsImport\ExternalSource\SofaScore;
-use Psr\Log\LoggerInterface;
-use SportsImport\Import\Service as ImportService;
 use SportsImport\ExternalSource\Season as ExternalSourceSeason;
 
+/**
+ * @template-extends SofaScoreHelper<SeasonBase>
+ */
 class Season extends SofaScoreHelper implements ExternalSourceSeason
 {
     /**
-     * @var array|SeasonBase[]
-     */
-    protected $seasonCache;
-
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->seasonCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
-
-    /**
-     * @return array|SeasonBase[]
+     * @return array<int|string, SeasonBase>
      */
     public function getSeasons(): array
     {
@@ -44,15 +24,19 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
 
         foreach ($externalSeasons as $externalSeason) {
             $season = $this->convertToSeason($externalSeason);
-            $seasons[$season->getId()] = $season;
+            $seasonId = $season->getId();
+            if ($seasonId === null) {
+                continue;
+            }
+            $seasons[$seasonId] = $season;
         }
         return $seasons;
     }
 
-    public function getSeason($id = null): ?SeasonBase
+    public function getSeason(string|int $id): SeasonBase|null
     {
-        if (array_key_exists($id, $this->seasonCache)) {
-            return $this->seasonCache[$id];
+        if (array_key_exists($id, $this->cache)) {
+            return $this->cache[$id];
         }
         $seasons = $this->getSeasons();
         if (array_key_exists($id, $seasons)) {
@@ -63,20 +47,20 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
 
     protected function convertToSeason(stdClass $externalSeason): SeasonBase
     {
-        $name = $this->apiHelper->convertToSeasonId( $externalSeason->name );
-        if( array_key_exists( $name, $this->seasonCache ) ) {
-            return $this->seasonCache[$name];
+        /** @var string $externalSeasonName */
+        $externalSeasonName = $externalSeason->name;
+        $name = $this->apiHelper->convertToSeasonId($externalSeasonName);
+        if (array_key_exists($name, $this->cache)) {
+            return $this->cache[$name];
         }
         $season = new SeasonBase($name, $this->getPeriod($name));
         $season->setId($name);
-        $this->seasonCache[$season->getId()] = $season;
+        $this->cache[$name] = $season;
         return $season;
     }
 
     protected function getPeriod(string $name): Period
     {
-        $start = null;
-        $end = null;
         if (strpos($name, "/") !== false) {
             $year = substr($name, 0, 4);
             $start = $year . "-07-01";

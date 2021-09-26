@@ -1,11 +1,15 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Attacher\Season;
 
+use SportsImport\Attacher\Season as SeasonAttacher;
+use SportsImport\Attacher\Repository as AttacherRepository;
+use Sports\Season as SeasonBase;
+
 /**
- * Class Repository
- * @package SportsImport\External\Season
+ * @template-extends AttacherRepository<SeasonAttacher,SeasonBase>
  */
-class Repository extends \SportsImport\Attacher\Repository
+class Repository extends AttacherRepository
 {
 }

@@ -19,7 +19,7 @@ use Sports\Competition;
 
 class Factory
 {
-    public function createObject(Identifiable $importable, ExternalSource $externalSource, $externalId): ?AttacherBase
+    public function createObject(Identifiable $importable, ExternalSource $externalSource, string $externalId): ?AttacherBase
     {
         if ($importable instanceof Sport) {
             return new SportAttacher(

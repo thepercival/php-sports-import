@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
@@ -13,34 +14,15 @@ use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 use SportsImport\ExternalSource\NameAnalyzer;
 
+/**
+ * @template-extends SofaScoreHelper<PersonBase>
+ */
 class Person extends SofaScoreHelper implements ExternalSourcePerson
 {
-    /**
-     * @var array|PersonBase[]
-     */
-    protected $personCache;
-
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->personCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
-
-    /**
-     * @param Game $game
-     * @param string|int $id
-     * @return PersonBase|null
-     */
-    public function getPerson( Game $game, $id ): ?PersonBase {
-        if( array_key_exists( $id, $this->personCache ) ) {
-            return $this->personCache[$id];
+    public function getPerson(Game $game, string|int $id): PersonBase|null
+    {
+        if (array_key_exists($id, $this->cache)) {
+            return $this->cache[$id];
         }
         return null;
     }
@@ -61,26 +43,29 @@ class Person extends SofaScoreHelper implements ExternalSourcePerson
      * @return ?PersonBase
      * @throws \Exception
      */
-    public function convertToPerson( stdClass $externalPerson ): ?PersonBase{
-        $externalId = $externalPerson->slug . "/" . $externalPerson->id;
-        if( array_key_exists( $externalId, $this->personCache ) ) {
-            return $this->personCache[$externalId];
+    public function convertToPerson(stdClass $externalPerson): ?PersonBase
+    {
+        $externalId = (string)$externalPerson->slug . "/" . (string)$externalPerson->id;
+        if (array_key_exists($externalId, $this->cache)) {
+            return $this->cache[$externalId];
         }
-        $nameAnalyzer = new NameAnalyzer( $externalPerson->name );
+        $nameAnalyzer = new NameAnalyzer((string)$externalPerson->name);
         $firstName = $nameAnalyzer->getFirstName();
-        if( $firstName === null ) {
+        if ($firstName === null) {
             $firstName = "Onbekend";
         }
-        $person = new PersonBase( $firstName, $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName() );
-        $person->setId( $externalId );
-        if( property_exists($externalPerson, "dateOfBirthTimestamp")) {
-            $person->setDateOfBirth(new DateTimeImmutable( "@" . $externalPerson->dateOfBirthTimestamp ) );
+        $person = new PersonBase($firstName, $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName());
+        $person->setId($externalId);
+        if (property_exists($externalPerson, "dateOfBirthTimestamp")) {
+            $dateOfBirthTimestamp = (string)$externalPerson->dateOfBirthTimestamp;
+            $person->setDateOfBirth(new DateTimeImmutable("@" . $dateOfBirthTimestamp));
         }
-        $this->personCache[$person->getId()] = $person;
+        $this->cache[$externalId] = $person;
         return $person;
     }
 
-    public function getImagePerson( string $personExternalId ): string {
-        return $this->apiHelper->getPersonImageData( $personExternalId );
+    public function getImagePerson(string $personExternalId): string
+    {
+        return $this->apiHelper->getPersonImageData($personExternalId);
     }
 }

@@ -1,39 +1,39 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore;
 
 use SportsImport\ExternalSource\SofaScore;
 use Psr\Log\LoggerInterface;
 
-class Helper
+/**
+ * @template T
+ */
+abstract class Helper
 {
     /**
-     * @var SofaScore
+     * @var array<int|string, T>
      */
-    protected $parent;
-    /**
-     * @var ApiHelper
-     */
-    protected $apiHelper;
-    /**
-     * @var LoggerInterface;
-     */
-    protected $logger;
-
+    protected array $cache = [];
 
     public function __construct(
-        SofaScore $parent,
-        ApiHelper $apiHelper,
-        LoggerInterface $logger
+        protected SofaScore $parent,
+        protected ApiHelper $apiHelper,
+        protected LoggerInterface $logger
     ) {
-        $this->parent = $parent;
-        $this->apiHelper = $apiHelper;
-        $this->logger = $logger;
     }
 
+    /**
+     * @param list<object> $objects
+     * @param string $name
+     * @return bool
+     */
     protected function hasName(array $objects, string $name): bool
     {
         foreach ($objects as $object) {
+            if (!method_exists($object, "getName")) {
+                continue;
+            }
             if ($object->getName() === $name) {
                 return true;
             }
@@ -42,12 +42,12 @@ class Helper
     }
 
 
-    private function notice($msg)
+    private function notice(string $msg): void
     {
         $this->logger->notice($this->parent->getExternalSource()->getName() . " : " . $msg);
     }
 
-    private function error($msg)
+    private function error(string $msg): void
     {
         $this->logger->error($this->parent->getExternalSource()->getName() . " : " . $msg);
     }

@@ -12,7 +12,7 @@ interface Competition
     /**
      * @param Sport $sport,
      * @param League $league
-     * @return array|CompetitionBase[]
+     * @return array<int|string, CompetitionBase>
      */
     public function getCompetitions( Sport $sport, League $league): array;
 

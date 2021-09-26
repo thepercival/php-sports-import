@@ -4,58 +4,29 @@ declare(strict_types=1);
 namespace SportsImport;
 
 use SportsHelpers\Identifiable;
-use SportsImport\ExternalSource;
 
-class Attacher
+/**
+ * @template T
+ */
+abstract class Attacher extends Identifiable
 {
-    /**
-     * @var int
-     */
-    protected $id;
-    /**
-     * @var int
-     */
-    protected $importableId;
-
     const MAX_LENGTH_EXTERNALID = 100;
 
+    /**
+     * @param T $importable
+     * @param ExternalSource $externalSource
+     * @param string $externalId
+     */
     public function __construct(
-        protected Identifiable $importable,
+        protected mixed $importable,
         protected ExternalSource $externalSource,
         protected string $externalId
-    )
-    {
+    ) {
     }
 
-    /**
-     * Get id
-     *
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param int $id
-     */
-    public function setId(int $id)
-    {
-        $this->id = $id;
-    }
-
-    public function getExternalId()
+    public function getExternalId(): string
     {
         return $this->externalId;
-    }
-
-    /**
-     * @return Identifiable
-     */
-    public function getImportable()
-    {
-        return $this->importable;
     }
 
     public function getExternalSource(): ExternalSource
@@ -64,26 +35,10 @@ class Attacher
     }
 
     /**
-     * @return int
+     * @return T
      */
-    public function getImportableId(): int
+    public function getImportable(): mixed
     {
-        return $this->importable->getId();
-    }
-
-    /**
-     * @return int
-     */
-    public function getImportableIdForSer(): int
-    {
-        return $this->importableId;
-    }
-
-    /**
-     * @param int $importableId
-     */
-    public function setImportableId(int $importableId)
-    {
-        $this->importableId = $importableId;
+        return $this->importable;
     }
 }

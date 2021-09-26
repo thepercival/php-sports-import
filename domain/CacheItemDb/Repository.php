@@ -1,18 +1,30 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\CacheItemDb;
 
+use DateTimeImmutable;
+use Doctrine\ORM\EntityRepository;
 use SportsImport\CacheItemDb;
+use SportsHelpers\Repository as BaseRepository;
 
-class Repository extends \Sports\Repository
+/**
+ * @template-extends EntityRepository<CacheItemDb>
+ */
+class Repository extends EntityRepository
 {
+    /**
+     * @use BaseRepository<CacheItemDb>
+     */
+    use BaseRepository;
+
     public function getItem(string $name): ?string
     {
-        /** @var CacheItemDb|null $cacheItem */
         $cacheItem = $this->findOneBy(["name" => $name]);
         if ($cacheItem !== null &&
             ($cacheItem->getExpireDateTime() === null || $cacheItem->getExpireDateTime() > (new \DateTimeImmutable()))
         ) {
+            /** @var string|resource $handle */
             $handle = $cacheItem->getValue();
             if (is_string($handle)) {
                 return $handle;
@@ -24,17 +36,16 @@ class Repository extends \Sports\Repository
         return null;
     }
 
-    public function getExpireDateTime(string $name): ?\DateTimeImmutable
+    public function getExpireDateTime(string $name): DateTimeImmutable|null
     {
-        /** @var CacheItemDb|null $cacheItem */
         $cacheItem = $this->findOneBy(["name" => $name]);
-        if ($cacheItem === null ) {
+        if ($cacheItem === null) {
             return null;
         }
         return $cacheItem->getExpireDateTime();
     }
 
-    public function saveItem(string $name, $value, int $nrOfMinutesToExpire = null)
+    public function saveItem(string $name, mixed $value, int $nrOfMinutesToExpire = null): string
     {
         $cacheItem = $this->findOneBy(["name" => $name]);
         $expireDateTime = null;
@@ -49,14 +60,16 @@ class Repository extends \Sports\Repository
             $cacheItem->setExpireDateTime($expireDateTime);
         }
         $this->save($cacheItem);
-        return $cacheItem->getValue();
+        /** @var string $item */
+        $item = $cacheItem->getValue();
+        return $item;
     }
 
-    public function removeItem(string $name)
+    public function removeItem(string $name): void
     {
-        $cacheItem = $this->getItem($name);
+        $cacheItem = $this->findOneBy(["name" => $name]);
         if ($cacheItem !== null) {
-            $this->removeItem($cacheItem);
+            $this->remove($cacheItem);
         }
     }
 }

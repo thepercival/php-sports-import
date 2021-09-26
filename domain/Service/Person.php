@@ -33,9 +33,8 @@ class Person
             }
             $personAttacher = $this->personAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
-            $person = null;
             if ($personAttacher === null) {
                 $person = $this->createPerson($externalPerson);
                 $personAttacher = new PersonAttacher(
@@ -72,7 +71,7 @@ class Person
     ): void {
         $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
             $externalSource,
-            $externalPlayer->getTeam()->getId()
+            (string)$externalPlayer->getTeam()->getId()
         );
         if ($teamAttacher === null) {
             throw new \Exception('no team found for externalsource "'.$externalSource->getName().'" and extern teamid ' . (string)$externalPlayer->getTeam()->getId(), E_ERROR);

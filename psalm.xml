@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="8"
+    totallyTyped="true"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
@@ -14,8 +14,8 @@
             <directory name="vendor"/>
         </ignoreFiles>
     </projectFiles>
-<plugins>
-    <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
-    <pluginClass class="Weirdan\DoctrinePsalmPlugin\Plugin"/>
-</plugins>
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+        <pluginClass class="Weirdan\DoctrinePsalmPlugin\Plugin"/>
+    </plugins>
 </psalm>

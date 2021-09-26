@@ -10,27 +10,12 @@ use Psr\Log\LoggerInterface;
 use Sports\Competitor\Map as CompetitorMap;
 use SportsImport\ExternalSource\SofaScore;
 
-
-class Role extends SofaScoreHelper // implements ExternalSourceTeamRole
+/**
+ * @template-extends SofaScoreHelper<TeamRole>
+ */
+class Role extends SofaScoreHelper
 {
-    /**
-     * @var array|TeamRole[]
-     */
-    protected $teamRoleCache;
     protected CompetitorMap|null $placeLocationMap = null;
-
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->teamRoleCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
 
 
 //    /**

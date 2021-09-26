@@ -46,35 +46,44 @@ class SofaScore implements
     ExternalSourceTeamCompetitor,
     ExternalSourceStructure,
     ExternalSourceAgainstGame,
-    CacheInfo, ApiHelper, Proxy
+    CacheInfo,
+    ApiHelper,
+    Proxy
 {
     public const NAME = "SofaScore";
+    protected SofaScore\ApiHelper $apiHelper;
 
-    /**
-     * @var ExternalSourceBase
-     */
-    private $externalSource;
-    /**
-     * @var CacheItemDbRepository
-     */
-    private $cacheItemDbRepos;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-    /**
-     * @var array|mixed[]
-     */
-    private $helpers;
+    protected SofaScore\Helper\Association $associationHelper;
+    protected SofaScore\Helper\Competition $competitionHelper;
+    protected SofaScore\Helper\League $leagueHelper;
+    protected SofaScore\Helper\Person $personHelper;
+    protected SofaScore\Helper\Season $seasonHelper;
+    protected SofaScore\Helper\Sport $sportHelper;
+    protected SofaScore\Helper\Structure $structureHelper;
+    protected SofaScore\Helper\Team $teamHelper;
+    protected SofaScore\Helper\Competitor\Team $teamCompetitorHelper;
+    protected SofaScore\Helper\Game\Against $againstGameHelper;
+    protected SofaScore\Helper\Team\Role $teamRoleHelper;
 
     public function __construct(
-        ExternalSourceBase $externalSource,
-        CacheItemDbRepository $cacheItemDbRepos,
-        LoggerInterface $logger = null
+        protected ExternalSourceBase $externalSource,
+        protected CacheItemDbRepository $cacheItemDbRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->helpers = [];
-        $this->setExternalSource($externalSource);
+        $apiHelper = new SofaScore\ApiHelper($externalSource, $cacheItemDbRepos, $this->logger);
+        $this->apiHelper = $apiHelper;
+        $this->associationHelper = new SofaScore\Helper\Association($this, $apiHelper, $this->logger);
+        $this->competitionHelper = new SofaScore\Helper\Competition($this, $apiHelper, $this->logger);
+        $this->leagueHelper = new SofaScore\Helper\League($this, $apiHelper, $this->logger);
+        $this->personHelper = new SofaScore\Helper\Person($this, $apiHelper, $this->logger);
+        $this->seasonHelper = new SofaScore\Helper\Season($this, $apiHelper, $this->logger);
+        $this->sportHelper = new SofaScore\Helper\Sport($this, $apiHelper, $this->logger);
+        $this->structureHelper = new SofaScore\Helper\Structure($this, $apiHelper, $this->logger);
+        $this->teamHelper = new SofaScore\Helper\Team($this, $apiHelper, $this->logger);
+        $this->teamCompetitorHelper = new SofaScore\Helper\Competitor\Team($this, $apiHelper, $this->logger);
+        $this->againstGameHelper = new SofaScore\Helper\Game\Against($this, $apiHelper, $this->logger);
+        $this->teamRoleHelper = new SofaScore\Helper\Team\Role($this, $apiHelper, $this->logger);
+
         $this->cacheItemDbRepos = $cacheItemDbRepos;
         /* $this->structureOptions = new StructureOptions(
              new VoetbalRange(1, 32),
@@ -88,103 +97,72 @@ class SofaScore implements
         reset( $this->settings['www']['urls']);
     }*/
 
-    /**
-     * @return ExternalSourceBase
-     */
-    public function getExternalSource()
+    public function getExternalSource(): ExternalSourceBase
     {
         return $this->externalSource;
     }
 
     /**
-     * @param ExternalSourceBase $externalSource
-     */
-    public function setExternalSource(ExternalSourceBase $externalSource)
-    {
-        $this->externalSource = $externalSource;
-    }
-
-    /**
-     * @return array|Sport[]
+     * @return array<int|string, Sport>
      */
     public function getSports(): array
     {
-        return $this->getSportHelper()->getSports();
+        return $this->sportHelper->getSports();
     }
 
-    public function getSport($id = null): ?Sport
+    public function getSport(string|int $id): Sport|null
     {
-        return $this->getSportHelper()->getSport($id);
-    }
-
-    protected function getSportHelper(): SofaScore\Helper\Sport
-    {
-        return $this->getHelper( SofaScore\Helper\Sport::class );
+        return $this->sportHelper->getSport($id);
     }
 
     /**
-     * @return array|Association[]
+     * @return array<int|string, Association>
      */
     public function getAssociations(Sport $sport): array
     {
-        return $this->getAssociationHelper()->getAssociations( $sport );
+        return $this->associationHelper->getAssociations($sport);
     }
 
-    public function getAssociation(Sport $sport, $id = null): ?Association
+    public function getAssociation(Sport $sport, string|int $id): Association|null
     {
-        return $this->getAssociationHelper()->getAssociation($sport, $id);
-    }
-
-    protected function getAssociationHelper(): SofaScore\Helper\Association
-    {
-        return $this->getHelper( SofaScore\Helper\Association::class );
+        return $this->associationHelper->getAssociation($sport, $id);
     }
 
     /**
-     * @return array|Season[]
+     * @return array<int|string, Season>
      */
     public function getSeasons(): array
     {
-        return $this->getSeasonHelper()->getSeasons();
+        return $this->seasonHelper->getSeasons();
     }
 
-    public function getSeason($id = null): ?Season
+    public function getSeason(string|int $id): ?Season
     {
-        return $this->getSeasonHelper()->getSeason($id);
-    }
-
-    protected function getSeasonHelper(): SofaScore\Helper\Season
-    {
-        return $this->getHelper( SofaScore\Helper\Season::class );
+        return $this->seasonHelper->getSeason($id);
     }
 
     /**
      * @param Association $association
-     * @return array|League[]
+     * @return array<int|string, League>
      */
     public function getLeagues(Association $association): array
     {
-        return $this->getLeagueHelper()->getLeagues($association);
+        return $this->leagueHelper->getLeagues($association);
     }
 
-    public function getLeague(Association $association, $id = null): ?League
+    public function getLeague(Association $association, string|int $id): League|null
     {
-        return $this->getLeagueHelper()->getLeague($association, $id);
-    }
-
-    protected function getLeagueHelper(): SofaScore\Helper\League
-    {
-        return $this->getHelper( SofaScore\Helper\League::class );
+        return $this->leagueHelper->getLeague($association, $id);
     }
 
     /**
      * @param Sport $sport
      * @param League $league
-     * @return array|CompetitionBase[]
+     * @return array<int|string, CompetitionBase>
      */
-    public function getCompetitions( Sport $sport, League $league ): array
+    public function getCompetitions(Sport $sport, League $league): array
     {
-        return $this->getCompetitionHelper()->getCompetitions($sport, $league);
+        return $this->competitionHelper->getCompetitions($sport, $league);
     }
 
     /**
@@ -193,174 +171,111 @@ class SofaScore implements
      * @param Season $season
      * @return CompetitionBase|null
      */
-    public function getCompetition( Sport $sport, League $league, Season $season ): ?CompetitionBase
+    public function getCompetition(Sport $sport, League $league, Season $season): ?CompetitionBase
     {
-        return $this->getCompetitionHelper()->getCompetition($sport, $league, $season);
-    }
-
-    protected function getCompetitionHelper(): SofaScore\Helper\Competition
-    {
-        return $this->getHelper( SofaScore\Helper\Competition::class );
+        return $this->competitionHelper->getCompetition($sport, $league, $season);
     }
 
     /**
-     * @return array|Team[]
+     * @return list<Team>
      */
     public function getTeams(Competition $competition): array
     {
-        return $this->getTeamHelper()->getTeams($competition);
+        return $this->teamHelper->getTeams($competition);
     }
 
-    public function getTeam(Competition $competition, $id): ?Team
+    public function getTeam(Competition $competition, string|int $id): Team|null
     {
-        return $this->getHelper( SofaScore\Helper\Team::class )->getTeam($competition, $id);
+        return $this->teamHelper->getTeam($competition, $id);
     }
 
-    public function getImageTeam( string $teamExternalId ): string {
-        return $this->getTeamHelper()->getImageTeam( $teamExternalId );
-    }
-
-    protected function getTeamHelper(): SofaScore\Helper\Team
+    public function getImageTeam(string $teamExternalId): string
     {
-        return $this->getHelper( SofaScore\Helper\Team::class );
+        return $this->teamHelper->getImageTeam($teamExternalId);
     }
-
 
     /**
-     * @return array|TeamCompetitor[]
+     * @return list<TeamCompetitor>
      */
     public function getTeamCompetitors(Competition $competition): array
     {
-        return $this->getTeamCompetitorHelper()->getTeamCompetitors($competition);
+        return $this->teamCompetitorHelper->getTeamCompetitors($competition);
     }
 
-    public function getTeamCompetitor(Competition $competition, $id): ?TeamCompetitor
+    public function getTeamCompetitor(Competition $competition, string|int $id): ?TeamCompetitor
     {
-        return $this->getTeamCompetitorHelper()->getTeamCompetitor($competition, $id);
-    }
-
-    protected function getTeamCompetitorHelper(): SofaScore\Helper\Competitor\Team
-    {
-        return $this->getHelper( SofaScore\Helper\Competitor\Team::class );
+        return $this->teamCompetitorHelper->getTeamCompetitor($competition, $id);
     }
 
     public function getStructure(Competition $competition): ?Structure
     {
-        return $this->getStructureHelper()->getStructure($competition);
-    }
-
-    protected function getStructureHelper(): SofaScore\Helper\Structure
-    {
-        return $this->getHelper( SofaScore\Helper\Structure::class );
+        return $this->structureHelper->getStructure($competition);
     }
 
     public function getBatchNrs(Competition $competition): array
     {
-        return $this->getGameHelper()->getBatchNrs($competition);
+        return $this->againstGameHelper->getBatchNrs($competition);
     }
 
-    public function getGames(Competition $competition, int $batchNr): array
+    public function getAgainstGames(Competition $competition, int $batchNr): array
     {
-        return $this->getGameHelper()->getGames($competition, $batchNr);
+        return $this->againstGameHelper->getAgainstGames($competition, $batchNr);
     }
 
-    public function getAgainstGame(Competition $competition, $id): AgainstGame|null
+    public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null
     {
-        return $this->getGameHelper()->getAgainstGame($competition, $id);
+        return $this->againstGameHelper->getAgainstGame($competition, $id);
     }
 
 //    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {
 //        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
 //    }
 
-    protected function getTeamRoleHelper(): SofaScore\Helper\Team\Role
+    public function getPerson(AgainstGame $againstGame, string|int $id): Person|null
     {
-        return $this->getHelper( SofaScore\Helper\Team\Role::class );
+        return $this->personHelper->getPerson($againstGame, $id);
+    }
+
+    public function convertToPerson(stdClass $externalPerson): ?Person
+    {
+        return $this->personHelper->convertToPerson($externalPerson);
+    }
+
+    public function getImagePerson(string $personExternalId): string
+    {
+        return $this->personHelper->getImagePerson($personExternalId);
+    }
+
+    public function getEndPoint(int $dataTypeIdentifier = null): string
+    {
+        return $this->apiHelper->getEndPoint($dataTypeIdentifier);
+    }
+
+    public function getEndPointSuffix(int $dataTypeIdentifier): string
+    {
+        return $this->apiHelper->getEndPointSuffix($dataTypeIdentifier);
+    }
+
+    public function getCacheMinutes(int $dataTypeIdentifier): int
+    {
+        return $this->apiHelper->getCacheMinutes($dataTypeIdentifier);
+    }
+
+    public function getCacheId(int $dataTypeIdentifier): string
+    {
+        return $this->apiHelper->getCacheId($dataTypeIdentifier);
+    }
+
+    public function getCacheInfo(int $dataTypeIdentifier = null): string
+    {
+        return $this->apiHelper->getCacheInfo($dataTypeIdentifier);
     }
 
     /**
-     * @param Game $game
-     * @param string|int $id
-     * @return Person|null
+     * @param array<string, string> $options
      */
-    public function getPerson(Game $game, $id ): ?Person {
-        return $this->getPersonHelper()->getPerson( $game, $id );
-    }
-
-    public function convertToPerson( stdClass $externalPerson ): ?Person {
-        return $this->getPersonHelper()->convertToPerson( $externalPerson );
-    }
-
-    public function getImagePerson( string $personExternalId ): string {
-        return $this->getPersonHelper()->getImagePerson( $personExternalId );
-    }
-
-    protected function getPersonHelper(): SofaScore\Helper\Person
+    public function setProxy(array $options): void
     {
-        return $this->getHelper( SofaScore\Helper\Person::class );
-    }
-
-    protected function getGameHelper(): SofaScore\Helper\Game
-    {
-        return $this->getHelper( SofaScore\Helper\Game::class );
-    }
-
-    public function getEndPoint( int $dataTypeIdentifier = null ): string
-    {
-        return $this->getApiHelper()->getEndPoint( $dataTypeIdentifier );
-    }
-
-    public function getEndPointSuffix( int $dataTypeIdentifier ): string
-    {
-        return $this->getApiHelper()->getEndPointSuffix( $dataTypeIdentifier );
-    }
-
-    public function getCacheMinutes( int $dataTypeIdentifier ): int{
-        return $this->getApiHelper()->getCacheMinutes( $dataTypeIdentifier );
-    }
-
-    public function getCacheId( int $dataTypeIdentifier ): string {
-        return $this->getApiHelper()->getCacheId( $dataTypeIdentifier );
-    }
-
-    public function getCacheInfo( int $dataTypeIdentifier = null): string {
-        return $this->getApiHelper()->getCacheInfo( $dataTypeIdentifier );
-    }
-
-    public function setProxy(array $options) {
-        return $this->getApiHelper()->setProxy( $options );
-    }
-
-    /**
-     * @return mixed
-     */
-    protected function getApiHelper()
-    {
-        if (array_key_exists(SofaScore\ApiHelper::class, $this->helpers)) {
-            return $this->helpers[SofaScore\ApiHelper::class];
-        }
-        $this->helpers[SofaScore\ApiHelper::class] = new SofaScore\ApiHelper(
-            $this->getExternalSource(),
-            $this->cacheItemDbRepos,
-            $this->logger
-        );
-        return $this->helpers[SofaScore\ApiHelper::class];
-    }
-
-    /**
-     * @param string $helperClass
-     * @return mixed
-     */
-    protected function getHelper( string $helperClass )
-    {
-        if (array_key_exists($helperClass, $this->helpers)) {
-            return $this->helpers[$helperClass];
-        }
-        $this->helpers[$helperClass] = new $helperClass(
-            $this,
-            $this->getApiHelper(),
-            $this->logger
-        );
-        return $this->helpers[$helperClass];
+        $this->apiHelper->setProxy($options);
     }
 }

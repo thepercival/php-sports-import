@@ -2,6 +2,7 @@
 
 namespace SportsImport\Service;
 
+use Exception;
 use SportsImport\ExternalSource;
 use Sports\Sport\Repository as SportRepository;
 use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
@@ -18,8 +19,8 @@ class Sport
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|SportBase[] $externalSourceSports
-     * @throws \Exception
+     * @param list<SportBase> $externalSourceSports
+     * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceSports): void
     {
@@ -30,7 +31,7 @@ class Sport
             }
             $sportAttacher = $this->sportAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($sportAttacher === null) {
                 $sport = $this->createSport($externalSourceSport);
@@ -62,10 +63,10 @@ class Sport
         return $this->sportRepos->save($newSport);
     }
 
-    protected function editSport(SportBase $sport, SportBase $externalSourceSport): SportBase
+    protected function editSport(SportBase $sport, SportBase $externalSourceSport): void
     {
         $sport->setName($externalSourceSport->getName());
         $sport->setCustomId($externalSourceSport->getCustomId());
-        return $this->sportRepos->save($sport);
+        $this->sportRepos->save($sport);
     }
 }

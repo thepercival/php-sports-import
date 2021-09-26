@@ -27,12 +27,13 @@ class TeamCompetitor
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|TeamCompetitorBase[] $externalSourceTeamCompetitors
+     * @param list<TeamCompetitorBase> $externalSourceTeamCompetitors
      * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceTeamCompetitors): void
     {
-        $updated = 0; $added = 0;
+        $updated = 0;
+        $added = 0;
         foreach ($externalSourceTeamCompetitors as $externalSourceTeamCompetitor) {
             $externalId = $externalSourceTeamCompetitor->getId();
             if ($externalId === null) {
@@ -40,7 +41,7 @@ class TeamCompetitor
             }
             $competitorAttacher = $this->teamCompetitorAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($competitorAttacher === null) {
                 $teamCompetitor = $this->createTeamCompetitor($externalSource, $externalSourceTeamCompetitor);
@@ -59,21 +60,21 @@ class TeamCompetitor
                 $updated++;
             }
         }
-        $this->logger->info("added: " . $added . ", updated: " . $updated );
+        $this->logger->info("added: " . $added . ", updated: " . $updated);
     }
 
     protected function createTeamCompetitor(ExternalSource $externalSource, TeamCompetitorBase $externalSourceTeamCompetitor): ?TeamCompetitorBase
     {
         $team = $this->teamAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceTeamCompetitor->getTeam()->getId()
+            (string)$externalSourceTeamCompetitor->getTeam()->getId()
         );
         if ($team === null) {
             return null;
         }
         $competition = $this->competitionAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceTeamCompetitor->getCompetition()->getId()
+            (string)$externalSourceTeamCompetitor->getCompetition()->getId()
         );
         if ($competition === null) {
             return null;
@@ -91,10 +92,10 @@ class TeamCompetitor
         return $teamCompetitor;
     }
 
-    protected function editTeamCompetitor(TeamCompetitorBase $teamCompetitor, TeamCompetitorBase $externalSourceTeamCompetitor): TeamCompetitorBase
+    protected function editTeamCompetitor(TeamCompetitorBase $teamCompetitor, TeamCompetitorBase $externalSourceTeamCompetitor): void
     {
         $teamCompetitor->setRegistered($externalSourceTeamCompetitor->getRegistered());
         $teamCompetitor->setInfo($externalSourceTeamCompetitor->getInfo());
-        return $this->teamCompetitorRepos->save($teamCompetitor);
+        $this->teamCompetitorRepos->save($teamCompetitor);
     }
 }

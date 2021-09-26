@@ -2,6 +2,13 @@
 
 namespace SportsImport\Attacher\League;
 
-class Repository extends \SportsImport\Attacher\Repository
+use SportsImport\Attacher\League as LeagueAttacher;
+use SportsImport\Attacher\Repository as AttacherRepository;
+use Sports\League as LeagueBase;
+
+/**
+ * @template-extends AttacherRepository<LeagueAttacher,LeagueBase>
+ */
+class Repository extends AttacherRepository
 {
 }

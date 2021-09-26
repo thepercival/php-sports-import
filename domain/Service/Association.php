@@ -2,6 +2,7 @@
 
 namespace SportsImport\Service;
 
+use Exception;
 use SportsImport\ExternalSource;
 use Sports\Association\Repository as AssociationRepository;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
@@ -21,19 +22,19 @@ class Association
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|AssociationBase[] $externalSourceAssociations
-     * @throws \Exception
+     * @param list<AssociationBase> $externalSourceAssociations
+     * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceAssociations): void
     {
         foreach ($externalSourceAssociations as $externalSourceAssociation) {
             $externalId = $externalSourceAssociation->getId();
-            if( $externalId === null ) {
+            if ($externalId === null) {
                 continue;
             }
             $associationAttacher = $this->associationAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($associationAttacher === null) {
                 $association = $this->createAssociation($externalSource, $externalSourceAssociation);
@@ -60,7 +61,7 @@ class Association
             if ($parentExternalId !== null) {
                 $parentAssociation = $this->associationAttacherRepos->findImportable(
                     $externalSource,
-                    $parentExternalId
+                    (string)$parentExternalId
                 );
             }
         }

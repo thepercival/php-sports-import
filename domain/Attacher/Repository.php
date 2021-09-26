@@ -1,17 +1,33 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\Attacher;
 
 use Doctrine\ORM\EntityRepository;
 use SportsImport\ExternalSource;
 use SportsHelpers\Identifiable;
+use SportsImport\Attacher as Atacherbase;
+use SportsHelpers\Repository as BaseRepository;
 
 /**
- * @template-extends EntityRepository<mixed>
+ * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, MixedMethodCall
+ * @template T
+ * @template I
+ * @template-extends EntityRepository<T>
  */
 class Repository extends EntityRepository
 {
-    public function findOneByExternalId(ExternalSource $externalSource, $externalId)
+    /**
+     * @use BaseRepository<T>
+     */
+    use BaseRepository;
+
+    /**
+     * @param ExternalSource $externalSource
+     * @param string $externalId
+     * @return T|null
+     */
+    public function findOneByExternalId(ExternalSource $externalSource, string $externalId): mixed
     {
         return $this->findOneBy(array(
             'externalId' => $externalId,
@@ -19,16 +35,26 @@ class Repository extends EntityRepository
         ));
     }
 
-    public function findImportable(ExternalSource $externalSource, $externalId)
+    /**
+     * @param ExternalSource $externalSource
+     * @param string $externalId
+     * @return I|null
+     */
+    public function findImportable(ExternalSource $externalSource, string $externalId): mixed
     {
-        $externalObject = $this->findOneByExternalId($externalSource, $externalId);
-        if ($externalObject === null) {
+        $attacher = $this->findOneByExternalId($externalSource, $externalId);
+        if ($attacher === null) {
             return null;
         }
-        return $externalObject->getImportable();
+        return $attacher->getImportable();
     }
 
-    public function findOneByImportable(ExternalSource $externalSource, Identifiable $importable)
+    /**
+     * @param ExternalSource $externalSource
+     * @param Identifiable $importable
+     * @return T|null
+     */
+    public function findOneByImportable(ExternalSource $externalSource, Identifiable $importable): mixed
     {
         return $this->findOneBy(array(
             'importable' => $importable,
@@ -36,13 +62,17 @@ class Repository extends EntityRepository
         ));
     }
 
-
-    public function findExternalId(ExternalSource $externalSource, Identifiable $importable)
+    /**
+     * @param ExternalSource $externalSource
+     * @param Identifiable $importable
+     * @return string|null
+     */
+    public function findExternalId(ExternalSource $externalSource, Identifiable $importable): string|null
     {
-        $externalObject = $this->findOneByImportable($externalSource, $importable);
-        if ($externalObject === null) {
+        $attacher = $this->findOneByImportable($externalSource, $importable);
+        if ($attacher === null) {
             return null;
         }
-        return $externalObject->getExternalId();
+        return $attacher->getExternalId();
     }
 }

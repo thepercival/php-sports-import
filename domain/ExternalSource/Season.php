@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
 
@@ -7,12 +8,8 @@ use Sports\Season as SeasonBase;
 interface Season
 {
     /**
-     * @return array|SeasonBase[]
+     * @return array<int|string, SeasonBase>
      */
     public function getSeasons(): array;
-    /**
-     * @param string|int $id
-     * @return SeasonBase|null
-     */
-    public function getSeason($id): ?SeasonBase;
+    public function getSeason(string|int $id): SeasonBase|null;
 }

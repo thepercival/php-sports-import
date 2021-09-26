@@ -8,7 +8,7 @@ use Sports\Sport as SportBase;
 interface Sport
 {
     /**
-     * @return list<SportBase>
+     * @return array<int|string, SportBase>
      */
     public function getSports(): array;
     public function getSport(string|int $id): SportBase|null;

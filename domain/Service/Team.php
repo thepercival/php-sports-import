@@ -24,12 +24,13 @@ class Team
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|TeamBase[] $externalSourceTeams
+     * @param list<TeamBase> $externalSourceTeams
      * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceTeams): void
     {
-        $updated = 0; $added = 0;
+        $updated = 0;
+        $added = 0;
         foreach ($externalSourceTeams as $externalSourceTeam) {
             $externalId = $externalSourceTeam->getId();
             if ($externalId === null) {
@@ -37,7 +38,7 @@ class Team
             }
             $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($teamAttacher === null) {
                 $team = $this->createTeam($externalSource, $externalSourceTeam);
@@ -56,14 +57,14 @@ class Team
                 $updated++;
             }
         }
-        $this->logger->info("added: " . $added . ", updated: " . $updated );
+        $this->logger->info("added: " . $added . ", updated: " . $updated);
     }
 
     protected function createTeam(ExternalSource $externalSource, TeamBase $externalSourceTeam): ?TeamBase
     {
         $association = $this->associationAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceTeam->getAssociation()->getId()
+            (string)$externalSourceTeam->getAssociation()->getId()
         );
         if ($association === null) {
             return null;
@@ -76,56 +77,56 @@ class Team
         return $team;
     }
 
-    protected function editTeam(TeamBase $team, TeamBase $externalSourceTeam): TeamBase
+    protected function editTeam(TeamBase $team, TeamBase $externalSourceTeam): void
     {
         $team->setName($externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
         $team->setImageUrl($externalSourceTeam->getImageUrl());
-        return $this->teamRepos->save($team);
+        $this->teamRepos->save($team);
     }
 
     public function importImage(
-        ExternalSourceTeam $externalSourceTeam, ExternalSource $externalSource,
+        ExternalSourceTeam $externalSourceTeam,
+        ExternalSource $externalSource,
         TeamBase $team,
-        string $localOutputPath, string $publicOutputPath, int $maxWidth = null
-    ): bool
-    {
-        $teamExternalId = $this->teamAttacherRepos->findExternalId( $externalSource, $team );
-        if( $teamExternalId === null ) {
+        string $localOutputPath,
+        string $publicOutputPath,
+        int $maxWidth = null
+    ): bool {
+        $teamExternalId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
+        if ($teamExternalId === null) {
             return false;
         }
         $localFilePath = $localOutputPath . $teamExternalId . ".png";
 
-        if( file_exists( $localFilePath ) ) {
-            $timestamp = filectime ( $localFilePath );
+        if (file_exists($localFilePath)) {
+            $timestamp = filectime($localFilePath);
             $modifyDate = null;
-            if( $timestamp !== false ) {
-                $modifyDate = new \DateTimeImmutable( '@' . $timestamp );
+            if ($timestamp !== false) {
+                $modifyDate = new \DateTimeImmutable('@' . $timestamp);
             }
-            if( $modifyDate !== null && $modifyDate->modify("+1 years") > (new \DateTimeImmutable()) ) {
+            if ($modifyDate !== null && $modifyDate->modify("+1 years") > (new \DateTimeImmutable())) {
                 return false;
             }
         }
 
         try {
-            $imgStream = $externalSourceTeam->getImageTeam( $teamExternalId );
+            $imgStream = $externalSourceTeam->getImageTeam($teamExternalId);
             $im = imagecreatefromstring($imgStream);
             if ($im === false) {
                 return false;
             }
-            if( $maxWidth !== null ) {
+            if ($maxWidth !== null) {
                 // make smaller if greater than maxWidth
             }
             imagepng($im, $localFilePath);
             imagedestroy($im);
 
             $publicFilePath = $publicOutputPath . $teamExternalId . ".png";
-            $team->setImageUrl( $publicFilePath );
-            $this->teamRepos->save( $team );
+            $team->setImageUrl($publicFilePath);
+            $this->teamRepos->save($team);
             return true;
-        }
-        catch( \Exception $e ) {
-
+        } catch (\Exception $e) {
         }
         return false;
     }

@@ -80,9 +80,9 @@ class Service
     public function importSports(
         ExternalSourceSport $externalSourceSport,
         ExternalSource $externalSource
-    ): void
-    {
-        $this->sportImportService->import($externalSource, $externalSourceSport->getSports());
+    ): void {
+        $externalSports = array_values($externalSourceSport->getSports());
+        $this->sportImportService->import($externalSource, $externalSports);
     }
 
     public function importAssociations(
@@ -99,7 +99,7 @@ class Service
         }
         $this->associationImportService->import(
             $externalSource,
-            $externalSourceAssociation->getAssociations($externalSport)
+            array_values($externalSourceAssociation->getAssociations($externalSport))
         );
     }
 
@@ -109,7 +109,7 @@ class Service
     ): void {
         $this->seasonImportService->import(
             $externalSource,
-            $externalSourceSeason->getSeasons()
+            array_values($externalSourceSeason->getSeasons())
         );
     }
 
@@ -120,7 +120,7 @@ class Service
     ): void {
         $this->leagueImportService->import(
             $externalSource,
-            $externalSourceLeague->getLeagues($association)
+            array_values($externalSourceLeague->getLeagues($association))
         );
     }
 
@@ -368,10 +368,8 @@ class Service
             return;
         }
 
-        $this->teamCompetitorImportService->import(
-            $externalSource,
-            $externalSourceTeamCompetitor->getTeamCompetitors($externalCompetition)
-        );
+        $competitors = $externalSourceTeamCompetitor->getTeamCompetitors($externalCompetition);
+        $this->teamCompetitorImportService->import($externalSource, array_values($competitors));
     }
 
     public function importStructure(
@@ -463,7 +461,7 @@ class Service
 
             $this->againstGameImportService->importSchedule(
                 $externalSource,
-                $externalGames
+                array_values($externalGames)
             );
         }
     }
@@ -653,8 +651,8 @@ class Service
      *
      * @param Competition $competition
      * @param int $nrOfPlaces
-     * @param array|int[] $batchNrs
-     * @return array|int[]
+     * @param list<int> $batchNrs
+     * @return list<int>
      */
     protected function getBatchNrsToImport(Competition $competition, int $nrOfPlaces, array $batchNrs): array
     {

@@ -3,46 +3,14 @@ declare(strict_types=1);
 
 namespace SportsImport;
 
-class ExternalSource
+use SportsHelpers\Identifiable;
+
+class ExternalSource extends Identifiable
 {
-    /**
-     * @var int
-     */
-    private $id;
-
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var string
-     */
-    private $website;
-
-    /**
-     * @var string
-     */
-    private $username;
-
-    /**
-     * @var string
-     */
-    private $password;
-
-    /**
-     * @var string
-     */
-    private $apiurl;
-
-    /**
-     * @var string
-     */
-    private $apikey;
-    /**
-     * @var int
-     */
-    private $implementations;
+    private string|null $username = null;
+    private string|null $password = null;
+    private string|null $apikey = null;
+    private int|null $implementations = null;
 
     const MAX_LENGTH_NAME = 50;
     const MAX_LENGTH_WEBSITE = 255;
@@ -67,117 +35,76 @@ class ExternalSource
     const DATA_PERSON_IMAGE = 8192;
     const DATA_TEAM_IMAGE = 16384;
 
-    public function __construct($name, $website = null)
+    public function __construct(
+        private string $name,
+        private string $apiurl,
+        private string|null $website = null
+    )
     {
-        $this->setName($name);
-        $this->setWebsite($website);
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param int $id
-     */
-    public function setId(int $id)
-    {
-        $this->id = $id;
-    }
-
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name)
+    public function setName(string $name): void
     {
-        if (strlen($name) > static::MAX_LENGTH_NAME) {
-            throw new \InvalidArgumentException("de naam mag maximaal ".static::MAX_LENGTH_NAME." karakters bevatten", E_ERROR);
+        if (strlen($name) > self::MAX_LENGTH_NAME) {
+            throw new \InvalidArgumentException("de naam mag maximaal ".self::MAX_LENGTH_NAME." karakters bevatten", E_ERROR);
         }
         $this->name = $name;
     }
 
-    /**
-     * @return string
-     */
-    public function getWebsite()
+    public function getWebsite(): string|null
     {
         return $this->website;
     }
 
-    /**
-     * @param string $website
-     */
-    public function setWebsite($website = null)
+    public function setWebsite(string|null $website): void
     {
-        if (strlen($website) > static::MAX_LENGTH_WEBSITE) {
-            throw new \InvalidArgumentException("de omschrijving mag maximaal ".static::MAX_LENGTH_WEBSITE." karakters bevatten", E_ERROR);
+        if (isset($website) && strlen($website) > self::MAX_LENGTH_WEBSITE) {
+            throw new \InvalidArgumentException("de omschrijving mag maximaal ".self::MAX_LENGTH_WEBSITE." karakters bevatten", E_ERROR);
         }
         $this->website = $website;
     }
 
-    /**
-     * @return string
-     */
-    public function getUsername()
+    public function getUsername(): string|null
     {
         return $this->username;
     }
 
-    /**
-     * @param string $username
-     */
-    public function setUsername($username)
+    public function setUsername(string|null $username): void
     {
         $this->username = $username;
     }
 
-    /**
-     * @return string
-     */
-    public function getPassword()
+    public function getPassword(): string|null
     {
         return $this->password;
     }
 
-    /**
-     * @param string $password
-     */
-    public function setPassword($password)
+    public function setPassword(string|null $password): void
     {
         $this->password = $password;
     }
 
-    /**
-     * @return string
-     */
-    public function getApiurl()
+    public function getApiurl(): string
     {
         return $this->apiurl;
     }
 
-    /**
-     * @param string $apiurl
-     */
-    public function setApiurl($apiurl)
+    public function setApiurl(string $apiurl): void
     {
         $this->apiurl = $apiurl;
     }
 
-    /**
-     * @return string
-     */
-    public function getApikey()
+    public function getApikey(): string|null
     {
         return $this->apikey;
     }
 
-    /**
-     * @param string $apikey
-     */
-    public function setApikey($apikey)
+    public function setApikey(string|null $apikey): void
     {
         $this->apikey = $apikey;
     }
@@ -190,10 +117,7 @@ class ExternalSource
         return $this->implementations;
     }
 
-    /**
-     * @param int $implementations
-     */
-    public function setImplementations(int $implementations)
+    public function setImplementations(int $implementations): void
     {
         $this->implementations = $implementations;
     }

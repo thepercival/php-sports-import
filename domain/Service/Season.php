@@ -22,7 +22,7 @@ class Season
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|SeasonBase[] $externalSourceSeasons
+     * @param list<SeasonBase> $externalSourceSeasons
      * @throws Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceSeasons): void
@@ -34,7 +34,7 @@ class Season
             }
             $seasonAttacher = $this->seasonAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($seasonAttacher === null) {
                 $season = $this->createSeason($externalSourceSeason);

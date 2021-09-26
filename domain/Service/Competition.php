@@ -39,7 +39,7 @@ class Competition
         }
         $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
             $externalSource,
-            $externalId
+            (string)$externalId
         );
         if ($competitionAttacher === null) {
             $competition = $this->createCompetition($externalSource, $externalSourceCompetition);
@@ -61,14 +61,14 @@ class Competition
     {
         $league = $this->leagueAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceCompetition->getLeague()->getId()
+            (string)$externalSourceCompetition->getLeague()->getId()
         );
         if ($league  === null) {
             return null;
         }
         $season = $this->seasonAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceCompetition->getSeason()->getId()
+            (string)$externalSourceCompetition->getSeason()->getId()
         );
         if ($season  === null) {
             return null;
@@ -84,7 +84,8 @@ class Competition
         $competition->setStartDateTime($season->getStartDateTime());
 
         foreach ($externalSourceCompetition->getSports() as $externalCompetitionSport) {
-            $sport = $this->sportAttacherRepos->findImportable($externalSource, $externalCompetitionSport->getSport()->getId());
+            $externalSportId = (string)$externalCompetitionSport->getSport()->getId();
+            $sport = $this->sportAttacherRepos->findImportable($externalSource, $externalSportId);
             if ($sport === null) {
                 continue;
             }

@@ -10,38 +10,26 @@ use Sports\Competitor\Team as TeamCompetitorBase;
 use Sports\Team as TeamBase;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
+use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use Sports\Competition;
 use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
 
+/**
+ * @template-extends SofaScoreHelper<TeamCompetitorBase>
+ */
 class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
 {
-    /**
-     * @var array | TeamCompetitorBase[]
-     */
-    protected $teamCompetitorCache;
-
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->teamCompetitorCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
 
     /**
-     * @return array|TeamCompetitorBase[]
+     * @return list<TeamCompetitorBase>
      */
     public function getTeamCompetitors(Competition $competition): array
     {
         return array_values($this->getTeamCompetitorsHelper($competition));
     }
 
-    public function getTeamCompetitor(Competition $competition, $id): ?TeamCompetitorBase
+    public function getTeamCompetitor(Competition $competition, string|int $id): ?TeamCompetitorBase
     {
         $competitionTeamCompetitors = $this->getTeamCompetitorsHelper($competition);
         if (array_key_exists($id, $competitionTeamCompetitors)) {
@@ -52,7 +40,7 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
 
     /**
      * @param Competition $competition
-     * @return array|TeamCompetitorBase[]
+     * @return array<int|string, TeamCompetitorBase>
      */
     protected function getTeamCompetitorsHelper(Competition $competition): array
     {
@@ -60,74 +48,85 @@ class Team extends SofaScoreHelper implements ExternalSourceTeamCompetitor
 
         $apiData = $this->apiHelper->getStructureData($competition);
 
-        $apiDataTeamCompetitors = $this->convertExternalSourceTeamCompetitors($apiData);
+        $apiDataTeamCompetitors = $this->convertExternalTeamCompetitors($apiData);
 
         $placeNr = 1;
         $pouleNr = 1;
-        /** @var stdClass $externalSourceTeamCompetitor */
-        foreach ($apiDataTeamCompetitors as $externalSourceTeamCompetitor) {
-            if (array_key_exists($externalSourceTeamCompetitor->id, $competitionTeamCompetitors)) {
+        foreach ($apiDataTeamCompetitors as $externalTeamCompetitor) {
+            if (array_key_exists($externalTeamCompetitor->id, $competitionTeamCompetitors)) {
                 continue;
             }
-            $newTeamCompetitor = $this->convertToTeamCompetitor($competition, $pouleNr, $placeNr++, $externalSourceTeamCompetitor);
-            $competitionTeamCompetitors[$newTeamCompetitor->getId()] = $newTeamCompetitor;
+            $newTeamCompetitor = $this->convertToTeamCompetitor($competition, $pouleNr, $placeNr++, $externalTeamCompetitor);
+            $competitionTeamCompetitors[$externalTeamCompetitor->id] = $newTeamCompetitor;
         }
         return $competitionTeamCompetitors;
     }
 
     /**
      * @param stdClass $apiData
-     * @return array|stdClass[]
+     * @return list<TeamCompetitorData>
      */
-    protected function convertExternalSourceTeamCompetitors(stdClass $apiData): array
+    protected function convertExternalTeamCompetitors(stdClass $apiData): array
     {
         if (property_exists($apiData, 'teamCompetitors')) {
-            return $apiData->teamCompetitors;
-        }
-        $apiDataTeamCompetitors = [];
-
-        if (!property_exists($apiData, 'standingsTables') || count($apiData->standingsTables) === 0) {
+            /** @var list<TeamCompetitorData> $apiDataTeamCompetitors */
+            $apiDataTeamCompetitors = $apiData->teamCompetitors;
             return $apiDataTeamCompetitors;
         }
+        /** @var list<TeamCompetitorData> $apiDataTeamCompetitors */
+        $apiDataTeamCompetitors = [];
+
+        if (!property_exists($apiData, 'standingsTables')) {
+            return $apiDataTeamCompetitors;
+        }
+        if (!is_array($apiData->standingsTables) || count($apiData->standingsTables) === 0) {
+            return $apiDataTeamCompetitors;
+        }
+
+        /** @var stdClass $standingsTables */
         $standingsTables = $apiData->standingsTables[0];
         if (!property_exists($standingsTables, 'tableRows')) {
             return $apiDataTeamCompetitors;
         }
-        foreach ($standingsTables->tableRows as $tableRow) {
+        /** @var list<TeamCompetitorData> $tableRows */
+        $tableRows = $standingsTables->tableRows;
+        foreach ($tableRows as $tableRow) {
             if (!property_exists($tableRow, 'team')) {
                 continue;
             }
-            if( !property_exists($tableRow->team, "id") ) {
+            if (!property_exists($tableRow->team, "id")) {
                 continue;
             }
-            if( !property_exists($tableRow, "id") ) {
+            if (!property_exists($tableRow, "id")) {
                 continue;
             }
             $apiDataTeamCompetitors[] = $tableRow;
         }
-        uasort( $apiDataTeamCompetitors, function( stdClass $a, stdClass $b): int {
+        uasort($apiDataTeamCompetitors, function (TeamCompetitorData $a, TeamCompetitorData $b): int {
             return $a->id < $b->id ? -1 : 1;
         });
-        return $apiDataTeamCompetitors;
+        return array_values($apiDataTeamCompetitors);
     }
 
     protected function convertToTeamCompetitor(
         Competition $competition,
-        int $pouleNr, int $placeNr,
-        stdClass $externalSourceTeamCompetitor): TeamCompetitorBase
-    {
-        if( array_key_exists( $externalSourceTeamCompetitor->id, $this->teamCompetitorCache ) ) {
-            return $this->teamCompetitorCache[$externalSourceTeamCompetitor->id];
+        int $pouleNr,
+        int $placeNr,
+        TeamCompetitorData $externalTeamCompetitor
+    ): TeamCompetitorBase {
+        if (array_key_exists($externalTeamCompetitor->id, $this->cache)) {
+            return $this->cache[$externalTeamCompetitor->id];
         }
         $association = $competition->getLeague()->getAssociation();
-        $team = $this->createTeam( $association, $externalSourceTeamCompetitor->team );
-        $teamCompetitor = new TeamCompetitorBase( $competition, $pouleNr, $placeNr, $team );
-        $teamCompetitor->setId( $externalSourceTeamCompetitor->id );
-        $this->teamCompetitorCache[$teamCompetitor->getId()] = $teamCompetitor;
+        $team = $this->createTeam($association, $externalTeamCompetitor->team);
+        $teamCompetitor = new TeamCompetitorBase($competition, $pouleNr, $placeNr, $team);
+        $teamCompetitor->setId($externalTeamCompetitor->id);
+        $this->cache[$externalTeamCompetitor->id] = $teamCompetitor;
         return $teamCompetitor;
     }
 
-    protected function createTeam(Association $association, stdClass $externalTeam): TeamBase {
+    protected function createTeam(Association $association, TeamData $externalTeam): TeamBase
+    {
         return $this->apiHelper->convertTeam($association, $externalTeam);
     }
 }

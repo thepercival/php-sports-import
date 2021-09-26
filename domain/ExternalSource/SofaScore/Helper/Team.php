@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
@@ -11,32 +12,23 @@ use SportsImport\ExternalSource\SofaScore;
 use Sports\Competition;
 use SportsImport\ExternalSource\Team as ExternalSourceTeam;
 
+/**
+ * @template-extends SofaScoreHelper<TeamBase>
+ */
 class Team extends SofaScoreHelper implements ExternalSourceTeam
 {
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
-
     /**
      * @param Competition $competition
-     * @return array|TeamBase[]
+     * @return list<TeamBase>
      */
     public function getTeams(Competition $competition): array
     {
-        return array_map( function(TeamCompetitor $teamCompetitor) : TeamBase {
+        return array_values( array_map( function(TeamCompetitor $teamCompetitor) : TeamBase {
             return $teamCompetitor->getTeam();
-        }, $this->parent->getTeamCompetitors($competition));
+        }, $this->parent->getTeamCompetitors($competition)));
     }
 
-    public function getTeam(Competition $competition, $id): ?TeamBase
+    public function getTeam(Competition $competition, string|int $id): TeamBase|null
     {
         $competitionTeams = $this->getTeams($competition);
         if (array_key_exists($id, $competitionTeams)) {

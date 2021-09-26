@@ -9,14 +9,8 @@ interface League
 {
     /**
      * @param Association $association
-     * @return array|LeagueBase[]
+     * @return array<int|string, LeagueBase>
      */
-    public function getLeagues( Association $association): array;
-
-    /**
-     * @param Association $association
-     * @param mixed $id
-     * @return LeagueBase|null
-     */
-    public function getLeague(Association $association, $id): ?LeagueBase;
+    public function getLeagues(Association $association): array;
+    public function getLeague(Association $association, string|int $id): LeagueBase|null;
 }

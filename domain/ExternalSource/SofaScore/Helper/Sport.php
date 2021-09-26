@@ -2,6 +2,7 @@
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
+use SportsHelpers\GameMode;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use SportsImport\ExternalSource\Sport as ExternalSourceSport;
@@ -11,47 +12,32 @@ use Psr\Log\LoggerInterface;
 use Sports\Sport\Custom as SportCustom;
 use stdClass;
 
+/**
+ * @template-extends SofaScoreHelper<SportBase>
+ */
 class Sport extends SofaScoreHelper implements ExternalSourceSport
 {
     /**
-     * @var array|SportBase[]
+     * @return array<string|int, SportBase>
      */
-    protected $sportCache;
-    /**
-     * @var SportBase
-     */
-    protected $defaultSport;
-
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->sportCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
-
     public function getSports(): array
     {
         $externalSports = $this->apiHelper->getSportsData();
         $sports = [];
-        foreach ($externalSports as $externalSportName => $value ) {
+        $externalSportNames = array_keys($externalSports);
+        foreach ($externalSportNames as $externalSportName) {
             $externalSport = new stdClass();
             $externalSport->name = $externalSportName;
             $sport = $this->convertToSport($externalSport) ;
-            $sports[$sport->getId()] = $sport;
+            $sports[$externalSportName] = $sport;
         }
         return $sports;
     }
 
-    public function getSport($id = null): ?SportBase
+    public function getSport(string|int $id): SportBase|null
     {
-        if (array_key_exists($id, $this->sportCache)) {
-            return $this->sportCache[$id];
+        if (array_key_exists($id, $this->cache)) {
+            return $this->cache[$id];
         }
         $sports = $this->getSports();
         if (array_key_exists($id, $sports)) {
@@ -62,21 +48,28 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
 
     protected function convertToSport(stdClass $externalSport): SportBase
     {
-        if( array_key_exists( $externalSport->name, $this->sportCache ) ) {
-            return $this->sportCache[$externalSport->name];
+        /** @var string $externalSportName */
+        $externalSportName = $externalSport->name;
+        if (array_key_exists($externalSportName, $this->cache)) {
+            return $this->cache[$externalSportName];
         }
-        $sport = new SportBase($externalSport->name);
-        $sport->setTeam(false);
-        $sport->setId($externalSport->name);
-        $sport->setCustomId( $this->getCustomId($externalSport->name) );
-        $this->sportCache[$sport->getId()] = $sport;
+        $sport = new SportBase(
+            $externalSportName,
+            true,
+            GameMode::AGAINST,
+            1
+        );
+        $sport->setId($externalSportName);
+        $sport->setCustomId($this->getCustomId($externalSportName));
+        $this->cache[$externalSportName] = $sport;
         return $sport;
     }
 
-    protected function getCustomId( string $sportName ): ?int {
-        if( $sportName === "football" ) {
+    protected function getCustomId(string $sportName): int
+    {
+        if ($sportName === "football") {
             return SportCustom::Football;
         }
-        return null;
+        return 0;
     }
 }

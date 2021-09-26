@@ -4,10 +4,13 @@ namespace SportsImport\ExternalSource;
 
 class NameAnalyzer
 {
-    protected ?string $firstName;
-    protected ?string $nameInsertions;
-    protected ?string $lastName;
+    protected string|null $firstName = null;
+    protected string|null $nameInsertions = null;
+    protected string $lastName = '';
 
+    /**
+     * @var list<string>
+     */
     protected static array $defaultNameInsertions = array(
         "van",
         "der",
@@ -20,9 +23,6 @@ class NameAnalyzer
 
     public function __construct(string $name)
     {
-        $this->firstName = null;
-        $this->nameInsertions = null;
-        $this->lastName = null;
         $this->analyse($name);
     }
 
@@ -41,42 +41,46 @@ class NameAnalyzer
         return $this->lastName;
     }
 
-    protected function analyse(string $name)
+    protected function analyse(string $name): void
     {
         $arrNameParts = explode(" ", str_replace(".", "", $name));
         for ($nI = 0; $nI < count($arrNameParts); $nI++) {
+            $namePart = $arrNameParts[$nI];
             if ($nI === 0 and count($arrNameParts) > 1) {
-                $this->firstName = $arrNameParts[$nI];
+                $this->firstName = $namePart;
             } elseif ($nI < (count($arrNameParts) - 1)) {
-                if ($this->inDefaultNameInsertions($arrNameParts[$nI])) {
-                    if ($this->nameInsertions !== null) {
-                        $this->nameInsertions .= " ";
-                    }
-                    $this->nameInsertions .= strtolower($arrNameParts[$nI]);
-                } else {
-                    if ($this->lastName !== null) {
-                        $this->lastName .= " ";
-                    }
-                    $this->lastName .= $arrNameParts[$nI];
+                if ($this->inDefaultNameInsertions($namePart)) {
+                    $this->addNameInsertionsPart($namePart);
                 }
             } else {
                 if ($nI === (count($arrNameParts) - 1)) {
-                    if ($this->lastName !== null) {
-                        $this->lastName .= " ";
-                    }
-                    $this->lastName .= $arrNameParts[$nI];
+                    $this->addLastNamePart($namePart);
                 }
             }
         }
     }
 
-    /**
-     * @param string $needle
-     * @return bool
-     */
-    protected function inDefaultNameInsertions( string $needle ): bool {
-        foreach( static::$defaultNameInsertions as $value ) {
-            if( strtolower($value) === $needle ) {
+    protected function addNameInsertionsPart(string $namePart): void
+    {
+        if ($this->nameInsertions !== null) {
+            $this->nameInsertions .= " " . strtolower($namePart);
+        } else {
+            $this->nameInsertions = strtolower($namePart);
+        }
+    }
+
+    protected function addLastNamePart(string $namePart): void
+    {
+        if (strlen($this->lastName) > 0) {
+            $this->lastName .= " ";
+        }
+        $this->lastName .= $namePart;
+    }
+
+    protected function inDefaultNameInsertions(string $needle): bool
+    {
+        foreach (static::$defaultNameInsertions as $value) {
+            if (strtolower($value) === $needle) {
                 return true;
             }
         }

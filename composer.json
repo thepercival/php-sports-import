@@ -15,7 +15,7 @@
   },
   "require": {
     "php": ">=8.0",
-    "vlucas/phpdotenv": "^4.1",
+    "vlucas/phpdotenv": "^v5.1",
     "league/period": "^4.9",
     "doctrine/orm": "^2.7",
     "jms/serializer": "^3.4",

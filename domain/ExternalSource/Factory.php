@@ -9,21 +9,9 @@ use Psr\Log\LoggerInterface;
 class Factory implements Proxy
 {
     /**
-     * @var Repository
+     * @var array<string, string>
      */
-    protected $externalSourceRepos;
-    /**
-     * @var CacheItemDbRepository
-     */
-    protected $cacheItemDbRepos;
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-    /**
-     * @var array|string[]|null
-     */
-    protected $proxyOptions;
+    protected array $proxyOptions = [];
 
     protected const SPORT = 1;
     protected const ASSOCIATION = 2;
@@ -33,16 +21,13 @@ class Factory implements Proxy
     protected const TEAMCOMPETITOR = 32;
 
     public function __construct(
-        Repository $externalSourceRepos,
-        CacheItemDbRepository $cacheItemDbRepos,
-        LoggerInterface $logger
+        protected Repository $externalSourceRepos,
+        protected CacheItemDbRepository $cacheItemDbRepos,
+        protected LoggerInterface $logger
     ) {
-        $this->externalSourceRepos = $externalSourceRepos;
-        $this->cacheItemDbRepos = $cacheItemDbRepos;
-        $this->logger = $logger;
     }
 
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
@@ -56,9 +41,10 @@ class Factory implements Proxy
 //    }
 
     /**
-     * @param array|string[] $options
+     * @param array<string, string> $options
      */
-    public function setProxy(array $options) {
+    public function setProxy(array $options): void
+    {
         $this->proxyOptions = $options;
     }
 
@@ -69,16 +55,16 @@ class Factory implements Proxy
             return null;
         }
         $implementation = $this->create($externalSource);
-        if( $implementation === null ) {
+        if ($implementation === null) {
             return null;
         }
-        if( is_array($this->proxyOptions) && ($implementation instanceof Proxy) ) {
-            $implementation->setProxy( $this->proxyOptions );
+        if (count($this->proxyOptions) > 0 && ($implementation instanceof Proxy)) {
+            $implementation->setProxy($this->proxyOptions);
         }
         return $implementation;
     }
 
-    protected function create(ExternalSource $externalSource): ?Implementation
+    protected function create(ExternalSource $externalSource): Implementation|null
     {
         if ($externalSource->getName() === SofaScore::NAME) {
             return new SofaScore($externalSource, $this->cacheItemDbRepos, $this->logger);
@@ -87,11 +73,10 @@ class Factory implements Proxy
     }
 
     /**
-     * @param array|ExternalSource[] $externalSources
+     * @param list<ExternalSource> $externalSources
      */
-    public function setImplementations(array $externalSources)
+    public function setImplementations(array $externalSources): void
     {
-        /** @var ExternalSource $externalSource */
         foreach ($externalSources as $externalSource) {
             $externalSourceImpl = $this->create($externalSource);
             if ($externalSourceImpl === null) {
@@ -103,26 +88,26 @@ class Factory implements Proxy
         }
     }
 
-    protected function getImplementations(ExternalSource\Implementation $implementation)
+    protected function getImplementations(ExternalSource\Implementation $implementation): int
     {
         $implementations = 0;
         if ($implementation instanceof ExternalSource\Sport) {
-            $implementations += static::SPORT;
+            $implementations += self::SPORT;
         }
         if ($implementation instanceof ExternalSource\Association) {
-            $implementations += static::ASSOCIATION;
+            $implementations += self::ASSOCIATION;
         }
         if ($implementation instanceof ExternalSource\Season) {
-            $implementations += static::SEASON;
+            $implementations += self::SEASON;
         }
         if ($implementation instanceof ExternalSource\League) {
-            $implementations += static::LEAGUE;
+            $implementations += self::LEAGUE;
         }
         if ($implementation instanceof ExternalSource\Competition) {
-            $implementations += static::COMPETITION;
+            $implementations += self::COMPETITION;
         }
         if ($implementation instanceof ExternalSource\Competitor\Team) {
-            $implementations += static::TEAMCOMPETITOR;
+            $implementations += self::TEAMCOMPETITOR;
         }
         return $implementations;
     }

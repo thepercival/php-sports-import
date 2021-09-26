@@ -68,7 +68,7 @@ class Against
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|AgainstGame[] $externalGames
+     * @param list<AgainstGame> $externalGames
      * @throws Exception
      */
     public function importSchedule(ExternalSource $externalSource, array $externalGames): void
@@ -88,7 +88,7 @@ class Against
             }
             $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
 
             if ($gameAttacher === null) {
@@ -107,9 +107,6 @@ class Against
                 continue;
             }
             $game = $gameAttacher->getImportable();
-            if ($game === null) {
-                continue;
-            }
             $rescheduled = false;
             $oldStartDateTime = $game->getStartDateTime();
             if ($game->getStartDateTime() != $externalGame->getStartDateTime()) {
@@ -170,17 +167,27 @@ class Against
         $externalId = $externalGame->getId();
         $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
             $externalSource,
-            $externalId
+            (string)$externalId
         );
-        $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
-        $game = $gameAttacher->getImportable();
-        if ($game === null) {
+        if ($gameAttacher === null) {
+            $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
             $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
             $placeLocationMap = new CompetitorMap($teamCompetitors);
             $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
             $gameOutput->output($externalGame, "no game found for external  ");
             $this->logger->warning("no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName() ."\"") ;
+            return;
         }
+
+
+        $game = $gameAttacher->getImportable();
+//        if ($game === null) {
+//            $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
+//            $placeLocationMap = new CompetitorMap($teamCompetitors);
+//            $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
+//            $gameOutput->output($externalGame, "no game found for external  ");
+//            $this->logger->warning("no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName() ."\"") ;
+//        }
 
         $game->setState($externalGame->getState());
 
@@ -236,7 +243,7 @@ class Against
     {
         $sport = $this->sportAttacherRepos->findImportable(
             $externalSource,
-            $externalSport->getId()
+            (string)$externalSport->getId()
         );
         if ($sport === null) {
             $this->logger->warning("no sport found for external sport " . $externalSport->getName());
@@ -252,7 +259,7 @@ class Against
 
         $competition = $this->competitionAttacherRepos->findImportable(
             $externalSource,
-            $externalCompetition->getId()
+            (string)$externalCompetition->getId()
         );
         if ($competition === null) {
             $this->logger->warning("no competition found for external competition " . $externalCompetition->getName());
@@ -296,7 +303,7 @@ class Against
     {
         $person = $this->personAttacherRepos->findImportable(
             $externalSource,
-            $externalPerson->getId()
+            (string)$externalPerson->getId()
         );
         if ($person === null) {
             $this->logger->warning("no person found for external person " . $externalPerson->getName());
@@ -309,7 +316,7 @@ class Against
     {
         $team = $this->teamAttacherRepos->findImportable(
             $externalSource,
-            $externalTeam->getId()
+            (string)$externalTeam->getId()
         );
         if ($team === null) {
             $this->logger->warning("no team found for external team " . $externalTeam->getName());

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
 
@@ -9,14 +10,9 @@ interface Team
 {
     /**
      * @param Competition $competition
-     * @return array|TeamBase[]
+     * @return list<TeamBase>
      */
     public function getTeams(Competition $competition): array;
-    /**
-     * @param Competition $competition
-     * @param string|int $id
-     * @return TeamBase|null
-     */
-    public function getTeam(Competition $competition, $id): ?TeamBase;
-    public function getImageTeam( string $teamExternalId ): string;
+    public function getTeam(Competition $competition, string|int $id): TeamBase|null;
+    public function getImageTeam(string $teamExternalId): string;
 }

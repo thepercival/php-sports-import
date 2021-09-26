@@ -9,13 +9,8 @@ interface Association
 {
     /**
      * @param Sport $sport
-     * @return array|AssociationBase[]
+     * @return array<int|string, AssociationBase>
      */
-    public function getAssociations( Sport $sport ): array;
-    /**
-     * @param Sport $sport
-     * @param int|string $id
-     * @return AssociationBase|null
-     */
-    public function getAssociation(Sport $sport, $id): ?AssociationBase;
+    public function getAssociations(Sport $sport): array;
+    public function getAssociation(Sport $sport, string|int $id): AssociationBase|null;
 }

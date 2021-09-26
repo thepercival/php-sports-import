@@ -8,12 +8,8 @@ use Sports\Competition;
 interface Team
 {
     /**
-     * @return array|TeamCompetitor[]
+     * @return list<TeamCompetitor>
      */
     public function getTeamCompetitors(Competition $competition): array;
-    /**
-     * @param mixed $id
-     * @return TeamCompetitor|null
-     */
-    public function getTeamCompetitor(Competition $competition, $id): ?TeamCompetitor;
+    public function getTeamCompetitor(Competition $competition, string|int $id): TeamCompetitor|null;
 }

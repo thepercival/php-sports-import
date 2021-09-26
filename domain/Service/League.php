@@ -20,7 +20,7 @@ class League
 
     /**
      * @param ExternalSource $externalSource
-     * @param array|LeagueBase[] $externalSourceLeagues
+     * @param list<LeagueBase> $externalSourceLeagues
      * @throws \Exception
      */
     public function import(ExternalSource $externalSource, array $externalSourceLeagues): void
@@ -32,7 +32,7 @@ class League
             }
             $leagueAttacher = $this->leagueAttacherRepos->findOneByExternalId(
                 $externalSource,
-                $externalId
+                (string)$externalId
             );
             if ($leagueAttacher === null) {
                 $league = $this->createLeague($externalSource, $externalSourceLeague);
@@ -56,7 +56,7 @@ class League
     {
         $association = $this->associationAttacherRepos->findImportable(
             $externalSource,
-            $externalSourceLeague->getAssociation()->getId()
+            (string)$externalSourceLeague->getAssociation()->getId()
         );
         if ($association === null) {
             return null;

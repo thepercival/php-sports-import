@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
@@ -9,79 +10,67 @@ use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
 use Sports\Association as AssociationBase;
 use Sports\Sport;
 use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
 use Psr\Log\LoggerInterface;
-use SportsImport\Service as ImportService;
 
+/**
+ * @template-extends SofaScoreHelper<AssociationBase>
+ */
 class Association extends SofaScoreHelper implements ExternalSourceAssociation
 {
-    /**
-     * @var array|AssociationBase[]
-     */
-    protected $associationCache;
-    /**
-     * @var AssociationBase
-     */
-    protected $defaultAssociation;
+    protected AssociationBase|null $defaultAssociation = null;
 
-    public function __construct(
-        SofaScore $parent,
-        SofaScoreApiHelper $apiHelper,
-        LoggerInterface $logger
-    ) {
-        $this->associationCache = [];
-        parent::__construct(
-            $parent,
-            $apiHelper,
-            $logger
-        );
-    }
+//    public function __construct(
+//        SofaScore $parent,
+//        SofaScoreApiHelper $apiHelper,
+//        LoggerInterface $logger
+//    ) {
+//        parent::__construct(
+//            $parent,
+//            $apiHelper,
+//            $logger
+//        );
+//    }
 
     /**
      * @param Sport $sport
-     * @return array|AssociationBase[]
+     * @return array<int|string, AssociationBase>
      */
-    public function getAssociations( Sport $sport ): array
+    public function getAssociations(Sport $sport): array
     {
         $defaultAssociation = $this->getDefaultAssociation();
-        $associations = [ $defaultAssociation->getId() => $defaultAssociation ];
+        $associations = [ (string)$defaultAssociation->getId() => $defaultAssociation ];
 
-        $externalAssociations = $this->apiHelper->getAssociationsData( $sport );
+        $externalAssociations = $this->apiHelper->getAssociationsData($sport);
 
         foreach ($externalAssociations as $externalAssociation) {
             $association = $this->convertToAssociation($externalAssociation);
-            $associations[$association->getId()] = $association;
+            $associations[$externalAssociation->id] = $association;
         }
         return $associations;
     }
 
-    public function getAssociation(Sport $sport, $id = null): ?AssociationBase
+    public function getAssociation(Sport $sport, string|int $id): AssociationBase|null
     {
-        if (array_key_exists($id, $this->associationCache)) {
-            return $this->associationCache[$id];
+        if (array_key_exists($id, $this->cache)) {
+            return $this->cache[$id];
         }
-        $associations = $this->getAssociations( $sport );
+        $associations = $this->getAssociations($sport);
         if (array_key_exists($id, $associations)) {
             return $associations[$id];
         }
         return null;
     }
 
-    /**
-     * {"name":"England","slug":"england","priority":10,"id":1,"flag":"england"}
-     *
-     * @param stdClass $externalAssociation
-     * @return AssociationBase
-     * @throws \Exception
-     */
-    protected function convertToAssociation(\stdClass $externalAssociation): AssociationBase
+    protected function convertToAssociation(AssociationData $externalAssociation): AssociationBase
     {
-        if( array_key_exists( $externalAssociation->id, $this->associationCache ) ) {
-            return $this->associationCache[$externalAssociation->id];
+        if (array_key_exists($externalAssociation->id, $this->cache)) {
+            return $this->cache[$externalAssociation->id];
         }
         $association = new AssociationBase($externalAssociation->name);
         $association->setParent($this->getDefaultAssociation());
         $association->setId($externalAssociation->id);
-        $this->associationCache[$association->getId()] = $association;
+        $this->cache[$externalAssociation->id] = $association;
         return $association;
     }
 

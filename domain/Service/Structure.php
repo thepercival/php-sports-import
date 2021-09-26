@@ -25,18 +25,17 @@ class Structure
     public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure): ?StructureBase
     {
         $externalCompetition = $externalSourceStructure->getFirstRoundNumber()->getCompetition();
-        /** @var Attacher|null $competitionAttacher */
         $competitionAttacher = $this->competitionAttacherRepos->findOneByExternalId(
             $externalSource,
-            $externalCompetition->getId()
+            (string)$externalCompetition->getId()
         );
         if ($competitionAttacher === null) {
             return null;
         }
-        /** @var Competition $competition */
         $competition = $competitionAttacher->getImportable();
 
-        $structure = $this->structureRepos->getStructure($competition);
+        // is needed for initialization
+        $this->structureRepos->getStructure($competition);
 
         $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
 
