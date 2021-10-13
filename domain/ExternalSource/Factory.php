@@ -5,6 +5,7 @@ namespace SportsImport\ExternalSource;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource;
 use Psr\Log\LoggerInterface;
+use stdClass;
 
 class Factory implements Proxy
 {
@@ -13,12 +14,9 @@ class Factory implements Proxy
      */
     protected array $proxyOptions = [];
 
-    protected const SPORT = 1;
-    protected const ASSOCIATION = 2;
-    protected const SEASON = 4;
-    protected const LEAGUE = 8;
-    protected const COMPETITION = 16;
-    protected const TEAMCOMPETITOR = 32;
+    protected const COMPETITIONS = 1;
+    protected const COMPETITION_STRUCTURE = 2;
+    protected const COMPETITION_DETAILS = 4;
 
     public function __construct(
         protected Repository $externalSourceRepos,
@@ -88,26 +86,17 @@ class Factory implements Proxy
         }
     }
 
-    protected function getImplementations(ExternalSource\Implementation $implementation): int
+    protected function getImplementations(Implementation $externalSourceImplementation): int
     {
         $implementations = 0;
-        if ($implementation instanceof ExternalSource\Sport) {
-            $implementations += self::SPORT;
+        if ($externalSourceImplementation instanceof ExternalSource\Competitions) {
+            $implementations += self::COMPETITIONS;
         }
-        if ($implementation instanceof ExternalSource\Association) {
-            $implementations += self::ASSOCIATION;
+        if ($externalSourceImplementation instanceof ExternalSource\CompetitionStructure) {
+            $implementations += self::COMPETITION_STRUCTURE;
         }
-        if ($implementation instanceof ExternalSource\Season) {
-            $implementations += self::SEASON;
-        }
-        if ($implementation instanceof ExternalSource\League) {
-            $implementations += self::LEAGUE;
-        }
-        if ($implementation instanceof ExternalSource\Competition) {
-            $implementations += self::COMPETITION;
-        }
-        if ($implementation instanceof ExternalSource\Competitor\Team) {
-            $implementations += self::TEAMCOMPETITOR;
+        if ($externalSourceImplementation instanceof ExternalSource\CompetitionDetails) {
+            $implementations += self::COMPETITION_DETAILS;
         }
         return $implementations;
     }

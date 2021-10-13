@@ -3,34 +3,28 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use stdClass;
+use Psr\Log\LoggerInterface;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
+use SportsImport\ExternalSource\SofaScore;
 use Sports\Association as AssociationBase;
 use Sports\Sport;
-use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
-use Psr\Log\LoggerInterface;
 
 /**
  * @template-extends SofaScoreHelper<AssociationBase>
  */
-class Association extends SofaScoreHelper implements ExternalSourceAssociation
+class Association extends SofaScoreHelper
 {
     protected AssociationBase|null $defaultAssociation = null;
 
-//    public function __construct(
-//        SofaScore $parent,
-//        SofaScoreApiHelper $apiHelper,
-//        LoggerInterface $logger
-//    ) {
-//        parent::__construct(
-//            $parent,
-//            $apiHelper,
-//            $logger
-//        );
-//    }
+    public function __construct(
+        protected AssociationApiHelper $apiHelper,
+        SofaScore $parent,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($parent, $logger);
+    }
 
     /**
      * @param Sport $sport
@@ -41,11 +35,11 @@ class Association extends SofaScoreHelper implements ExternalSourceAssociation
         $defaultAssociation = $this->getDefaultAssociation();
         $associations = [ (string)$defaultAssociation->getId() => $defaultAssociation ];
 
-        $externalAssociations = $this->apiHelper->getAssociationsData($sport);
+        $associationsData = $this->apiHelper->getAssociations($sport);
 
-        foreach ($externalAssociations as $externalAssociation) {
-            $association = $this->convertToAssociation($externalAssociation);
-            $associations[$externalAssociation->id] = $association;
+        foreach ($associationsData as $associationData) {
+            $association = $this->convertDataToAssociation($associationData);
+            $associations[$associationData->id] = $association;
         }
         return $associations;
     }
@@ -62,7 +56,7 @@ class Association extends SofaScoreHelper implements ExternalSourceAssociation
         return null;
     }
 
-    protected function convertToAssociation(AssociationData $externalAssociation): AssociationBase
+    protected function convertDataToAssociation(AssociationData $externalAssociation): AssociationBase
     {
         if (array_key_exists($externalAssociation->id, $this->cache)) {
             return $this->cache[$externalAssociation->id];

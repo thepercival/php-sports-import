@@ -8,81 +8,131 @@ use Sports\Person;
 use Sports\Team\Role as TeamRole;
 use stdClass;
 use SportsImport\ExternalSource as ExternalSourceBase;
-use SportsImport\ExternalSource\Implementation as ExternalSourceImplementation;
+use SportsImport\ExternalSource;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use Psr\Log\LoggerInterface;
 
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Association as AssociationHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\League as LeagueHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Season as SeasonHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Competition as CompetitionHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Structure as StructureApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Competitor\Team as TeamCompetitorHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameDetails as AgainstGameDetailsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Game\Against as AgainstGameHelper;
+//use SportsImport\ExternalSource\SofaScore\ApiHelper\Team\Role as TeamRoleApiHelper;
+//use SportsImport\ExternalSource\SofaScore\Helper\Team\Role as TeamRoleHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Game\RoundNumbers as GameRoundNumbersHelper;
+
 use Sports\Sport;
-use SportsImport\ExternalSource\Sport as ExternalSourceSport;
-use SportsImport\ExternalSource\Association as ExternalSourceAssociation;
 use Sports\Association;
-use SportsImport\ExternalSource\Season as ExternalSourceSeason;
 use Sports\Season;
-use SportsImport\ExternalSource\League as ExternalSourceLeague;
 use Sports\League;
-use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
 use Sports\Competition;
-use SportsImport\ExternalSource\Team as ExternalSourceTeam;
 use Sports\Team;
-use SportsImport\ExternalSource\Competitor\Team as ExternalSourceTeamCompetitor;
 use Sports\Competitor\Team as TeamCompetitor;
-use SportsImport\ExternalSource\Structure as ExternalSourceStructure;
 use Sports\Structure;
-use SportsImport\ExternalSource\Game\Against as ExternalSourceAgainstGame;
-use SportsImport\ExternalSource\Team\Role as ExternalSourceTeamRole;
-use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 use Sports\Game\Against as AgainstGame;
 
 class SofaScore implements
-    ExternalSourceImplementation,
-    ExternalSourceSport,
-    ExternalSourceAssociation,
-    ExternalSourceSeason,
-    ExternalSourceLeague,
-    ExternalSourceCompetition,
-    ExternalSourceTeam,
-    // ExternalSourceTeamRole,
-    ExternalSourcePerson,
-    ExternalSourceTeamCompetitor,
-    ExternalSourceStructure,
-    ExternalSourceAgainstGame,
-    CacheInfo,
-    ApiHelper,
+    Implementation,
+    Competitions,
+    CompetitionStructure,
+    CompetitionDetails,
     Proxy
 {
     public const NAME = "SofaScore";
-    protected SofaScore\ApiHelper $apiHelper;
+    /**
+     * @var array<string, string>|null
+     */
+    private array|null $proxyOptions = null;
 
-    protected SofaScore\Helper\Association $associationHelper;
-    protected SofaScore\Helper\Competition $competitionHelper;
-    protected SofaScore\Helper\League $leagueHelper;
-    protected SofaScore\Helper\Person $personHelper;
-    protected SofaScore\Helper\Season $seasonHelper;
-    protected SofaScore\Helper\Sport $sportHelper;
+    protected SportHelper $sportHelper;
+    protected AssociationHelper $associationHelper;
+    protected LeagueHelper $leagueHelper;
+    protected SeasonHelper $seasonHelper;
+    protected CompetitionHelper $competitionHelper;
+
+    protected PersonHelper $personHelper;
     protected SofaScore\Helper\Structure $structureHelper;
     protected SofaScore\Helper\Team $teamHelper;
     protected SofaScore\Helper\Competitor\Team $teamCompetitorHelper;
     protected SofaScore\Helper\Game\Against $againstGameHelper;
-    protected SofaScore\Helper\Team\Role $teamRoleHelper;
+    // protected SofaScore\Helper\Team\Role $teamRoleHelper;
+
+    protected SofaScore\Helper\Game\RoundNumbers $gameRoundsHelper;
 
     public function __construct(
         protected ExternalSourceBase $externalSource,
         protected CacheItemDbRepository $cacheItemDbRepos,
         protected LoggerInterface $logger
     ) {
-        $apiHelper = new SofaScore\ApiHelper($externalSource, $cacheItemDbRepos, $this->logger);
-        $this->apiHelper = $apiHelper;
-        $this->associationHelper = new SofaScore\Helper\Association($this, $apiHelper, $this->logger);
-        $this->competitionHelper = new SofaScore\Helper\Competition($this, $apiHelper, $this->logger);
-        $this->leagueHelper = new SofaScore\Helper\League($this, $apiHelper, $this->logger);
-        $this->personHelper = new SofaScore\Helper\Person($this, $apiHelper, $this->logger);
-        $this->seasonHelper = new SofaScore\Helper\Season($this, $apiHelper, $this->logger);
-        $this->sportHelper = new SofaScore\Helper\Sport($this, $apiHelper, $this->logger);
-        $this->structureHelper = new SofaScore\Helper\Structure($this, $apiHelper, $this->logger);
-        $this->teamHelper = new SofaScore\Helper\Team($this, $apiHelper, $this->logger);
-        $this->teamCompetitorHelper = new SofaScore\Helper\Competitor\Team($this, $apiHelper, $this->logger);
-        $this->againstGameHelper = new SofaScore\Helper\Game\Against($this, $apiHelper, $this->logger);
-        $this->teamRoleHelper = new SofaScore\Helper\Team\Role($this, $apiHelper, $this->logger);
+        $sportApiHelper = new SportApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->sportHelper = new SportHelper($sportApiHelper, $this, $this->logger);
+
+        $associationApiHelper = new AssociationApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->associationHelper = new AssociationHelper($associationApiHelper, $this, $this->logger);
+
+        $seasonApiHelper = new SeasonApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->seasonHelper = new SeasonHelper($seasonApiHelper, $this, $this->logger);
+
+        $leagueApiHelper = new LeagueApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->leagueHelper = new LeagueHelper($leagueApiHelper, $this, $this->logger);
+
+        $competitionApiHelper = new CompetitionApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->competitionHelper = new CompetitionHelper($competitionApiHelper, $this, $this->logger);
+
+        $teamApiHelper = new TeamApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->teamHelper = new TeamHelper($teamApiHelper, $this, $this->logger);
+
+        $teamCompetitorApiHelper = new TeamCompetitorApiHelper($teamApiHelper, $this, $cacheItemDbRepos, $logger);
+        $this->teamCompetitorHelper = new TeamCompetitorHelper(
+            $this->teamHelper, $teamCompetitorApiHelper, $this, $this->logger);
+
+        $this->structureHelper = new StructureHelper($teamCompetitorApiHelper, $this, $this->logger);
+
+        $playerApiHelper = new PlayerApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->personHelper = new PersonHelper($playerApiHelper, $this, $this->logger);
+
+        $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
+        $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
+        $againstGameDetailsApiHelper = new AgainstGameDetailsApiHelper(
+            $againstGameLineupsApiHelper, $againstGameEventsApiHelper, $teamApiHelper,
+            $this, $cacheItemDbRepos, $logger);
+        $againstGamesApiHelper = new AgainstGamesApiHelper($againstGameDetailsApiHelper, $this, $cacheItemDbRepos, $logger);
+
+
+        $this->againstGameHelper = new AgainstGameHelper(
+            $this->teamHelper, $this->personHelper,
+            $againstGamesApiHelper, $againstGameDetailsApiHelper,
+            $againstGameLineupsApiHelper, $againstGameEventsApiHelper,
+            $playerApiHelper,
+            $this, $this->logger);
+
+        $gameRoundNumbersApiHelper = new GameRoundNumbersApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->gameRoundsHelper = new GameRoundNumbersHelper(
+            $gameRoundNumbersApiHelper, $this, $this->logger);
+
+//        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
+//        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
+
+
 
         $this->cacheItemDbRepos = $cacheItemDbRepos;
         /* $this->structureOptions = new StructureOptions(
@@ -92,12 +142,7 @@ class SofaScore implements
          );*/
     }
 
-    /*protected function getErrorUrl(): string
-    {
-        reset( $this->settings['www']['urls']);
-    }*/
-
-    public function getExternalSource(): ExternalSourceBase
+    public function getExternalSource(): ExternalSource
     {
         return $this->externalSource;
     }
@@ -207,19 +252,29 @@ class SofaScore implements
         return $this->teamCompetitorHelper->getTeamCompetitor($competition, $id);
     }
 
-    public function getStructure(Competition $competition): ?Structure
+    public function getStructure(Competition $competition): Structure
     {
         return $this->structureHelper->getStructure($competition);
     }
 
-    public function getBatchNrs(Competition $competition): array
+    /**
+     * @param Competition $competition
+     * @return list<int>
+     */
+    public function getGameRoundNumbers(Competition $competition): array
     {
-        return $this->againstGameHelper->getBatchNrs($competition);
+        return $this->gameRoundsHelper->getGameRoundNumbers($competition);
     }
 
-    public function getAgainstGames(Competition $competition, int $batchNr): array
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @return array<int|string, AgainstGame>
+     * @throws \Exception
+     */
+    public function getAgainstGames(Competition $competition, int $gameRoundNumber): array
     {
-        return $this->againstGameHelper->getAgainstGames($competition, $batchNr);
+        return $this->againstGameHelper->getAgainstGames($competition, $gameRoundNumber);
     }
 
     public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null
@@ -236,39 +291,60 @@ class SofaScore implements
         return $this->personHelper->getPerson($againstGame, $id);
     }
 
-    public function convertToPerson(stdClass $externalPerson): ?Person
-    {
-        return $this->personHelper->convertToPerson($externalPerson);
-    }
+//    public function convertToPerson(stdClass $externalPerson): ?Person
+//    {
+//        return $this->personHelper->convertToPerson($externalPerson);
+//    }
 
     public function getImagePerson(string $personExternalId): string
     {
         return $this->personHelper->getImagePerson($personExternalId);
     }
 
-    public function getEndPoint(int $dataTypeIdentifier = null): string
-    {
-        return $this->apiHelper->getEndPoint($dataTypeIdentifier);
-    }
+//    protected function showMetadata(
+//        Competitions|CompetitionStructure|CompetitionDetails $externalSourceImpl,
+//        int $entity
+//    ): void {
+//        if( $externalSourceImpl instanceof  CacheInfo ) {
+//            $this->logger->info($externalSourceImpl->getCacheInfo($entity));
+//        }
+//        if ( $externalSourceImpl instanceof ApiHelper ) {
+//            $this->logger->info("endpoint: " . $externalSourceImpl->getEndPoint($entity));
+//        }
+//    }
 
-    public function getEndPointSuffix(int $dataTypeIdentifier): string
-    {
-        return $this->apiHelper->getEndPointSuffix($dataTypeIdentifier);
-    }
+//
+//    public function getEndPoint(int $dataTypeIdentifier = null): string
+//    {
+//        return $this->apiHelper->getEndPoint($dataTypeIdentifier);
+//    }
+//
+//    public function getEndPointSuffix(int $dataTypeIdentifier): string
+//    {
+//        return $this->apiHelper->getEndPointSuffix($dataTypeIdentifier);
+//    }
 
-    public function getCacheMinutes(int $dataTypeIdentifier): int
-    {
-        return $this->apiHelper->getCacheMinutes($dataTypeIdentifier);
-    }
+//    public function getCacheMinutes(int $dataTypeIdentifier): int
+//    {
+//        return $this->apiHelper->getCacheMinutes($dataTypeIdentifier);
+//    }
+//
+//    public function getCacheId(int $dataTypeIdentifier): string
+//    {
+//        return $this->apiHelper->getCacheId($dataTypeIdentifier);
+//    }
+//
+//    public function getCacheInfo(int $dataTypeIdentifier = null): string
+//    {
+//        return $this->apiHelper->getCacheInfo($dataTypeIdentifier);
+//    }
 
-    public function getCacheId(int $dataTypeIdentifier): string
+    /**
+     * @return array<string, string>|null
+     */
+    public function getProxy(): array|null
     {
-        return $this->apiHelper->getCacheId($dataTypeIdentifier);
-    }
-
-    public function getCacheInfo(int $dataTypeIdentifier = null): string
-    {
-        return $this->apiHelper->getCacheInfo($dataTypeIdentifier);
+        return $this->proxyOptions;
     }
 
     /**
@@ -276,6 +352,9 @@ class SofaScore implements
      */
     public function setProxy(array $options): void
     {
-        $this->apiHelper->setProxy($options);
+        $this->proxyOptions["username"] = $options["username"];
+        $this->proxyOptions["password"] = $options["password"];
+        $this->proxyOptions["host"] = $options["host"];
+        $this->proxyOptions["port"] = $options["port"];
     }
 }

@@ -18,7 +18,6 @@ abstract class Helper
 
     public function __construct(
         protected SofaScore $parent,
-        protected ApiHelper $apiHelper,
         protected LoggerInterface $logger
     ) {
     }

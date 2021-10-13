@@ -1,35 +1,40 @@
 <?php
+declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use SportsHelpers\GameMode;
-use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
-use SportsImport\ExternalSource\Sport as ExternalSourceSport;
-use Sports\Sport as SportBase;
-use SportsImport\ExternalSource\SofaScore;
 use Psr\Log\LoggerInterface;
+use SportsHelpers\GameMode;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\Data\Sport as SportData;
+use Sports\Sport as SportBase;
 use Sports\Sport\Custom as SportCustom;
 use stdClass;
 
 /**
  * @template-extends SofaScoreHelper<SportBase>
  */
-class Sport extends SofaScoreHelper implements ExternalSourceSport
+class Sport extends SofaScoreHelper
 {
+    public function __construct(
+        protected SportApiHelper $apiHelper,
+        SofaScore $parent,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($parent, $logger);
+    }
+
     /**
      * @return array<string|int, SportBase>
      */
     public function getSports(): array
     {
-        $externalSports = $this->apiHelper->getSportsData();
+        $sportsData = $this->apiHelper->getSports();
         $sports = [];
-        $externalSportNames = array_keys($externalSports);
-        foreach ($externalSportNames as $externalSportName) {
-            $externalSport = new stdClass();
-            $externalSport->name = $externalSportName;
-            $sport = $this->convertToSport($externalSport) ;
-            $sports[$externalSportName] = $sport;
+        foreach ($sportsData as $sportData) {
+            $sports[$sportData->id] = $this->convertDataToSport($sportData);
         }
         return $sports;
     }
@@ -46,22 +51,20 @@ class Sport extends SofaScoreHelper implements ExternalSourceSport
         return null;
     }
 
-    protected function convertToSport(stdClass $externalSport): SportBase
+    protected function convertDataToSport(SportData $sportData): SportBase
     {
-        /** @var string $externalSportName */
-        $externalSportName = $externalSport->name;
-        if (array_key_exists($externalSportName, $this->cache)) {
-            return $this->cache[$externalSportName];
+        if (array_key_exists($sportData->name, $this->cache)) {
+            return $this->cache[$sportData->name];
         }
         $sport = new SportBase(
-            $externalSportName,
+            $sportData->name,
             true,
             GameMode::AGAINST,
             1
         );
-        $sport->setId($externalSportName);
-        $sport->setCustomId($this->getCustomId($externalSportName));
-        $this->cache[$externalSportName] = $sport;
+        $sport->setId($sportData->name);
+        $sport->setCustomId($this->getCustomId($sportData->name));
+        $this->cache[$sportData->name] = $sport;
         return $sport;
     }
 

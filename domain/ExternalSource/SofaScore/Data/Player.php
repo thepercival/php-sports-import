@@ -3,14 +3,15 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
-use stdClass;
+use DateTimeImmutable;
 
 class Player
 {
     public function __construct(
-        public stdClass $player,
-        public array $statistics,
-        public string $position
+        public string $id,
+        public string $name,
+        public int $line,
+        public DateTimeImmutable|null $dateOfBirth = null,
     ) {
     }
 }

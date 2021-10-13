@@ -4,9 +4,6 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
   <entity name="SportsImport\CacheItemDb" table="cacheItems" repository-class="SportsImport\CacheItemDb\Repository">
-    <id name="id" type="integer" column="id">
-      <generator strategy="AUTO"/>
-    </id>
     <field name="name" column="name" type="string" length="150" nullable="false" unique="true"/>
     <field name="value" column="value" type="blob" nullable="false" unique="false"/>
     <field name="expireDateTime" column="expireDateTime" type="datetime_immutable" nullable="true" unique="false"/>

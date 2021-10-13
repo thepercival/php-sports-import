@@ -28,12 +28,13 @@ class ExternalSource extends Identifiable
     const DATA_TEAMCOMPETITORS = 64;
     // const DATA_PERSONCOMPETITORS = 2;
     const DATA_STRUCTURES = 256;
-    const DATA_GAMES = 512;
-    const DATA_GAME = 1024;
-    const DATA_GAME_LINEUPS = 2048;
-    const DATA_GAME_EVENTS = 4096;
-    const DATA_PERSON_IMAGE = 8192;
-    const DATA_TEAM_IMAGE = 16384;
+    const DATA_GAMEROUNDS = 512;
+    const DATA_GAMES = 1024;
+    const DATA_GAME = 2048;
+    const DATA_GAME_LINEUPS = 4096;
+    const DATA_GAME_EVENTS = 8192;
+    const DATA_PERSON_IMAGE = 16384;
+    const DATA_TEAM_IMAGE = 32768;
 
     public function __construct(
         private string $name,

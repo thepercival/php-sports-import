@@ -3,34 +3,26 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
+use Psr\Log\LoggerInterface;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
+use SportsImport\ExternalSource\SofaScore\Data\League as LeagueData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\League as LeagueBase;
 use Sports\Association;
-use stdClass;
-use Psr\Log\LoggerInterface;
-use SportsImport\Service as ImportService;
-use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\Data\League as LeagueData;
-use SportsImport\ExternalSource\League as ExternalSourceLeague;
 
 /**
  * @template-extends SofaScoreHelper<LeagueBase>
  */
-class League extends SofaScoreHelper implements ExternalSourceLeague
+class League extends SofaScoreHelper
 {
-//    public function __construct(
-//        SofaScore $parent,
-//        SofaScoreApiHelper $apiHelper,
-//        LoggerInterface $logger
-//    ) {
-//        $this->leagueCache = [];
-//        parent::__construct(
-//            $parent,
-//            $apiHelper,
-//            $logger
-//        );
-//    }
+    public function __construct(
+        protected LeagueApiHelper $apiHelper,
+        SofaScore $parent,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($parent, $logger);
+    }
 
     /**
      * @param Association $association
@@ -38,12 +30,12 @@ class League extends SofaScoreHelper implements ExternalSourceLeague
      */
     public function getLeagues(Association $association): array
     {
-        $externalLeagues = $this->apiHelper->getLeaguesData($association);
+        $externalLeagues = $this->apiHelper->getLeagues($association);
 
         $leagues = [];
-        foreach ($externalLeagues as $externalLeague) {
-            $league = $this->convertToLeague($association, $externalLeague);
-            $leagues[$externalLeague->id] = $league;
+        foreach ($externalLeagues as $leagueData) {
+            $league = $this->convertToLeague($association, $leagueData);
+            $leagues[$leagueData->id] = $league;
         }
 
         uasort($leagues, function (LeagueBase $league1, LeagueBase $league2): int {

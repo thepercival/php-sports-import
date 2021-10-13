@@ -4,31 +4,37 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use League\Period\Period;
+use Psr\Log\LoggerInterface;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\Data\Season as SeasonData;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use Sports\Season as SeasonBase;
-use SportsImport\ExternalSource\Season as ExternalSourceSeason;
 
 /**
  * @template-extends SofaScoreHelper<SeasonBase>
  */
-class Season extends SofaScoreHelper implements ExternalSourceSeason
+class Season extends SofaScoreHelper
 {
+    public function __construct(
+        protected SeasonApiHelper $apiHelper,
+        SofaScore $parent,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($parent, $logger);
+    }
+
     /**
      * @return array<int|string, SeasonBase>
      */
     public function getSeasons(): array
     {
         $seasons = [];
-        $externalSeasons = $this->apiHelper->getSeasonsData();
+        $seasonsData = $this->apiHelper->getSeasons();
 
-        foreach ($externalSeasons as $externalSeason) {
-            $season = $this->convertToSeason($externalSeason);
-            $seasonId = $season->getId();
-            if ($seasonId === null) {
-                continue;
-            }
-            $seasons[$seasonId] = $season;
+        foreach ($seasonsData as $seasonData) {
+            $seasons[$seasonData->name] = $this->convertDataToSeason($seasonData);
         }
         return $seasons;
     }
@@ -45,11 +51,9 @@ class Season extends SofaScoreHelper implements ExternalSourceSeason
         return null;
     }
 
-    protected function convertToSeason(stdClass $externalSeason): SeasonBase
+    protected function convertDataToSeason(SeasonData $seasonData): SeasonBase
     {
-        /** @var string $externalSeasonName */
-        $externalSeasonName = $externalSeason->name;
-        $name = $this->apiHelper->convertToSeasonId($externalSeasonName);
+        $name = $this->apiHelper->convertToSeasonId($seasonData->name);
         if (array_key_exists($name, $this->cache)) {
             return $this->cache[$name];
         }

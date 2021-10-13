@@ -9,7 +9,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 class Association
 {
     public function __construct(
-        public int|string $id,
+        public string $id,
         public string $name
     ) {
     }

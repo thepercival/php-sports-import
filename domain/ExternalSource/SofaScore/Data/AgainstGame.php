@@ -3,15 +3,28 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
+use DateTimeImmutable;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
+
 class AgainstGame
 {
     /**
-     * @var list<AgainstGameEvent>
+     * @var list<CardEventData|GoalEventData|SubstitutionEventData>
      */
-    public array $incidents = [];
+    public array $events = [];
     public AgainstGameLineups|null $lineups = null;
 
-    public function __construct(public AgainstGameHelper $event)
-    {
+    public function __construct(
+        public string $id,
+        public DateTimeImmutable $start,
+        public AgainstGameRound $roundInfo,
+        public int $status,
+        public Team $homeTeam,
+        public Team $awayTeam,
+        public AgainstGameScore $homeScore,
+        public AgainstGameScore $awayScore,
+    ) {
     }
 }

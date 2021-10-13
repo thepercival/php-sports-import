@@ -3,38 +3,31 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
+use Psr\Log\LoggerInterface;
 use Sports\Competition\Sport as CompetitionSport;
 use SportsHelpers\Sport\PersistVariant;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Sports\Competition as CompetitionBase;
-use SportsImport\ExternalSource;
-use Psr\Log\LoggerInterface;
 use Sports\League;
 use Sports\Season;
-use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\Data\Competition as CompetitionData;
 use Sports\Sport;
-use SportsImport\ExternalSource\Competition as ExternalSourceCompetition;
 
 /**
  * @template-extends SofaScoreHelper<CompetitionBase>
  */
-class Competition extends SofaScoreHelper implements ExternalSourceCompetition
+class Competition extends SofaScoreHelper
 {
-//    public function __construct(
-//        SofaScore $parent,
-//        SofaScoreApiHelper $apiHelper,
-//        LoggerInterface $logger
-//    ) {
-//        $this->competitionCache = [];
-//        parent::__construct(
-//            $parent,
-//            $apiHelper,
-//            $logger
-//        );
-//    }
+    public function __construct(
+        protected CompetitionApiHelper $apiHelper,
+        SofaScore $parent,
+        LoggerInterface $logger
+    ) {
+        parent::__construct($parent, $logger);
+    }
 
     /**
      * @param Sport $sport
@@ -44,17 +37,13 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
     public function getCompetitions(Sport $sport, League $league): array
     {
         $competitions = [];
-        $externalCompetitions = $this->apiHelper->getCompetitionsData($league);
-        foreach ($externalCompetitions as $externalCompetition) {
-            $competition = $this->convertToCompetition($sport, $league, $externalCompetition);
+        $competitionsData = $this->apiHelper->getCompetitions($league);
+        foreach ($competitionsData as $competitionData) {
+            $competition = $this->convertDataToCompetition($sport, $league, $competitionData);
             if ($competition === null) {
                 continue;
             }
-            $competitionId = $competition->getId();
-            if ($competitionId === null) {
-                continue;
-            }
-            $competitions[$competitionId] = $competition;
+            $competitions[$competitionData->id] = $competition;
         }
         return $competitions;
     }
@@ -76,7 +65,7 @@ class Competition extends SofaScoreHelper implements ExternalSourceCompetition
         return null;
     }
 
-    protected function convertToCompetition(Sport $sport, League $league, CompetitionData $externalCompetition): ?CompetitionBase
+    protected function convertDataToCompetition(Sport $sport, League $league, CompetitionData $externalCompetition): ?CompetitionBase
     {
         if (array_key_exists($externalCompetition->id, $this->cache)) {
             return $this->cache[$externalCompetition->id];
