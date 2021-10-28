@@ -84,23 +84,25 @@ class Getter
         CompetitionDetails $externalSourceCompetitionDetails,
         ExternalSource $externalSource,
         Competition $externalCompetition,
-        AgainstGame $againstGame
+        string|int $gameId
     ): AgainstGame {
-        $gameAttacher = $this->againstGameAttacherRepos->findOneByImportable(
-            $externalSource,
-            $againstGame
-        );
-        if ($gameAttacher === null) {
-            $competition = $againstGame->getPoule()->getRound()->getNumber()->getCompetition();
-            $competitors = array_values($competition->getTeamCompetitors()->toArray());
-            $competitorMap = new CompetitorMap($competitors);
-            $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
-            $gameOutput->output($againstGame, 'there is no externalId for external source "' . $externalSource->getName() .' and game');
-            throw new \Exception('there is no externalId for external source "' . $externalSource->getName() .'" and external gameid "' . (string)$againstGame->getId() . '"', E_ERROR);
-        }
-        $externalGame = $externalSourceCompetitionDetails->getAgainstGame($externalCompetition, $gameAttacher->getExternalId());
+//        $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
+//            $externalSource,
+//            $gameId
+//        );
+//        if ($gameAttacher === null) {
+//            // $againstGame replaced by $gameId
+//            // $competition = $againstGame->getPoule()->getRound()->getNumber()->getCompetition();
+////            $competition = $externalCompetition;
+////            $competitors = array_values($competition->getTeamCompetitors()->toArray());
+////            $competitorMap = new CompetitorMap($competitors);
+////            $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
+////            $gameOutput->output($againstGame, 'there is no externalId for external source "' . $externalSource->getName() .' and game');
+//            throw new \Exception('there is no externalId for external source "' . $externalSource->getName() .'" and external gameid "' . (string)$againstGame->getId() . '"', E_ERROR);
+//        }
+        $externalGame = $externalSourceCompetitionDetails->getAgainstGame($externalCompetition, $gameId);
         if ($externalGame === null) {
-            throw new \Exception("external source \"" . $externalSource->getName() ."\" could not find a game for externalId \"" . $gameAttacher->getExternalId() . "\"", E_ERROR);
+            throw new \Exception('externalSource "' . $externalSource->getName() .'" could not find a game for id "' . $gameId . '"', E_ERROR);
         }
         return $externalGame;
     }

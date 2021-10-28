@@ -20,6 +20,7 @@ use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Sport;
 use Sports\State;
 use Sports\Team\Player;
+use SportsHelpers\SportRange;
 use SportsImport\ExternalSource\CompetitionDetails;
 use SportsImport\ExternalSource\Competitions;
 use SportsImport\ExternalSource\CompetitionStructure;
@@ -206,7 +207,8 @@ class Importer
         ExternalSource $externalSource,
         Sport $sport,
         League $league,
-        Season $season
+        Season $season,
+        SportRange|null $gameRoundRange = null
     ): void {
         $externalCompetition = $this->getter->getCompetition(
             $externalSourceCompetitions,
@@ -236,6 +238,10 @@ class Importer
         }
 
         $gameRoundNumbers = $externalSourceCompetitionDetails->getGameRoundNumbers($externalCompetition);
+        if( $gameRoundRange !== null ) {
+            $gameRoundNumbers = array_filter($gameRoundNumbers, fn(int $number) => $gameRoundRange->isWithIn($number));
+            $gameRoundNumbers = array_values($gameRoundNumbers);
+        }
         $filteredGameRoundNumbers = $this->getGameRoundNumbersToImport($competition, $nrOfPlaces, $gameRoundNumbers);
 
         foreach ($filteredGameRoundNumbers as $gameRoundNumber) {
@@ -256,7 +262,7 @@ class Importer
         Sport $sport,
         League $league,
         Season $season,
-        Period $period
+        string $externalGameId
     ): void {
         $externalCompetition = $this->getter->getCompetition(
             $externalSourceCompetitions,
@@ -280,31 +286,30 @@ class Importer
         if ($competition->getTeamCompetitors()->count() === 0) {
             $this->logger->warning("no competitors found for external competition " . $externalCompetition->getName());
         }
-        $games = $this->againstGameRepos->getCompetitionGames($competition, null, null, $period);
+
+
         if ($this->eventSender !== null) {
             if ($this->eventSender instanceof ImportGameDetailsEvent) {
                 $this->againstGameImportService->setEventSender($this->eventSender);
             }
         }
-        $game = null;
         try {
-            foreach ($games as $game) {
-                $externalGame = $this->getter->getAgainstGame($externalSourceCompetitionDetails, $externalSource, $externalCompetition, $game);
-                if ($externalGame->getState() !== State::Finished) {
-                    $this->logger->info("game " . (string)$externalGame->getId() . " is not finished");
-                    continue;
-                }
-                $this->personImportService->importByAgainstGame(
-                    $externalSource,
-                    $externalGame
-                );
-
-                $this->againstGameImportService->importDetails(
-                    $externalSource,
-                    $externalGame
-                );
+            $externalGame = $this->getter->getAgainstGame($externalSourceCompetitionDetails, $externalSource, $externalCompetition, $externalGameId);
+            if ($externalGame->getState() !== State::Finished) {
+                $this->logger->info("game " . (string)$externalGame->getId() . " is not finished");
+                return;
             }
+            $this->personImportService->importByAgainstGame(
+                $externalSource,
+                $externalGame
+            );
+
+            $this->againstGameImportService->importDetails(
+                $externalSource,
+                $externalGame
+            );
         } catch (\Exception $e) {
+            $game = $this->againstGameAttacherRepos->findImportable($externalSource, $externalGameId);
             if ($game !== null) {
                 // all batch should be stopped, because of editing playerperiods
                 $competitors = array_values($competition->getTeamCompetitors()->toArray());
@@ -334,7 +339,6 @@ class Importer
                 return $teamCompetitor->getTeam();
             }, $competition->getTeamCompetitors()->toArray());
         foreach ($teams as $team) {
-            /** @var array<int|string, Player> $activePlayers */
             $activePlayers = array_filter( $team->getPlayers()->toArray(), function (Player $player) use ($season): bool {
                 return $player->getEndDateTime() > $season->getStartDateTime();
             });

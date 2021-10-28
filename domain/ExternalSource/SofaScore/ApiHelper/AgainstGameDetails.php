@@ -48,6 +48,11 @@ class AgainstGameDetails extends ApiHelper
 
     public function convertApiDataRow(stdClass $apiDataRow): AgainstGameData|null
     {
+        if (property_exists($apiDataRow, "event")) {
+            /** @var stdClass $apiDataRow */
+            $apiDataRow = $apiDataRow->event;
+        }
+
         $start = new DateTimeImmutable("@" . (string)$apiDataRow->startTimestamp . "");
 
         if (!property_exists($apiDataRow, "roundInfo")) {

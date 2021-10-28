@@ -92,6 +92,7 @@ class Against
                 (string)$externalId
             );
 
+            $gameCreated = false;
             if ($gameAttacher === null) {
                 $game = $this->createGame($poule, $externalSource, $externalGame);
                 if ($game === null) {
@@ -105,6 +106,7 @@ class Against
                 $this->againstGameAttacherRepos->save($gameAttacher);
 
                 $gameOutput->output($game, "created => ");
+                $gameCreated = true;
             }
 
             if( $externalGame->getState() === State::Finished ) {
@@ -114,13 +116,20 @@ class Against
                 );
                 $this->importDetails($externalSource,  $externalGame);
             } else {
+                $gameRescheduled = false;
                 $game = $gameAttacher->getImportable();
                 $oldStartDateTime = $game->getStartDateTime();
                 if ($game->getStartDateTime()->getTimestamp() !== $externalGame->getStartDateTime()->getTimestamp()) {
+                    $gameRescheduled = true;
                     $game->setStartDateTime($externalGame->getStartDateTime());
                     $this->againstGameRepos->save($game);
                     if ($this->eventSender instanceof ImportGameEvent) {
                         $this->eventSender->sendUpdateGameEvent($game, $oldStartDateTime);
+                    }
+                }
+                if( $gameCreated || $gameRescheduled ) {
+                    if ($this->eventSender !== null && $this->eventSender instanceof ImportGameEvent ) {
+                        $this->eventSender->sendUpdateGameEvent($game);
                     }
                 }
             }
@@ -155,9 +164,6 @@ class Against
         }
 
         $this->againstGameRepos->save($game);
-        if ($this->eventSender !== null && $this->eventSender instanceof ImportGameEvent) {
-            $this->eventSender->sendUpdateGameEvent($game);
-        }
         return $game;
     }
 

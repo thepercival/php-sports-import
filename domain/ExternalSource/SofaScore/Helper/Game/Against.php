@@ -221,6 +221,7 @@ class Against extends SofaScoreHelper
             }
 
             $teamPlayer = new TeamPlayer($teamCompetitor->getTeam(), $person, $period, $playerData->line);
+
             new GameParticipation($againstGamePlace, $teamPlayer, 0, 0);
         }
     }
@@ -238,7 +239,9 @@ class Against extends SofaScoreHelper
 
         $createGoalEvent = function (AgainstGame $game, GoalEventData $event): void {
             $participation = $this->convertPlayerDataToParticipation($game, $event->player);
-            new GoalEvent($event->time, $participation);
+            $goalEvent = new GoalEvent($event->time, $participation);
+            $goalEvent->setOwn($event->own);
+            $goalEvent->setPenalty($event->penalty);
         };
 
         $updateGameParticipations = function (AgainstGame $game, SubstitutionEventData $event): void {

@@ -53,7 +53,17 @@ class AgainstGameLineups extends ApiHelper
         /** @var list<stdClass> $playersApiData */
         $playersApiData = $apiLineup->players;
 
-        $playersData = array_values(
+        // remove players which will not appear
+        $appearedPlayersApiData = array_filter($playersApiData, function (stdClass $playerApiData): bool {
+            if (!property_exists($playerApiData, "statistics")) {
+                return false;
+            }
+            /** @var stdClass $statistics */
+            $statistics = $playerApiData->statistics;
+            return property_exists($statistics, "minutesPlayed");
+        });
+
+        $appearedPlayersApiData = array_values(
             array_map(function (stdClass $playerApiData): PlayerData {
                 if (!property_exists($playerApiData, "player")) {
                     throw new \Exception('player-apidata does not contain property player', E_ERROR);
@@ -65,10 +75,10 @@ class AgainstGameLineups extends ApiHelper
                     throw new \Exception('player should not be null', E_ERROR);
                 }
                 return $playerData;
-            }, $playersApiData)
+            }, $appearedPlayersApiData)
         );
 
-        return new AgainstGameSidePlayersData($againstSide, $playersData);
+        return new AgainstGameSidePlayersData($againstSide, $appearedPlayersApiData);
     }
 
     public function getCacheMinutes(): int
