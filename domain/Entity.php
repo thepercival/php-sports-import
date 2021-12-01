@@ -17,5 +17,5 @@ class Entity
     public const GAMES = 256;
     public const SCHEDULE = 512;
     public const GAMEDETAILS = 1024;
-    public const IMAGES = 2048;
+    public const PLAYERS = 2048;
 }

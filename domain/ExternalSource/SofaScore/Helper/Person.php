@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Sports\Person as PersonBase;
 use Sports\Game;
@@ -68,10 +67,5 @@ class Person extends SofaScoreHelper
         }
         $this->cache[$playerData->id] = $person;
         return $person;
-    }
-
-    public function getImagePerson(string $personExternalId): string
-    {
-        return $this->apiHelper->getImage($personExternalId);
     }
 }

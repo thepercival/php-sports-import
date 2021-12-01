@@ -35,13 +35,13 @@ class Player extends ApiHelper
 
     public function getDefaultEndPoint(): string
     {
-        // private const OLDAPIURL = "https://www.sofascore.com/";
         return "images/player/image_**personId**.png";
     }
 
     public function getImageEndPoint(string $externalId): string
     {
-        return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
+        return self::IMAGEBASEURL . $this->getImageEndPointSuffix($externalId);
+        // return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
     }
 
     protected function getImageEndPointSuffix(string $externalId): string

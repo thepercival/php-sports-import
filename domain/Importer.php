@@ -53,6 +53,7 @@ class Importer
         protected ImporterHelpers\Structure $structureImportService,
         protected ImporterHelpers\Game\Against $againstGameImportService,
         protected ImporterHelpers\Person $personImportService,
+        protected ImporterHelpers\Player $playerImportService,
         protected SportAttacherRepository $sportAttacherRepos,
         protected AssociationAttacherRepository $associationAttacherRepos,
         protected LeagueAttacherRepository $leagueAttacherRepos,
@@ -319,21 +320,19 @@ class Importer
         }
     }
 
-    public function importPersonImages(
+    public function importPlayerImages(
         ExternalSource\CompetitionDetails $externalSourceCompetitionDetails,
         ExternalSource $externalSource,
         League $league,
         Season $season,
-        string $localOutputPath,
-        string $publicOutputPath,
-        int $maxWidth
+        string $localOutputPath
     ): void {
         $competition = $league->getCompetition($season);
         if ($competition === null) {
             return;
         }
-        $nrUpdated = 0;
-        $maxUpdated = 10;
+//        $nrUpdated = 0;
+//        $maxUpdated = 20;
 
         $teams = array_map( function (TeamCompetitorBase $teamCompetitor): TeamBase {
                 return $teamCompetitor->getTeam();
@@ -343,27 +342,13 @@ class Importer
                 return $player->getEndDateTime() > $season->getStartDateTime();
             });
             foreach ($activePlayers as $activePlayer) {
-                $person = $activePlayer->getPerson();
-                $personExternalId = $this->personAttacherRepos->findExternalId(
-                    $externalSource,
-                    $person
-                );
-                if ($personExternalId === null) {
-                    continue;
-                }
-                if (!$this->personImportService->importImage(
+
+                $this->playerImportService->importImage(
                     $externalSourceCompetitionDetails,
                     $externalSource,
-                    $person,
-                    $localOutputPath,
-                    $publicOutputPath,
-                    $maxWidth
-                )) {
-                    continue;
-                }
-                if (++$nrUpdated === $maxUpdated) {
-                    return;
-                }
+                    $activePlayer,
+                    $localOutputPath
+                );
             }
         }
     }
@@ -374,15 +359,12 @@ class Importer
         League $league,
         Season $season,
         string $localOutputPath,
-        string $publicOutputPath,
         int $maxWidth
     ): void {
         $competition = $league->getCompetition($season);
         if ($competition === null) {
             return;
         }
-        $nrUpdated = 0;
-        $maxUpdated = 10;
 
         $teams = $competition->getTeamCompetitors()->map(function (TeamCompetitorBase $teamCompetitor): TeamBase {
             return $teamCompetitor->getTeam();
@@ -395,19 +377,13 @@ class Importer
             if ($teamExternalId === null) {
                 continue;
             }
-            if (!$this->teamImportService->importTeamImage(
+            $this->teamImportService->importTeamImage(
                 $externalSourceCompetitionStructure,
                 $externalSource,
                 $team,
                 $localOutputPath,
-                $publicOutputPath,
                 $maxWidth
-            )) {
-                continue;
-            }
-            if (++$nrUpdated === $maxUpdated) {
-                return;
-            }
+            );
         }
     }
 

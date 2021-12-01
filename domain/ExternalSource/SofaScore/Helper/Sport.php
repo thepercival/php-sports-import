@@ -59,7 +59,7 @@ class Sport extends SofaScoreHelper
         $sport = new SportBase(
             $sportData->name,
             true,
-            GameMode::AGAINST,
+            GameMode::Against,
             1
         );
         $sport->setId($sportData->name);

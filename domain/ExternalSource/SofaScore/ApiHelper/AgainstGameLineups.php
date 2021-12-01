@@ -38,14 +38,14 @@ class AgainstGameLineups extends ApiHelper
         }
         /** @var stdClass $homePlayers */
         $homePlayers = $apiData->home;
-        $homeLineup = $this->convertApiLineup( AgainstSide::HOME, $homePlayers );
+        $homeLineup = $this->convertApiLineup( AgainstSide::Home, $homePlayers );
         /** @var stdClass $awayPlayers */
         $awayPlayers = $apiData->away;
-        $awayLineup = $this->convertApiLineup( AgainstSide::AWAY, $awayPlayers );
+        $awayLineup = $this->convertApiLineup( AgainstSide::Away, $awayPlayers );
         return new AgainstGameLineupsData($homeLineup, $awayLineup);
     }
 
-    protected function convertApiLineup(int $againstSide, stdClass $apiLineup): AgainstGameSidePlayersData
+    protected function convertApiLineup(AgainstSide $againstSide, stdClass $apiLineup): AgainstGameSidePlayersData
     {
         if (!property_exists($apiLineup, "players") || !is_array($apiLineup->players)) {
             throw new \Exception('api-lineup does not contain properties home and away', E_ERROR);

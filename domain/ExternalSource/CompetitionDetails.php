@@ -26,7 +26,7 @@ interface CompetitionDetails
 
     // public function convertToPersonDEP( stdClass $externalPerson ): ?Person;
 
-    public function getImagePerson( string $personExternalId ): string;
+    public function getImagePlayer( string $personExternalId ): string;
 
     /**
      * @param Competition $competition

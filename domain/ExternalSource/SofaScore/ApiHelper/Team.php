@@ -28,7 +28,7 @@ class Team extends ApiHelper
     public function getCacheMinutes(): int
     {
         // case ExternalSource::DATA_TEAM_IMAGE:
-        return 60 * 24 * 365;
+        return 60 * 24;
     }
 
     public function getDefaultEndPoint(): string
@@ -38,7 +38,8 @@ class Team extends ApiHelper
 
     public function getImageEndPoint(string $externalId): string
     {
-        return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
+        return self::IMAGEBASEURL . $this->getImageEndPointSuffix($externalId);
+        // return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
     }
 
     protected function getImageEndPointSuffix(string $externalId): string

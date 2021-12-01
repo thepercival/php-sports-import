@@ -77,7 +77,6 @@ class Team extends SofaScoreHelper
         }
 
         $team->setAbbreviation(strtoupper(substr($abbreviation, $startPos, TeamBase::MAX_LENGTH_ABBREVIATION)));
-        $team->setImageUrl("https://www.sofascore.com/images/team-logo/football_".$teamId.".png");
         $this->cache[$teamId] = $team;
         return $team;
     }

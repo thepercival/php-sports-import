@@ -14,14 +14,14 @@
 	"email": "coendunnink@gmail.com"
   },
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.1",
     "vlucas/phpdotenv": "^v5.1",
     "league/period": "^4.9",
-    "doctrine/orm": "^2.7",
+    "doctrine/orm": "^2.10",
     "jms/serializer": "^3.4",
     "symfony/yaml": "^5.0",
     "monolog/monolog": "^2.0",
-    "guzzlehttp/guzzle": "^6.5",
+    "guzzlehttp/guzzle": "^7.3",
     "thepercival/php-sports-helpers": "^1.0",
     "thepercival/php-sports": "^1.0",
     "ext-curl": "*",

@@ -71,7 +71,6 @@ class Team
         }
         $team = new TeamBase($association, $externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
-        $team->setImageUrl($externalSourceTeam->getImageUrl());
 
         $this->teamRepos->save($team);
         return $team;
@@ -81,7 +80,6 @@ class Team
     {
         $team->setName($externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
-        $team->setImageUrl($externalSourceTeam->getImageUrl());
         $this->teamRepos->save($team);
     }
 
@@ -90,14 +88,13 @@ class Team
         ExternalSource $externalSource,
         TeamBase $team,
         string $localOutputPath,
-        string $publicOutputPath,
         int $maxWidth = null
     ): bool {
         $teamExternalId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
         if ($teamExternalId === null) {
             return false;
         }
-        $localFilePath = $localOutputPath . $teamExternalId . ".png";
+        $localFilePath = $localOutputPath . (string)$team->getId() . ".png";
 
         if (file_exists($localFilePath)) {
             $timestamp = filectime($localFilePath);
@@ -121,10 +118,6 @@ class Team
             }
             imagepng($im, $localFilePath);
             imagedestroy($im);
-
-            $publicFilePath = $publicOutputPath . $teamExternalId . ".png";
-            $team->setImageUrl($publicFilePath);
-            $this->teamRepos->save($team);
             return true;
         } catch (\Exception $e) {
         }

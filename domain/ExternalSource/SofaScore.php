@@ -74,6 +74,7 @@ class SofaScore implements
     protected SofaScore\Helper\Team $teamHelper;
     protected SofaScore\Helper\Competitor\Team $teamCompetitorHelper;
     protected SofaScore\Helper\Game\Against $againstGameHelper;
+    protected SofaScore\Helper\Player $playerHelper;
     // protected SofaScore\Helper\Team\Role $teamRoleHelper;
 
     protected SofaScore\Helper\Game\RoundNumbers $gameRoundsHelper;
@@ -109,6 +110,7 @@ class SofaScore implements
 
         $playerApiHelper = new PlayerApiHelper($this, $cacheItemDbRepos, $logger);
         $this->personHelper = new PersonHelper($playerApiHelper, $this, $this->logger);
+        $this->playerHelper = new SofaScore\Helper\Player($playerApiHelper, $this, $this->logger);
 
         $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
@@ -296,9 +298,9 @@ class SofaScore implements
 //        return $this->personHelper->convertToPerson($externalPerson);
 //    }
 
-    public function getImagePerson(string $personExternalId): string
+    public function getImagePlayer(string $personExternalId): string
     {
-        return $this->personHelper->getImagePerson($personExternalId);
+        return $this->playerHelper->getImagePlayer($personExternalId);
     }
 
 //    protected function showMetadata(

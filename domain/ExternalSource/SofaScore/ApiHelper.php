@@ -6,22 +6,20 @@ namespace SportsImport\ExternalSource\SofaScore;
 use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
-use Sports\Sport\Custom as SportCustom;
 use Sports\State;
-use Sports\Team;
-use SportsImport\ExternalSource;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use SportsHelpers\SportRange;
-use Sports\Association;
 
 abstract class ApiHelper
 {
     private const NrOfRetries = 2;
     private SportRange|null $sleepRangeInSeconds = null;
     private Client|null $client = null;
+
+    public const IMAGEBASEURL = "https://www.sofascore.com/";
 
     public function __construct(
         protected SofaScore $sofaScore,
@@ -78,7 +76,9 @@ abstract class ApiHelper
         if ($this->sleepRangeInSeconds === null) {
             $this->sleepRangeInSeconds = new SportRange(3, 5);
         } else {
-            sleep(rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax()));
+            /** @var positive-int $randomNr */
+            $randomNr = rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax());
+            sleep($randomNr);
         }
 //        return json_decode(
 //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
@@ -126,7 +126,9 @@ abstract class ApiHelper
         if ($this->sleepRangeInSeconds === null) {
             $this->sleepRangeInSeconds = new SportRange(3, 5);
         } else {
-            sleep(rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax()));
+            /** @var positive-int $randomNr */
+            $randomNr = rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax());
+            sleep($randomNr);
         }
 //        return json_decode(
 //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)

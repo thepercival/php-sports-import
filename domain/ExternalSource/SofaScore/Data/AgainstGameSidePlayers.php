@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
+use SportsHelpers\Against\Side as AgainstSide;
+
 class AgainstGameSidePlayers
 {
     /**
      * @param list<Player> $players
      */
     public function __construct(
-        public int $againstSide,
+        public AgainstSide $againstSide,
         public array $players
     ) {
     }

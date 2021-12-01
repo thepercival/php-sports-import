@@ -133,8 +133,8 @@ class Against extends SofaScoreHelper
         if ($awayPlace === null) {
             return null;
         }
-        $homeGamePlace = new AgainstGamePlace($game, $homePlace, AgainstSide::HOME);
-        $awayGamePlace = new AgainstGamePlace($game, $awayPlace, AgainstSide::AWAY);
+        $homeGamePlace = new AgainstGamePlace($game, $homePlace, AgainstSide::Home);
+        $awayGamePlace = new AgainstGamePlace($game, $awayPlace, AgainstSide::Away);
 
         /** @psalm-suppress RedundantCondition */
         if ($game->getState() === State::Finished ) {
@@ -151,7 +151,7 @@ class Against extends SofaScoreHelper
                 if (count($competitors) === 1) {
                     $competitor = reset($competitors);
                     if ($competitor instanceof TeamCompetitor) {
-                        $side = $sideGamePlace->getSide() === AgainstSide::AWAY ? $lineups->away : $lineups->home;
+                        $side = $sideGamePlace->getSide() === AgainstSide::Away ? $lineups->away : $lineups->home;
                         $this->addGameParticipations($sideGamePlace, $competitor, $side->players);
                     }
                 }
