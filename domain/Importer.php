@@ -179,7 +179,7 @@ class Importer
             $season
         );
         $competitors = $externalSourceCompetitionStructure->getTeamCompetitors($externalCompetition);
-        $this->teamCompetitorImportService->import($externalSource, array_values($competitors));
+        $this->teamCompetitorImportService->import($externalSource, $competitors);
     }
 
     public function importStructure(

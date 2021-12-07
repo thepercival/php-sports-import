@@ -78,9 +78,9 @@ class Competition extends ApiHelper
         }
         /** @var list<stdClass> $seasons */
         $seasons = $dateApiData->seasons;
-        return array_values( array_map( function(stdClass $season): CompetitionData {
+        return array_map( function(stdClass $season): CompetitionData {
                                      return $this->convertApiDataRow($season);
-                                 }, $seasons) );
+                                 }, $seasons);
     }
 
 

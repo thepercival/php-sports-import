@@ -41,10 +41,10 @@ class Association extends ApiHelper
         }
         /** @var list<stdClass> $associationData */
         $associationData = $apiData->categories;
-        return array_values( array_map(
+        return array_map(
              function(stdClass $apiDataRow): AssociationData {
                  return $this->convertApiDataRow($apiDataRow);
-             }, $associationData) );
+             }, $associationData);
     }
 
 

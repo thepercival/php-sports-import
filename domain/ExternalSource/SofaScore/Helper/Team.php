@@ -32,9 +32,9 @@ class Team extends SofaScoreHelper
      */
     public function getTeams(Competition $competition): array
     {
-        return array_values(array_map(function (TeamCompetitor $teamCompetitor) : TeamBase {
+        return array_map(function (TeamCompetitor $teamCompetitor) : TeamBase {
             return $teamCompetitor->getTeam();
-        }, $this->parent->getTeamCompetitors($competition)));
+        }, $this->parent->getTeamCompetitors($competition));
     }
 
     public function getTeam(Competition $competition, string|int $id): TeamBase|null

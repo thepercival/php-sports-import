@@ -35,9 +35,9 @@ class Sport extends ApiHelper
         );
         /** @var list<string> $sportNames */
         $sportNames = array_keys((array)$apiData);
-        return array_values( array_map(function(string $sportName): SportData {
+        return array_map(function(string $sportName): SportData {
             return $this->convertApiDataRow($sportName);
-        }, $sportNames) );
+        }, $sportNames);
     }
 
     protected function convertApiDataRow(string $sportName): SportData {
