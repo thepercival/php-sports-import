@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Game;
@@ -28,10 +29,11 @@ class RoundNumbers extends SofaScoreHelper
     public function getGameRoundNumbers(Competition $competition): array
     {
         $competitionId = (string)$competition->getId();
-       if (array_key_exists($competitionId, $this->cache)) {
+        if (array_key_exists($competitionId, $this->cache)) {
             return $this->cache[$competitionId];
         }
-       $gameRoundNumbers = $this->apiHelper->getGameRoundNumbers($competition);;
+        $gameRoundNumbers = $this->apiHelper->getGameRoundNumbers($competition);
+        ;
         $this->cache[$competitionId] = $gameRoundNumbers;
         return $gameRoundNumbers;
     }

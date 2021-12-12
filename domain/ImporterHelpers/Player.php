@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
@@ -31,7 +32,7 @@ class Player
         $localImagePath = $localOutputPath . $imageFile;
 
         try {
-            if( !$this->renewLocalImageOnDisk($localImagePath) ) {
+            if (!$this->renewLocalImageOnDisk($localImagePath)) {
                 return false;
             }
             $personExternalId = $this->getPersonExternalNumberId($externalSource, $person);
@@ -44,7 +45,8 @@ class Player
         return false;
     }
 
-    protected function getPersonExternalNumberId(ExternalSource $externalSource, PersonBase $person): string|false {
+    protected function getPersonExternalNumberId(ExternalSource $externalSource, PersonBase $person): string|false
+    {
         $personExternalId = $this->personAttacherRepos->findExternalId($externalSource, $person);
         if ($personExternalId === null) {
             return false;
@@ -56,7 +58,8 @@ class Player
         return substr($personExternalId, $externalSeparatorPos + 1);
     }
 
-    protected function renewLocalImageOnDisk(string $localImagePath): bool {
+    protected function renewLocalImageOnDisk(string $localImagePath): bool
+    {
         if (!file_exists($localImagePath)) {
             return true;
         }
@@ -73,7 +76,6 @@ class Player
         string $personExternalId,
         string $localFilePath,
     ): bool {
-
         $imgStream = $externalSourcePlayer->getImagePlayer($personExternalId);
         $im = imagecreatefromstring($imgStream);
         if ($im === false) {

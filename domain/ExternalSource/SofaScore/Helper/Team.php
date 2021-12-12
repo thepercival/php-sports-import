@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
@@ -32,7 +33,7 @@ class Team extends SofaScoreHelper
      */
     public function getTeams(Competition $competition): array
     {
-        return array_map(function (TeamCompetitor $teamCompetitor) : TeamBase {
+        return array_map(function (TeamCompetitor $teamCompetitor): TeamBase {
             return $teamCompetitor->getTeam();
         }, $this->parent->getTeamCompetitors($competition));
     }

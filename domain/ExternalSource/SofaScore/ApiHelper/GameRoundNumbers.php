@@ -40,12 +40,12 @@ class GameRoundNumbers extends ApiHelper
             return [];
         }
         $gameRoundsData = $apiData->rounds;
-        if (!is_array($gameRoundsData) ) {
+        if (!is_array($gameRoundsData)) {
             return [];
         }
         $gameRoundsDataRetVal = [];
         /** @var stdClass $gameRoundData */
-        foreach( $gameRoundsData as $gameRoundData) {
+        foreach ($gameRoundsData as $gameRoundData) {
             if (!property_exists($gameRoundData, "round")) {
                 $this->logger->error('could not find stdClass-property "round"');
                 continue;

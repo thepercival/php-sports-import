@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport;
@@ -84,7 +85,8 @@ class Getter
         CompetitionDetails $externalSourceCompetitionDetails,
         ExternalSource $externalSource,
         Competition $externalCompetition,
-        string|int $gameId
+        string|int $gameId,
+        bool $removeFromGameCache
     ): AgainstGame {
 //        $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
 //            $externalSource,
@@ -93,14 +95,14 @@ class Getter
 //        if ($gameAttacher === null) {
 //            // $againstGame replaced by $gameId
 //            // $competition = $againstGame->getPoule()->getRound()->getNumber()->getCompetition();
-////            $competition = $externalCompetition;
-////            $competitors = array_values($competition->getTeamCompetitors()->toArray());
-////            $competitorMap = new CompetitorMap($competitors);
-////            $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
-////            $gameOutput->output($againstGame, 'there is no externalId for external source "' . $externalSource->getName() .' and game');
+        ////            $competition = $externalCompetition;
+        ////            $competitors = array_values($competition->getTeamCompetitors()->toArray());
+        ////            $competitorMap = new CompetitorMap($competitors);
+        ////            $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
+        ////            $gameOutput->output($againstGame, 'there is no externalId for external source "' . $externalSource->getName() .' and game');
 //            throw new \Exception('there is no externalId for external source "' . $externalSource->getName() .'" and external gameid "' . (string)$againstGame->getId() . '"', E_ERROR);
 //        }
-        $externalGame = $externalSourceCompetitionDetails->getAgainstGame($externalCompetition, $gameId);
+        $externalGame = $externalSourceCompetitionDetails->getAgainstGame($externalCompetition, $gameId, $removeFromGameCache);
         if ($externalGame === null) {
             throw new \Exception('externalSource "' . $externalSource->getName() .'" could not find a game for id "' . $gameId . '"', E_ERROR);
         }

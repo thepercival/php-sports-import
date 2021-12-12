@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -20,8 +21,6 @@ use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEv
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use stdClass;
-
-
 
 class AgainstGameEvents extends ApiHelper
 {
@@ -63,7 +62,7 @@ class AgainstGameEvents extends ApiHelper
 //            return $this->convertApiDataRow($eventApiData);
 //        });
         $events = [];
-        foreach( $eventsApiData as $eventsApiDataRow) {
+        foreach ($eventsApiData as $eventsApiDataRow) {
             $event = $this->convertApiDataRow($eventsApiDataRow);
             if ($event === null) {
                 continue;
@@ -77,7 +76,8 @@ class AgainstGameEvents extends ApiHelper
         return array_values($events);
     }
 
-    protected function convertApiDataRow(stdClass $apiDataRow): CardEventData|GoalEventData|SubstitutionEventData|null {
+    protected function convertApiDataRow(stdClass $apiDataRow): CardEventData|GoalEventData|SubstitutionEventData|null
+    {
         $eventType = strtolower((string)$apiDataRow->incidentType);
 
         if ($eventType === "card") {
@@ -92,24 +92,27 @@ class AgainstGameEvents extends ApiHelper
         return null;
     }
 
-    protected function createCard(stdClass $apiDataRow): CardEventData|null {
+    protected function createCard(stdClass $apiDataRow): CardEventData|null
+    {
         $eventClass = strtolower((string)$apiDataRow->incidentClass);
-        if( !in_array($eventClass, ['yellow', 'yellowred', 'red'])) {
+        if (!in_array($eventClass, ['yellow', 'yellowred', 'red'])) {
             throw new \Exception('kan het kaarttype "'.$eventClass.'" niet vaststellen', E_ERROR);
         }
-        if( !property_exists($apiDataRow, 'player')) { // can be manager
+        if (!property_exists($apiDataRow, 'player')) { // can be manager
             return null;
         }
         /** @var stdClass $playerApiData */
         $playerApiData = $apiDataRow->player;
         $player = $this->convertPlayerApiDataHelper($playerApiData);
         return new CardEventData(
-            $player, (int)$apiDataRow->time,
+            $player,
+            (int)$apiDataRow->time,
             $eventClass === 'red' ? Sport::SENDOFF : Sport::WARNING
         );
     }
 
-    protected function createGoal(stdClass $apiDataRow): GoalEventData {
+    protected function createGoal(stdClass $apiDataRow): GoalEventData
+    {
         $eventType = strtolower((string)$apiDataRow->incidentType);
         $eventClass = strtolower((string)$apiDataRow->incidentClass);
 
@@ -121,7 +124,7 @@ class AgainstGameEvents extends ApiHelper
                 $own = true;
             } elseif ($eventClass === "penalty") {
                 $penalty = true;
-            } elseif (property_exists($apiDataRow, 'assist1') ) {
+            } elseif (property_exists($apiDataRow, 'assist1')) {
                 /** @var stdClass $assistApiData */
                 $assistApiData = $apiDataRow->assist1;
                 $assist = $this->convertPlayerApiDataHelper($assistApiData);
@@ -137,8 +140,9 @@ class AgainstGameEvents extends ApiHelper
         return new GoalEventData($player, (int)$apiDataRow->time, $penalty, $own, $assist);
     }
 
-    protected function createSubstitution(stdClass $apiDataRow): SubstitutionEventData {
-        if( $apiDataRow->playerOut === null || $apiDataRow->playerIn === null ) {
+    protected function createSubstitution(stdClass $apiDataRow): SubstitutionEventData
+    {
+        if ($apiDataRow->playerOut === null || $apiDataRow->playerIn === null) {
             throw new \Exception('substitution should have a playerIn and a playerOut', E_ERROR);
         }
         /** @var stdClass $playerOutApiData */
@@ -150,9 +154,10 @@ class AgainstGameEvents extends ApiHelper
         return new SubstitutionEventData($playerOut, (int)$apiDataRow->time, $playerIn);
     }
 
-    protected function convertPlayerApiDataHelper(stdClass $playerApiData): PlayerData {
+    protected function convertPlayerApiDataHelper(stdClass $playerApiData): PlayerData
+    {
         $player = $this->playerApiHelper->convertApiDataRow($playerApiData);
-        if( $player === null) {
+        if ($player === null) {
             throw new \Exception('player could not be found', E_ERROR);
         }
         return $player;

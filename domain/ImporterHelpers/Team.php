@@ -2,7 +2,7 @@
 
 namespace SportsImport\ImporterHelpers;
 
-use \Exception;
+use Exception;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
 use SportsImport\ExternalSource;
 use Sports\Team\Repository as TeamRepository;

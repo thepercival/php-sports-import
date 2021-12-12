@@ -21,5 +21,5 @@ interface Role
 //     */
 //    public function getTeamRole( $id ): ?TeamRole;
 
-    public function convertToTeamRoleDEP( Game $game, Team $team, stdClass $externalTeamRole ): ?TeamRole;
+    public function convertToTeamRoleDEP(Game $game, Team $team, stdClass $externalTeamRole): ?TeamRole;
 }

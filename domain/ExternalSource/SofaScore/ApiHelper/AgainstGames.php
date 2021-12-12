@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -43,38 +44,38 @@ class AgainstGames extends ApiHelper
         $againstGamesData = [];
         /** @var list<stdClass> $events */
         $events = $apiData->events;
-        foreach($events as $event) {
+        foreach ($events as $event) {
             $againstGameData = $this->convertApiDataRow($event);
-            if( $againstGameData !== null) {
+            if ($againstGameData !== null) {
                 $againstGamesData[] = $againstGameData;
             }
         }
         return $againstGamesData;
     }
 //
-//if (array_key_exists($externalGame->event->id, $this->cache)) {
-//return $this->cache[$externalGame->event->id];
-//}
+    //if (array_key_exists($externalGame->event->id, $this->cache)) {
+    //return $this->cache[$externalGame->event->id];
+    //}
 //
-//$startDateTime = new DateTimeImmutable("@" . $externalGame->event->startTimestamp . "");
+    //$startDateTime = new DateTimeImmutable("@" . $externalGame->event->startTimestamp . "");
 //
-//if ($gameRoundNumber === null && property_exists($externalGame->event, "roundInfo")) {
+    //if ($gameRoundNumber === null && property_exists($externalGame->event, "roundInfo")) {
 //    $gameRoundNumber = $externalGame->event->roundInfo->round;
-//}
-//if (!is_int($gameRoundNumber)) {
+    //}
+    //if (!is_int($gameRoundNumber)) {
 //    return null;
-//}
-//$competitionSport = $competition->getSingleSport();
-//$game = new AgainstGame($poule, $gameRoundNumber, $startDateTime, $competitionSport, $gameRoundNumber);
-//if (property_exists($externalGame->event, "status")) {
+    //}
+    //$competitionSport = $competition->getSingleSport();
+    //$game = new AgainstGame($poule, $gameRoundNumber, $startDateTime, $competitionSport, $gameRoundNumber);
+    //if (property_exists($externalGame->event, "status")) {
 //    $game->setState($this->apiHelper->convertState($externalGame->event->status->code));
-//}
-//$game->setId($externalGame->event->id);
+    //}
+    //$game->setId($externalGame->event->id);
 
     protected function convertApiDataRow(stdClass $apiDataRow): AgainstGameData|null
     {
         $againstGameData = $this->againstGameDetailsApiHelper->convertApiDataRow($apiDataRow);
-        if( $againstGameData === null ) {
+        if ($againstGameData === null) {
             return null;
         }
         return $againstGameData;
@@ -106,7 +107,5 @@ class AgainstGames extends ApiHelper
         $retVal = str_replace("**leagueId**", (string)$competition->getLeague()->getId(), $endpointSuffix);
         $retVal = str_replace("**competitionId**", (string)$competition->getId(), $retVal);
         return str_replace("**gameRoundNumber**", (string)$gameRoundNumber, $retVal);
-
-
     }
 }

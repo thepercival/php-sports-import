@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers\Game;
@@ -109,12 +110,12 @@ class Against
                 $gameCreated = true;
             }
 
-            if( $externalGame->getState() === State::Finished ) {
+            if ($externalGame->getState() === State::Finished) {
                 $this->personHelper->importByAgainstGame(
                     $externalSource,
                     $externalGame
                 );
-                $this->importDetails($externalSource,  $externalGame);
+                $this->importDetails($externalSource, $externalGame);
             } else {
                 $gameRescheduled = false;
                 $game = $gameAttacher->getImportable();
@@ -127,8 +128,8 @@ class Against
                         $this->eventSender->sendUpdateGameEvent($game, $oldStartDateTime);
                     }
                 }
-                if( $gameCreated || $gameRescheduled ) {
-                    if ($this->eventSender !== null && $this->eventSender instanceof ImportGameEvent ) {
+                if ($gameCreated || $gameRescheduled) {
+                    if ($this->eventSender !== null && $this->eventSender instanceof ImportGameEvent) {
                         $this->eventSender->sendUpdateGameEvent($game);
                     }
                 }
@@ -153,7 +154,6 @@ class Against
             $externalGame->getStartDateTime(),
             $competitionSport,
             $externalGame->getGameRoundNumber()
-
         );
         $game->setStartDateTime($externalGame->getStartDateTime());
         $game->setState($externalGame->getState());
@@ -246,9 +246,10 @@ class Against
         }
     }
 
-    protected function getGamePlaceFromExternal(AgainstGame $game, int $placeNr): AgainstGamePlace {
-        foreach( $game->getPlaces() as $gamePlace ) {
-            if($gamePlace->getPlace()->getPlaceNr() === $placeNr ) {
+    protected function getGamePlaceFromExternal(AgainstGame $game, int $placeNr): AgainstGamePlace
+    {
+        foreach ($game->getPlaces() as $gamePlace) {
+            if ($gamePlace->getPlace()->getPlaceNr() === $placeNr) {
                 return $gamePlace;
             }
         }
@@ -344,7 +345,7 @@ class Against
 
     protected function removeDetails(AgainstGame $game): void
     {
-        foreach( $game->getPlaces() as $gamePlace ) {
+        foreach ($game->getPlaces() as $gamePlace) {
             while ($participation = $gamePlace->getParticipations()->first()) {
                 $gamePlace->getParticipations()->removeElement($participation);
             }

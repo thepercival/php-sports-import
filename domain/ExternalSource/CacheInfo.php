@@ -2,6 +2,7 @@
 
 namespace SportsImport\ExternalSource;
 
-interface CacheInfo {
+interface CacheInfo
+{
     public function getCacheInfo(): string;
 }

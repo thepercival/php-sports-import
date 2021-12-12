@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -42,16 +43,20 @@ class Association extends ApiHelper
         /** @var list<stdClass> $associationData */
         $associationData = $apiData->categories;
         return array_map(
-             function(stdClass $apiDataRow): AssociationData {
-                 return $this->convertApiDataRow($apiDataRow);
-             }, $associationData);
+            function (stdClass $apiDataRow): AssociationData {
+                return $this->convertApiDataRow($apiDataRow);
+            },
+            $associationData
+        );
     }
 
 
-    protected function convertApiDataRow(stdClass $apiDataRow): AssociationData {
+    protected function convertApiDataRow(stdClass $apiDataRow): AssociationData
+    {
         return new AssociationData(
             (string)$apiDataRow->id,
-            (string)$apiDataRow->name);
+            (string)$apiDataRow->name
+        );
     }
 
     public function getCacheId(Sport $sport): string
@@ -66,7 +71,7 @@ class Association extends ApiHelper
 
     public function getDefaultEndPoint(): string
     {
-         return "sport/**sportId**/categories";
+        return "sport/**sportId**/categories";
     }
 
     public function getEndPoint(Sport $sport): string

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
@@ -26,7 +27,7 @@ interface CompetitionDetails
 
     // public function convertToPersonDEP( stdClass $externalPerson ): ?Person;
 
-    public function getImagePlayer( string $personExternalId ): string;
+    public function getImagePlayer(string $personExternalId): string;
 
     /**
      * @param Competition $competition
@@ -39,5 +40,5 @@ interface CompetitionDetails
      * @return array<int|string, AgainstGame>
      */
     public function getAgainstGames(Competition $competition, int $gameRoundNumber): array;
-    public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null;
+    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null;
 }

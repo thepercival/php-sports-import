@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -51,7 +52,7 @@ class League extends ApiHelper
                 }
                 /** @var list<stdClass> $groupLeagues */
                 $groupLeagues = $group->uniqueTournaments;
-                foreach( $groupLeagues as $groupLeague) {
+                foreach ($groupLeagues as $groupLeague) {
                     $leagues[] = $this->convertApiDataRow($groupLeague);
                 }
             }
@@ -61,13 +62,16 @@ class League extends ApiHelper
     }
 
 
-    protected function convertApiDataRow(stdClass $apiDataRow): LeagueData {
+    protected function convertApiDataRow(stdClass $apiDataRow): LeagueData
+    {
         return new LeagueData(
             (string)$apiDataRow->id,
-            (string)$apiDataRow->name);
+            (string)$apiDataRow->name
+        );
     }
 
-    public function getCacheId(Association $association): string {
+    public function getCacheId(Association $association): string
+    {
         return $this->getEndPointSuffix($association);
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -97,7 +98,7 @@ class Player extends ApiHelper
 
         $line = $this->convertLine((string)$apiDataRow->position);
 
-        return new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth );
+        return new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth);
     }
 
     /**

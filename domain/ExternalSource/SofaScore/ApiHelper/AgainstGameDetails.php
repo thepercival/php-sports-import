@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -34,8 +35,12 @@ class AgainstGameDetails extends ApiHelper
      * @param string|int $gameId
      * @return AgainstGameData
      */
-    public function getAgainstGame(string|int $gameId): AgainstGameData|null
+    public function getAgainstGame(string|int $gameId, bool $removeFromGameCache): AgainstGameData|null
     {
+        if ($removeFromGameCache) {
+            $this->removeDataFromCache($this->getCacheId($gameId));
+        }
+
         /** @var stdClass $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($gameId),
@@ -81,7 +86,8 @@ class AgainstGameDetails extends ApiHelper
         $status = $apiDataRow->status;
         $state = $this->convertState((int)$status->code);
 
-        $home = 0; $away = 0;
+        $home = 0;
+        $away = 0;
         /** @psalm-suppress RedundantCondition */
         if ($state === State::Finished and is_object($apiDataRow->homeScore) and is_object($apiDataRow->awayScore)) {
             $home = (int)$apiDataRow->homeScore->current;
@@ -92,18 +98,21 @@ class AgainstGameDetails extends ApiHelper
             $start,
             new AgainstGameRoundData($gameRoundNumber),
             $state,
-            $homeTeamData, $awayTeamData,
-            new AgainstGameScoreData($home), new AgainstGameScoreData($away)
+            $homeTeamData,
+            $awayTeamData,
+            new AgainstGameScoreData($home),
+            new AgainstGameScoreData($away)
         );
 
-        if( $state === State::Finished) {
+        if ($state === State::Finished) {
             $againstGameData->lineups = $this->lineupApiHelper->getLineups($againstGameData->id);
             $againstGameData->events = $this->eventApiHelper->getEvents($againstGameData->id);
         }
         return $againstGameData;
     }
 
-    public function getCacheInfo(string|int $gameId): string {
+    public function getCacheInfo(string|int $gameId): string
+    {
         return $this->getCacheInfoHelper($this->getCacheId($gameId));
     }
 

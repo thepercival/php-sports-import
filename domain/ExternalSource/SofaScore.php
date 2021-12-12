@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
@@ -104,7 +105,11 @@ class SofaScore implements
 
         $teamCompetitorApiHelper = new TeamCompetitorApiHelper($teamApiHelper, $this, $cacheItemDbRepos, $logger);
         $this->teamCompetitorHelper = new TeamCompetitorHelper(
-            $this->teamHelper, $teamCompetitorApiHelper, $this, $this->logger);
+            $this->teamHelper,
+            $teamCompetitorApiHelper,
+            $this,
+            $this->logger
+        );
 
         $this->structureHelper = new StructureHelper($teamCompetitorApiHelper, $this, $this->logger);
 
@@ -115,21 +120,34 @@ class SofaScore implements
         $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameDetailsApiHelper = new AgainstGameDetailsApiHelper(
-            $againstGameLineupsApiHelper, $againstGameEventsApiHelper, $teamApiHelper,
-            $this, $cacheItemDbRepos, $logger);
+            $againstGameLineupsApiHelper,
+            $againstGameEventsApiHelper,
+            $teamApiHelper,
+            $this,
+            $cacheItemDbRepos,
+            $logger
+        );
         $againstGamesApiHelper = new AgainstGamesApiHelper($againstGameDetailsApiHelper, $this, $cacheItemDbRepos, $logger);
 
 
         $this->againstGameHelper = new AgainstGameHelper(
-            $this->teamHelper, $this->personHelper,
-            $againstGamesApiHelper, $againstGameDetailsApiHelper,
-            $againstGameLineupsApiHelper, $againstGameEventsApiHelper,
+            $this->teamHelper,
+            $this->personHelper,
+            $againstGamesApiHelper,
+            $againstGameDetailsApiHelper,
+            $againstGameLineupsApiHelper,
+            $againstGameEventsApiHelper,
             $playerApiHelper,
-            $this, $this->logger);
+            $this,
+            $this->logger
+        );
 
         $gameRoundNumbersApiHelper = new GameRoundNumbersApiHelper($this, $cacheItemDbRepos, $logger);
         $this->gameRoundsHelper = new GameRoundNumbersHelper(
-            $gameRoundNumbersApiHelper, $this, $this->logger);
+            $gameRoundNumbersApiHelper,
+            $this,
+            $this->logger
+        );
 
 //        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
 //        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
@@ -279,9 +297,9 @@ class SofaScore implements
         return $this->againstGameHelper->getAgainstGames($competition, $gameRoundNumber);
     }
 
-    public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null
+    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null
     {
-        return $this->againstGameHelper->getAgainstGame($competition, $id);
+        return $this->againstGameHelper->getAgainstGame($competition, $id, $removeFromGameCache);
     }
 
 //    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {

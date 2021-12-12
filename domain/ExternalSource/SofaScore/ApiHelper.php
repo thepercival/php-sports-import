@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore;
@@ -55,6 +56,11 @@ abstract class ApiHelper
             'curl' => $curlOptions,
             'headers' => [/*"User:agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"*/]
         ];
+    }
+
+    protected function removeDataFromCache(string $cacheId): void
+    {
+        $this->cacheItemDbRepos->removeItem($cacheId);
     }
 
     protected function getDataFromCache(string $cacheId): mixed

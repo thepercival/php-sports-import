@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport;
@@ -10,7 +11,7 @@ use SportsHelpers\Identifiable;
  */
 abstract class Attacher extends Identifiable
 {
-    const MAX_LENGTH_EXTERNALID = 100;
+    public const MAX_LENGTH_EXTERNALID = 100;
 
     /**
      * @param T $importable

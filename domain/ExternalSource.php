@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport;
@@ -12,36 +13,35 @@ class ExternalSource extends Identifiable
     private string|null $apikey = null;
     private int|null $implementations = null;
 
-    const MAX_LENGTH_NAME = 50;
-    const MAX_LENGTH_WEBSITE = 255;
-    const MAX_LENGTH_USERNAME = 50;
-    const MAX_LENGTH_PASSWORD = 50;
-    const MAX_LENGTH_APIURL = 255;
-    const MAX_LENGTH_APIKEY = 255;
+    public const MAX_LENGTH_NAME = 50;
+    public const MAX_LENGTH_WEBSITE = 255;
+    public const MAX_LENGTH_USERNAME = 50;
+    public const MAX_LENGTH_PASSWORD = 50;
+    public const MAX_LENGTH_APIURL = 255;
+    public const MAX_LENGTH_APIKEY = 255;
 
-    const DATA_SPORTS = 1;
-    const DATA_ASSOCIATIONS = 2;
-    const DATA_SEASONS = 4;
-    const DATA_LEAGUES = 8;
-    const DATA_COMPETITIONS = 16;
-    const DATA_TEAMS = 32;
-    const DATA_TEAMCOMPETITORS = 64;
+    public const DATA_SPORTS = 1;
+    public const DATA_ASSOCIATIONS = 2;
+    public const DATA_SEASONS = 4;
+    public const DATA_LEAGUES = 8;
+    public const DATA_COMPETITIONS = 16;
+    public const DATA_TEAMS = 32;
+    public const DATA_TEAMCOMPETITORS = 64;
     // const DATA_PERSONCOMPETITORS = 2;
-    const DATA_STRUCTURES = 256;
-    const DATA_GAMEROUNDS = 512;
-    const DATA_GAMES = 1024;
-    const DATA_GAME = 2048;
-    const DATA_GAME_LINEUPS = 4096;
-    const DATA_GAME_EVENTS = 8192;
-    const DATA_PERSON_IMAGE = 16384;
-    const DATA_TEAM_IMAGE = 32768;
+    public const DATA_STRUCTURES = 256;
+    public const DATA_GAMEROUNDS = 512;
+    public const DATA_GAMES = 1024;
+    public const DATA_GAME = 2048;
+    public const DATA_GAME_LINEUPS = 4096;
+    public const DATA_GAME_EVENTS = 8192;
+    public const DATA_PERSON_IMAGE = 16384;
+    public const DATA_TEAM_IMAGE = 32768;
 
     public function __construct(
         private string $name,
         private string $apiurl,
         private string|null $website = null
-    )
-    {
+    ) {
     }
 
     public function getName(): string

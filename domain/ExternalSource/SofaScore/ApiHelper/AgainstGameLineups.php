@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -38,10 +39,10 @@ class AgainstGameLineups extends ApiHelper
         }
         /** @var stdClass $homePlayers */
         $homePlayers = $apiData->home;
-        $homeLineup = $this->convertApiLineup( AgainstSide::Home, $homePlayers );
+        $homeLineup = $this->convertApiLineup(AgainstSide::Home, $homePlayers);
         /** @var stdClass $awayPlayers */
         $awayPlayers = $apiData->away;
-        $awayLineup = $this->convertApiLineup( AgainstSide::Away, $awayPlayers );
+        $awayLineup = $this->convertApiLineup(AgainstSide::Away, $awayPlayers);
         return new AgainstGameLineupsData($homeLineup, $awayLineup);
     }
 

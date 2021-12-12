@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Game;
@@ -137,7 +138,7 @@ class Against extends SofaScoreHelper
         $awayGamePlace = new AgainstGamePlace($game, $awayPlace, AgainstSide::Away);
 
         /** @psalm-suppress RedundantCondition */
-        if ($game->getState() === State::Finished ) {
+        if ($game->getState() === State::Finished) {
             $home = $againstGameData->homeScore->current;
             $away = $againstGameData->awayScore->current;
             new AgainstScore($game, $home, $away, GamePhase::RegularTime);
@@ -145,7 +146,7 @@ class Against extends SofaScoreHelper
 
         $lineups = $againstGameData->lineups;
         if ($lineups !== null) {
-            foreach( [$homeGamePlace, $awayGamePlace] as $sideGamePlace) {
+            foreach ([$homeGamePlace, $awayGamePlace] as $sideGamePlace) {
                 // use ($competitorMap, $lineups): void
                 $competitors =  $game->getCompetitors($competitorMap, $sideGamePlace->getSide());
                 if (count($competitors) === 1) {
@@ -156,7 +157,6 @@ class Against extends SofaScoreHelper
                     }
                 }
             };
-
         }
 
         $this->addGameEvents($game, $againstGameData->events);
@@ -185,17 +185,20 @@ class Against extends SofaScoreHelper
         return null;
     }
 
-    public function getAgainstGame(Competition $competition, string|int $id): AgainstGame|null
+    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null
     {
-        $againstGameData = $this->againstGameDetailsApiHelper->getAgainstGame($id);
-        if( $againstGameData === null ) {
+        $againstGameData = $this->againstGameDetailsApiHelper->getAgainstGame($id, $removeFromGameCache);
+        if ($againstGameData === null) {
             return null;
         }
         $structure = $this->parent->getStructure($competition);
         $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
         $firstPoule = $rootRound === false ? false : $rootRound->getPoules()->first();
         return $firstPoule === false ? null : $this->convertDataToAgainstGame(
-            $competition, $firstPoule, $againstGameData);
+            $competition,
+            $firstPoule,
+            $againstGameData
+        );
     }
 
     /**
@@ -205,7 +208,7 @@ class Against extends SofaScoreHelper
      */
     protected function addGameParticipations(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, array $players): void
     {
-        foreach( $players as $playerData) {
+        foreach ($players as $playerData) {
 //            if (count($externPlayer->statistics) === 0) {
 //                return;
 //            }
@@ -265,7 +268,8 @@ class Against extends SofaScoreHelper
         }
     }
 
-    protected function convertApiDataToPerson(stdClass $personApiData): Person {
+    protected function convertApiDataToPerson(stdClass $personApiData): Person
+    {
         $playerData = $this->playerApiHelper->convertApiDataRow($personApiData);
         if ($playerData === null) {
             throw new Exception('"'.(string)$personApiData->id.'" kon niet worden gevonden als speler', E_ERROR);
@@ -277,7 +281,8 @@ class Against extends SofaScoreHelper
         return $person;
     }
 
-    protected function convertPersonApiDataToParticipation(AgainstGame $game, stdClass $personApiData): Participation {
+    protected function convertPersonApiDataToParticipation(AgainstGame $game, stdClass $personApiData): Participation
+    {
         $person = $this->convertApiDataToPerson($personApiData);
         $participation = $game->getParticipation($person);
         if ($participation === null) {
@@ -286,7 +291,8 @@ class Against extends SofaScoreHelper
         return $participation;
     }
 
-    protected function convertPlayerDataToParticipation(AgainstGame $game, PlayerData $playerData): Participation {
+    protected function convertPlayerDataToParticipation(AgainstGame $game, PlayerData $playerData): Participation
+    {
         $person = $this->personHelper->convertDataToPerson($playerData);
         if ($person === null) {
             throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);

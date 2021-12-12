@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
@@ -62,7 +63,7 @@ class Person extends SofaScoreHelper
         }
         $person = new PersonBase($firstName, $nameAnalyzer->getNameInsertions(), $nameAnalyzer->getLastName());
         $person->setId($playerData->id);
-        if ($playerData->dateOfBirth !== null ) {
+        if ($playerData->dateOfBirth !== null) {
             $person->setDateOfBirth($playerData->dateOfBirth);
         }
         $this->cache[$playerData->id] = $person;

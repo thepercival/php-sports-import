@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -35,12 +36,13 @@ class Sport extends ApiHelper
         );
         /** @var list<string> $sportNames */
         $sportNames = array_keys((array)$apiData);
-        return array_map(function(string $sportName): SportData {
+        return array_map(function (string $sportName): SportData {
             return $this->convertApiDataRow($sportName);
         }, $sportNames);
     }
 
-    protected function convertApiDataRow(string $sportName): SportData {
+    protected function convertApiDataRow(string $sportName): SportData
+    {
         return new SportData($sportName, $sportName);
     }
 
@@ -54,7 +56,8 @@ class Sport extends ApiHelper
         return $this->sofaScore->getExternalSource()->getApiurl() . $this->getEndPointSuffix();
     }
 
-    public function getCacheId(): string {
+    public function getCacheId(): string
+    {
         return $this->getEndPointSuffix();
     }
 

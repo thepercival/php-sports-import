@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -78,20 +79,23 @@ class Competition extends ApiHelper
         }
         /** @var list<stdClass> $seasons */
         $seasons = $dateApiData->seasons;
-        return array_map( function(stdClass $season): CompetitionData {
-                                     return $this->convertApiDataRow($season);
-                                 }, $seasons);
+        return array_map(function (stdClass $season): CompetitionData {
+            return $this->convertApiDataRow($season);
+        }, $seasons);
     }
 
 
-    protected function convertApiDataRow(stdClass $apiDataRow): CompetitionData {
+    protected function convertApiDataRow(stdClass $apiDataRow): CompetitionData
+    {
         return new CompetitionData(
             (string)$apiDataRow->id,
             (string)$apiDataRow->name,
-            (string)$apiDataRow->year);
+            (string)$apiDataRow->year
+        );
     }
 
-    public function getCacheId(League $league): string {
+    public function getCacheId(League $league): string
+    {
         return $this->getEndPointSuffix($league);
     }
 
@@ -176,6 +180,4 @@ class Competition extends ApiHelper
 //
 //        return $firstCorrectSaturday;
 //    }
-
-
 }

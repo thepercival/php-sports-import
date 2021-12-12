@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor;
@@ -48,25 +49,25 @@ class Team extends ApiHelper
      */
     protected function convertApiToTeamCompetitorsData(stdClass $apiData): array
     {
-        if( !property_exists($apiData, 'standings') || !(is_array($apiData->standings) ) ) {
+        if (!property_exists($apiData, 'standings') || !(is_array($apiData->standings))) {
             throw new \Exception('the teamcompetitor-data is invalid', E_ERROR);
         }
         /** @var stdClass|false $standings */
         $standings = reset($apiData->standings);
-        if( $standings === false)  {
+        if ($standings === false) {
             throw new \Exception('the teamcompetitor-data is invalid', E_ERROR);
         }
         $rows = $standings->rows;
-        if( !is_array($rows) ) {
+        if (!is_array($rows)) {
             throw new \Exception('the teamcompetitor-data is invalid', E_ERROR);
         }
         $teamCompetitors = [];
-        foreach( $rows as $row ) {
-            if( !($row instanceof stdClass) ) {
+        foreach ($rows as $row) {
+            if (!($row instanceof stdClass)) {
                 continue;
             }
             $teamCompetitorData = $this->convertApiDataRow($row);
-            if( $teamCompetitorData === null ) {
+            if ($teamCompetitorData === null) {
                 $this->logger->error('could not convert api-data to teamcompetitor-data');
                 continue;
             }
@@ -75,7 +76,7 @@ class Team extends ApiHelper
         uasort($teamCompetitors, function (TeamCompetitorData $a, TeamCompetitorData $b): int {
             return $a->id < $b->id ? -1 : 1;
         });
-        if( count($teamCompetitors) === 0 ) {
+        if (count($teamCompetitors) === 0) {
             throw new \Exception('no teamcompetitor-data could be found', E_ERROR);
         }
         return array_values($teamCompetitors);
@@ -87,15 +88,15 @@ class Team extends ApiHelper
      */
     protected function convertApiDataRow(stdClass $standingRow): TeamCompetitorData|null
     {
-        if (!property_exists($standingRow, "team") || !($standingRow->team instanceof stdClass) ) {
+        if (!property_exists($standingRow, "team") || !($standingRow->team instanceof stdClass)) {
             $this->logger->error('could not find stdClass-property "team"');
             return null;
         }
         $teamData = $this->teamApiHelper->convertApiDataRow($standingRow->team);
-        if( $teamData === null ) {
+        if ($teamData === null) {
             return null;
         }
-        return new TeamCompetitorData((string)$standingRow->id, $teamData );
+        return new TeamCompetitorData((string)$standingRow->id, $teamData);
     }
 
     public function getCacheMinutes(): int
@@ -123,7 +124,5 @@ class Team extends ApiHelper
         $endpointSuffix = $this->getDefaultEndPoint();
         $retVal = str_replace("**leagueId**", (string)$competition->getLeague()->getId(), $endpointSuffix);
         return str_replace("**competitionId**", (string)$competition->getId(), $retVal);
-
-
     }
 }

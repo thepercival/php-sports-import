@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport;
@@ -8,14 +9,13 @@ use SportsHelpers\Identifiable;
 
 class CacheItemDb extends Identifiable
 {
-    const MAX_LENGTH_NAME = 150;
+    public const MAX_LENGTH_NAME = 150;
 
     public function __construct(
         protected string $name,
         protected mixed $value,
         protected DateTimeImmutable|null $expireDateTime = null
-    )
-    {
+    ) {
         $this->setName($name);
     }
 

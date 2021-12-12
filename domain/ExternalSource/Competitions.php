@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
@@ -38,7 +39,7 @@ interface Competitions
      * @param League $league
      * @return array<int|string, Competition>
      */
-    public function getCompetitions( Sport $sport, League $league): array;
+    public function getCompetitions(Sport $sport, League $league): array;
 
     /**
      * @param Sport $sport,
@@ -46,5 +47,5 @@ interface Competitions
      * @param Season $season
      * @return Competition|null
      */
-    public function getCompetition( Sport $sport, League $league, Season $season): ?Competition;
+    public function getCompetition(Sport $sport, League $league, Season $season): ?Competition;
 }

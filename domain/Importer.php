@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport;
@@ -239,8 +240,8 @@ class Importer
         }
 
         $gameRoundNumbers = $externalSourceCompetitionDetails->getGameRoundNumbers($externalCompetition);
-        if( $gameRoundRange !== null ) {
-            $gameRoundNumbers = array_filter($gameRoundNumbers, fn(int $number) => $gameRoundRange->isWithIn($number));
+        if ($gameRoundRange !== null) {
+            $gameRoundNumbers = array_filter($gameRoundNumbers, fn (int $number) => $gameRoundRange->isWithIn($number));
             $gameRoundNumbers = array_values($gameRoundNumbers);
         }
         $filteredGameRoundNumbers = $this->getGameRoundNumbersToImport($competition, $nrOfPlaces, $gameRoundNumbers);
@@ -263,7 +264,8 @@ class Importer
         Sport $sport,
         League $league,
         Season $season,
-        string $externalGameId
+        string $externalGameId,
+        bool $removeFromGameCache
     ): void {
         $externalCompetition = $this->getter->getCompetition(
             $externalSourceCompetitions,
@@ -295,7 +297,7 @@ class Importer
             }
         }
         try {
-            $externalGame = $this->getter->getAgainstGame($externalSourceCompetitionDetails, $externalSource, $externalCompetition, $externalGameId);
+            $externalGame = $this->getter->getAgainstGame($externalSourceCompetitionDetails, $externalSource, $externalCompetition, $externalGameId, $removeFromGameCache);
             if ($externalGame->getState() !== State::Finished) {
                 $this->logger->info("game " . (string)$externalGame->getId() . " is not finished");
                 return;
@@ -334,15 +336,14 @@ class Importer
 //        $nrUpdated = 0;
 //        $maxUpdated = 20;
 
-        $teams = array_map( function (TeamCompetitorBase $teamCompetitor): TeamBase {
-                return $teamCompetitor->getTeam();
-            }, $competition->getTeamCompetitors()->toArray());
+        $teams = array_map(function (TeamCompetitorBase $teamCompetitor): TeamBase {
+            return $teamCompetitor->getTeam();
+        }, $competition->getTeamCompetitors()->toArray());
         foreach ($teams as $team) {
-            $activePlayers = array_filter( $team->getPlayers()->toArray(), function (Player $player) use ($season): bool {
+            $activePlayers = array_filter($team->getPlayers()->toArray(), function (Player $player) use ($season): bool {
                 return $player->getEndDateTime() > $season->getStartDateTime();
             });
             foreach ($activePlayers as $activePlayer) {
-
                 $this->playerImportService->importImage(
                     $externalSourceCompetitionDetails,
                     $externalSource,
@@ -398,8 +399,8 @@ class Importer
     protected function getGameRoundNumbersToImport(
         Competition $competition,
         int $nrOfPlaces,
-        array $gameRoundNumbers): array
-    {
+        array $gameRoundNumbers
+    ): array {
         $gameRoundNumbersRet = [];
 
         foreach ($gameRoundNumbers as $gameRoundNumber) {

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -121,7 +122,5 @@ class Structure extends ApiHelper
         $endpointSuffix = $this->getDefaultEndPoint();
         $retVal = str_replace("**leagueId**", (string)$competition->getLeague()->getId(), $endpointSuffix);
         return str_replace("**competitionId**", (string)$competition->getId(), $retVal);
-
-
     }
 }

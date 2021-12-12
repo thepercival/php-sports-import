@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
@@ -27,7 +28,7 @@ class Structure extends SofaScoreHelper
         SofaScore $parent,
         LoggerInterface $logger
     ) {
-        parent::__construct($parent,$logger);
+        parent::__construct($parent, $logger);
         $this->structureEditor = new StructureEditor(
             new CompetitionSportService(),
             new PlanningConfigService()

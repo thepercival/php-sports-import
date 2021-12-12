@@ -36,7 +36,7 @@ class Structure
         $competition = $competitionAttacher->getImportable();
 
         $hasStructure = $this->structureRepos->hasStructure($competition);
-        if( $hasStructure === false ) {
+        if ($hasStructure === false) {
             $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
             $this->structureRepos->add($newStructure, 1);
             $this->logger->info("structure added for external competition " . $externalCompetition->getName());

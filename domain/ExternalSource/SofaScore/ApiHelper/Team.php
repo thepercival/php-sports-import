@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -63,6 +64,4 @@ class Team extends ApiHelper
             (string)$apiDataRow->shortName
         );
     }
-
-
 }
