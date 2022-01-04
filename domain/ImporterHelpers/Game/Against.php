@@ -220,6 +220,9 @@ class Against
                         continue;
                     }
                     $externalAssistParticipation = $externalGoal->getAssistGameParticipation();
+                    if ($externalAssistParticipation === null) {
+                        continue;
+                    }
                     $externalAssistPlayer = $externalAssistParticipation->getPlayer();
                     $assistPlayer = $this->getPlayerFromExternal($game, $externalSource, $externalAssistPlayer);
                     if ($assistPlayer === null) {
