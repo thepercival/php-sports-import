@@ -10,8 +10,8 @@ use Sports\State;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as LineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as EventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as LineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRoundData;
@@ -89,11 +89,13 @@ class AgainstGameDetails extends ApiHelper
         $home = 0;
         $away = 0;
         /** @psalm-suppress RedundantCondition */
-        if ($state === State::Finished and is_object($apiDataRow->homeScore) and is_object($apiDataRow->awayScore)) {
+        if ($state === State::Finished && is_object($apiDataRow->homeScore) && is_object($apiDataRow->awayScore)
+            && property_exists($apiDataRow->homeScore, "current")
+            && property_exists($apiDataRow->awayScore, "current")) {
             $home = (int)$apiDataRow->homeScore->current;
             $away = (int)$apiDataRow->awayScore->current;
         }
-        $againstGameData =  new AgainstGameData(
+        $againstGameData = new AgainstGameData(
             (string)$apiDataRow->id,
             $start,
             new AgainstGameRoundData($gameRoundNumber),

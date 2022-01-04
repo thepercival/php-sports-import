@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace SportsImport\Attacher;
 
 use Doctrine\ORM\EntityRepository;
-use SportsImport\ExternalSource;
 use SportsHelpers\Identifiable;
-use SportsImport\Attacher as Atacherbase;
 use SportsHelpers\Repository as BaseRepository;
+use SportsImport\ExternalSource;
 
 /**
  * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, MixedMethodCall
+ * @phpstan-ignore-next-line
  * @template T
  * @template I
  * @template-extends EntityRepository<T>

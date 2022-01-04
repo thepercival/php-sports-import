@@ -5,37 +5,33 @@ declare(strict_types=1);
 namespace SportsImport\ImporterHelpers\Game;
 
 use DateTimeImmutable;
-use Doctrine\Common\Collections\Collection;
 use Exception;
-use Sports\Sport;
-use Sports\Competition\Sport as CompetitionSport;
+use Psr\Log\LoggerInterface;
 use Sports\Competitor\Map as CompetitorMap;
+use Sports\Game;
+use Sports\Game\Against as AgainstGame;
+use Sports\Game\Against\Repository as AgainstGameRepository;
+use Sports\Game\Event\Card;
+use Sports\Game\Event\Goal;
+use Sports\Game\Place\Against as AgainstGamePlace;
+use Sports\Output\Game\Against as AgainstGameOutput;
 use Sports\Person;
-use Sports\Competitor;
+use Sports\Poule;
+use Sports\Score\Against\Repository as AgainstScoreRepository;
+use Sports\Score\Creator as ScoreCreator;
+use Sports\Sport;
 use Sports\State;
+use Sports\Structure\Repository as StructureRepository;
+use Sports\Team;
 use Sports\Team\Player;
+use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
+use SportsImport\Attacher\Game\Against as AgainstGameAttacher;
+use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
+use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
+use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
+use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
 use SportsImport\ImporterHelpers\Person as PersonImporterHelper;
-use Sports\Game\Against\Repository as AgainstGameRepository;
-use Sports\Score\Against\Repository as AgainstScoreRepository;
-use Sports\Structure\Repository as StructureRepository;
-use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use Sports\Game\Against as AgainstGame;
-use Sports\Game;
-use Sports\Score\Creator as ScoreCreator;
-use SportsImport\Attacher\Game\Against as AgainstGameAttacher;
-use Psr\Log\LoggerInterface;
-use Sports\Poule;
-use Sports\Place;
-use Sports\Game\Place\Against as AgainstGamePlace;
-use Sports\Team;
-use Sports\Game\Event\Goal;
-use Sports\Game\Event\Card;
-use Sports\Output\Game\Against as AgainstGameOutput;
 use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
 use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
 
@@ -224,10 +220,7 @@ class Against
                         continue;
                     }
                     $externalAssistParticipation = $externalGoal->getAssistGameParticipation();
-                    $externalAssistPlayer = $externalAssistParticipation?->getPlayer();
-                    if ($externalAssistPlayer === null) {
-                        continue;
-                    }
+                    $externalAssistPlayer = $externalAssistParticipation->getPlayer();
                     $assistPlayer = $this->getPlayerFromExternal($game, $externalSource, $externalAssistPlayer);
                     if ($assistPlayer === null) {
                         continue;

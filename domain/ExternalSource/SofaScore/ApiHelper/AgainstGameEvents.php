@@ -5,20 +5,15 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use Sports\Game\Against as AgainstGame;
-use Sports\Game\Event\Card as CardEvent;
-use Sports\Game\Event\Goal as GoalEvent;
 use Sports\Sport;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\CacheInfo;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
-use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use stdClass;
 
@@ -95,8 +90,8 @@ class AgainstGameEvents extends ApiHelper
     protected function createCard(stdClass $apiDataRow): CardEventData|null
     {
         $eventClass = strtolower((string)$apiDataRow->incidentClass);
-        if (!in_array($eventClass, ['yellow', 'yellowred', 'red'])) {
-            throw new \Exception('kan het kaarttype "'.$eventClass.'" niet vaststellen', E_ERROR);
+        if (!in_array($eventClass, ['yellow', 'yellowred', 'red'], true)) {
+            throw new \Exception('kan het kaarttype "' . $eventClass . '" niet vaststellen', E_ERROR);
         }
         if (!property_exists($apiDataRow, 'player')) { // can be manager
             return null;

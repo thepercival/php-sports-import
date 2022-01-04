@@ -6,8 +6,8 @@ namespace SportsImport\CacheItemDb;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
-use SportsImport\CacheItemDb;
 use SportsHelpers\Repository as BaseRepository;
+use SportsImport\CacheItemDb;
 
 /**
  * @template-extends EntityRepository<CacheItemDb>
@@ -19,7 +19,7 @@ class Repository extends EntityRepository
      */
     use BaseRepository;
 
-    public function getItem(string $name): ?string
+    public function getItem(string $name): string|null
     {
         $cacheItem = $this->findOneBy(["name" => $name]);
         if ($cacheItem !== null &&
@@ -32,7 +32,7 @@ class Repository extends EntityRepository
             }
             $content = stream_get_contents($handle);
             rewind($handle);
-            return $content;
+            return $content === false ? null : $content;
         }
         return null;
     }

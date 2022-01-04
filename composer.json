@@ -55,13 +55,12 @@
     }
   },
   "scripts": {
-    "start": "php -S localhost:2990 -t public/",
     "test": [
       "XDEBUG_MODE=coverage vendor/bin/phpunit --configuration tests/phpunit.xml"
     ],
     "stan": "XDEBUG_MODE=off vendor/bin/phpstan analyse",
     "psalm": "XDEBUG_MODE=off vendor/bin/psalm --output-format=phpstorm --show-info=true --no-diff",
-    "cs-fix": "php-cs-fixer fix .",
+    "cs-fix": "XDEBUG_MODE=off php-cs-fixer fix .",
     "copy-vob": [
       "rm -rf ../vobetting-api/vendor/thepercival/php-sports-import",
       "mkdir ../vobetting-api/vendor/thepercival/php-sports-import",
@@ -78,6 +77,12 @@
       "includes": [
         "extension.neon"
       ]
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/package-versions-deprecated": true,
+      "phpstan/extension-installer": true
     }
   }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore;
 
-use SportsImport\ExternalSource\SofaScore;
 use Psr\Log\LoggerInterface;
+use SportsImport\ExternalSource\SofaScore;
 
 /**
  * @template T
@@ -41,14 +41,14 @@ abstract class Helper
         return false;
     }
 
-
-    private function notice(string $msg): void
-    {
-        $this->logger->notice($this->parent->getExternalSource()->getName() . " : " . $msg);
-    }
-
-    private function error(string $msg): void
-    {
-        $this->logger->error($this->parent->getExternalSource()->getName() . " : " . $msg);
-    }
+//
+//    private function notice(string $msg): void
+//    {
+//        $this->logger->notice($this->parent->getExternalSource()->getName() . " : " . $msg);
+//    }
+//
+//    private function error(string $msg): void
+//    {
+//        $this->logger->error($this->parent->getExternalSource()->getName() . " : " . $msg);
+//    }
 }

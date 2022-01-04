@@ -6,13 +6,14 @@ namespace SportsImport\ExternalSource\SofaScore;
 
 use DateTimeImmutable;
 use Exception;
-use Psr\Log\LoggerInterface;
-use Sports\State;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource\SofaScore;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Psr\Log\LoggerInterface;
+use Sports\State;
+use SportsHelpers\Dev\ByteFormatter;
 use SportsHelpers\SportRange;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
+use SportsImport\ExternalSource\SofaScore;
 
 abstract class ApiHelper
 {
@@ -37,6 +38,9 @@ abstract class ApiHelper
         return $this->client;
     }
 
+    /**
+     * @return array<string|int, mixed>
+     */
     protected function getHeaders(): array
     {
         $curlOptions = [
@@ -106,25 +110,8 @@ abstract class ApiHelper
         }
         $content = $response->getBody()->getContents();
         $retVal = $this->cacheItemDbRepos->saveItem($cacheId, $content, $cacheMinutes);
-        $this->logger->info("received data size: " . $this->formatBytes(mb_strlen($retVal)));
+        $this->logger->info("received data size: " . (new ByteFormatter(mb_strlen($retVal))));
         return json_decode($retVal);
-    }
-
-    protected function formatBytes(false|int $bytes, int $precision = 2): string
-    {
-        if ($bytes === false) {
-            return 'unknown size';
-        }
-        $units = array('B', 'KB', 'MB', 'GB', 'TB');
-
-        $bytes = max($bytes, 0);
-        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-        $pow = (int)min($pow, count($units) - 1);
-
-        // Uncomment one of the following alternatives
-        $bytes /= pow(1024, $pow);
-        // $bytes /= (1 << (10 * $pow));
-        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
     protected function getImgData(string $endpoint): string

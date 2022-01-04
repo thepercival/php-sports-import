@@ -4,24 +4,32 @@ declare(strict_types=1);
 
 namespace SportsImport\Attacher;
 
-use SportsImport\ExternalSource;
-use SportsHelpers\Identifiable;
-use SportsImport\Attacher as AttacherBase;
-use SportsImport\Attacher\Sport as SportAttacher;
-use SportsImport\Attacher\Association as AssociationAttacher;
-use SportsImport\Attacher\Season as SeasonAttacher;
-use SportsImport\Attacher\League as LeagueAttacher;
-use SportsImport\Attacher\Competition as CompetitionAttacher;
-use Sports\Sport;
 use Sports\Association;
-use Sports\Season;
-use Sports\League;
 use Sports\Competition;
+use Sports\League;
+use Sports\Season;
+use Sports\Sport;
+use SportsHelpers\Identifiable;
+use SportsImport\Attacher\Association as AssociationAttacher;
+use SportsImport\Attacher\Competition as CompetitionAttacher;
+use SportsImport\Attacher\League as LeagueAttacher;
+use SportsImport\Attacher\Season as SeasonAttacher;
+use SportsImport\Attacher\Sport as SportAttacher;
+use SportsImport\ExternalSource;
 
 class Factory
 {
-    public function createObject(Identifiable $importable, ExternalSource $externalSource, string $externalId): ?AttacherBase
-    {
+    /**
+     * @param Identifiable $importable
+     * @param ExternalSource $externalSource
+     * @param string $externalId
+     * @return SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher|null
+     */
+    public function createObject(
+        Identifiable $importable,
+        ExternalSource $externalSource,
+        string $externalId
+    ): SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher|null {
         if ($importable instanceof Sport) {
             return new SportAttacher(
                 $importable,
