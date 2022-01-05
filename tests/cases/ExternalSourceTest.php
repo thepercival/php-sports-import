@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace SportsImport\Tests;
 
-use FCToernooi\User as User;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use SportsImport\ExternalSource;
 
