@@ -6,7 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
-use Sports\State;
+use Sports\Game\State as GameState;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -18,7 +18,7 @@ use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRo
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameScoreData;
 use stdClass;
 
-class AgainstGameDetails extends ApiHelper
+class AgainstGame extends ApiHelper
 {
     public function __construct(
         protected LineupsApiHelper $lineupApiHelper,
@@ -31,27 +31,45 @@ class AgainstGameDetails extends ApiHelper
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
     }
 
-    /**
-     * @param string|int $gameId
-     * @return AgainstGameData
-     */
-    public function getAgainstGame(string|int $gameId, bool $removeFromGameCache): AgainstGameData|null
+    public function getAgainstGame(string|int $gameId, bool $resetCache): AgainstGameData|null
     {
-        if ($removeFromGameCache) {
-            $this->removeDataFromCache($this->getCacheId($gameId));
+        $apiDataRow = $this->getAgainstGameBasics($gameId, $resetCache);
+
+        if ($apiDataRow === null) {
+            return null;
+        }
+        $againstGameData = $this->convertBasicsApiDataRow($apiDataRow);
+        if ($againstGameData !== null) {
+            $this->finishAgainstGameData($againstGameData, $resetCache);
+        }
+        return $againstGameData;
+    }
+
+    public function finishAgainstGameData(AgainstGameData $againstGameData, bool $resetCache): void
+    {
+        if ($againstGameData->state === GameState::Finished) {
+            $againstGameData->lineups = $this->lineupApiHelper->getLineups($againstGameData->id, $resetCache);
+            $againstGameData->events = $this->eventApiHelper->getEvents($againstGameData->id, $resetCache);
+        }
+    }
+
+    public function getAgainstGameBasics(string|int $gameId, bool $resetCache): stdClass|null
+    {
+        $cacheId = $this->getCacheId($gameId, true);
+        if ($resetCache) {
+            $this->resetDataFromCache($cacheId);
         }
 
         /** @var stdClass $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($gameId),
-            $this->getCacheId($gameId),
+            $cacheId,
             $this->getCacheMinutes()
         );
-
-        return $this->convertApiDataRow($apiData);
+        return $apiData;
     }
 
-    public function convertApiDataRow(stdClass $apiDataRow): AgainstGameData|null
+    public function convertBasicsApiDataRow(stdClass $apiDataRow): AgainstGameData|null
     {
         if (property_exists($apiDataRow, "event")) {
             /** @var stdClass $apiDataRow */
@@ -89,7 +107,7 @@ class AgainstGameDetails extends ApiHelper
         $home = 0;
         $away = 0;
         /** @psalm-suppress RedundantCondition */
-        if ($state === State::Finished && is_object($apiDataRow->homeScore) && is_object($apiDataRow->awayScore)
+        if ($state === GameState::Finished && is_object($apiDataRow->homeScore) && is_object($apiDataRow->awayScore)
             && property_exists($apiDataRow->homeScore, "current")
             && property_exists($apiDataRow->awayScore, "current")) {
             $home = (int)$apiDataRow->homeScore->current;
@@ -105,17 +123,12 @@ class AgainstGameDetails extends ApiHelper
             new AgainstGameScoreData($home),
             new AgainstGameScoreData($away)
         );
-
-        if ($state === State::Finished) {
-            $againstGameData->lineups = $this->lineupApiHelper->getLineups($againstGameData->id);
-            $againstGameData->events = $this->eventApiHelper->getEvents($againstGameData->id);
-        }
         return $againstGameData;
     }
 
-    public function getCacheInfo(string|int $gameId): string
+    public function getCacheInfo(string|int $gameId, bool $onlyScheduled): string
     {
-        return $this->getCacheInfoHelper($this->getCacheId($gameId));
+        return $this->getCacheInfoHelper($this->getCacheId($gameId, $onlyScheduled));
     }
 
     public function getCacheMinutes(): int
@@ -123,9 +136,9 @@ class AgainstGameDetails extends ApiHelper
         return 1555000; // @TODO CDK 55
     }
 
-    public function getCacheId(string|int $gameId): string
+    public function getCacheId(string|int $gameId, bool $onlyScheduled): string
     {
-        return $this->getEndPointSuffix($gameId);
+        return $this->getEndPointSuffix($gameId) . (!$onlyScheduled ? '-scheduled' : '');
     }
 
     public function getDefaultEndPoint(): string

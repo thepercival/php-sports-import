@@ -6,11 +6,8 @@ namespace SportsImport\ExternalSource;
 
 use Sports\Competition;
 use Sports\Game\Against as AgainstGame;
-use Sports\Person;
-use Sports\Game;
-use stdClass;
 
-interface CompetitionDetails
+interface GamesAndPlayers
 {
 //    /**
 //     * @param Game $game
@@ -34,11 +31,21 @@ interface CompetitionDetails
      * @return list<int>
      */
     public function getGameRoundNumbers(Competition $competition): array;
+
     /**
      * @param Competition $competition
      * @param int $gameRoundNumber
      * @return array<int|string, AgainstGame>
      */
-    public function getAgainstGames(Competition $competition, int $gameRoundNumber): array;
-    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null;
+    public function getAgainstGamesBasics(Competition $competition, int $gameRoundNumber): array;
+
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @param bool $resetCache
+     * @return array<int|string, AgainstGame>
+     */
+    public function getAgainstGamesComplete(Competition $competition, int $gameRoundNumber, bool $resetCache): array;
+
+    public function getAgainstGame(Competition $competition, string|int $id, bool $resetCache): AgainstGame|null;
 }

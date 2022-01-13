@@ -30,15 +30,21 @@ class AgainstGameEvents extends ApiHelper
 
     /**
      * @param string|int $gameId
+     * @param bool $resetCache
      * @return list<CardEventData|GoalEventData|SubstitutionEventData>
      * @throws \Exception
      */
-    public function getEvents(string|int $gameId): array
+    public function getEvents(string|int $gameId, bool $resetCache): array
     {
+        $cacheId = $this->getCacheId($gameId);
+        if ($resetCache) {
+            $this->resetDataFromCache($cacheId);
+        }
+
         /** @var stdClass $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($gameId),
-            $this->getCacheId($gameId),
+            $cacheId,
             $this->getCacheMinutes()
         );
         if (!property_exists($apiData, "incidents")) {

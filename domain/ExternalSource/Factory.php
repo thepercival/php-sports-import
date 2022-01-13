@@ -2,10 +2,9 @@
 
 namespace SportsImport\ExternalSource;
 
+use Psr\Log\LoggerInterface;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource;
-use Psr\Log\LoggerInterface;
-use stdClass;
 
 class Factory implements Proxy
 {
@@ -16,7 +15,7 @@ class Factory implements Proxy
 
     protected const COMPETITIONS = 1;
     protected const COMPETITION_STRUCTURE = 2;
-    protected const COMPETITION_DETAILS = 4;
+    protected const GAMES_AND_PLAYERIMAGES = 4;
 
     public function __construct(
         protected Repository $externalSourceRepos,
@@ -95,8 +94,8 @@ class Factory implements Proxy
         if ($externalSourceImplementation instanceof ExternalSource\CompetitionStructure) {
             $implementations += self::COMPETITION_STRUCTURE;
         }
-        if ($externalSourceImplementation instanceof ExternalSource\CompetitionDetails) {
-            $implementations += self::COMPETITION_DETAILS;
+        if ($externalSourceImplementation instanceof ExternalSource\GamesAndPlayers) {
+            $implementations += self::GAMES_AND_PLAYERIMAGES;
         }
         return $implementations;
     }

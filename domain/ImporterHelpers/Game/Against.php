@@ -14,13 +14,14 @@ use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Game\Event\Card;
 use Sports\Game\Event\Goal;
 use Sports\Game\Place\Against as AgainstGamePlace;
+use Sports\Game\State as GameState;
 use Sports\Output\Game\Against as AgainstGameOutput;
+use Sports\Output\Game\Column as GameColumn;
 use Sports\Person;
 use Sports\Poule;
 use Sports\Score\Against\Repository as AgainstScoreRepository;
 use Sports\Score\Creator as ScoreCreator;
 use Sports\Sport;
-use Sports\State;
 use Sports\Structure\Repository as StructureRepository;
 use Sports\Team;
 use Sports\Team\Player;
@@ -32,12 +33,11 @@ use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
 use SportsImport\ImporterHelpers\Person as PersonImporterHelper;
-use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
-use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
+use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 
 class Against
 {
-    protected ImportGameEvent|ImportGameDetailsEvent|null $eventSender = null;
+    protected ImportGameEvents|null $importGameEventsSender = null;
 
     // public const MAX_DAYS_BACK = 8;
 
@@ -59,26 +59,24 @@ class Against
 //        return (new DateTimeImmutable())->modify("-" . static::MAX_DAYS_BACK . " days");
 //    }
 
-    public function setEventSender(ImportGameEvent|ImportGameDetailsEvent $eventSender): void
+    public function setEventSender(ImportGameEvents $importGameEventsSender): void
     {
-        $this->eventSender = $eventSender;
+        $this->importGameEventsSender = $importGameEventsSender;
     }
 
     /**
      * @param ExternalSource $externalSource
      * @param list<AgainstGame> $externalGames
+     * @param bool $onlyBasics
      * @throws Exception
      */
-    public function importSchedule(ExternalSource $externalSource, array $externalGames): void
+    public function importGames(ExternalSource $externalSource, array $externalGames, bool $onlyBasics): void
     {
         foreach ($externalGames as $externalGame) {
             $poule = $this->getPouleFromExternal($externalSource, $externalGame->getPoule());
             if ($poule === null) {
                 continue;
             }
-            $teamCompetitors = $poule->getRound()->getNumber()->getCompetition()->getTeamCompetitors()->toArray();
-            $competitorMap = new CompetitorMap(array_values($teamCompetitors));
-            $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
 
             $externalId = $externalGame->getId();
             if ($externalId === null) {
@@ -89,7 +87,6 @@ class Against
                 (string)$externalId
             );
 
-            $gameCreated = false;
             if ($gameAttacher === null) {
                 $game = $this->createGame($poule, $externalSource, $externalGame);
                 if ($game === null) {
@@ -102,33 +99,17 @@ class Against
                 );
                 $this->againstGameAttacherRepos->save($gameAttacher);
 
-                $gameOutput->output($game, "created => ");
-                $gameCreated = true;
+                $this->outputGame($game, "created => ");
+            } else {
+                $this->importBasics($externalSource, $externalGame);
             }
 
-            if ($externalGame->getState() === State::Finished) {
+            if ($externalGame->getState() === GameState::Finished && !$onlyBasics) {
                 $this->personHelper->importByAgainstGame(
                     $externalSource,
                     $externalGame
                 );
-                $this->importDetails($externalSource, $externalGame);
-            } else {
-                $gameRescheduled = false;
-                $game = $gameAttacher->getImportable();
-                $oldStartDateTime = $game->getStartDateTime();
-                if ($game->getStartDateTime()->getTimestamp() !== $externalGame->getStartDateTime()->getTimestamp()) {
-                    $gameRescheduled = true;
-                    $game->setStartDateTime($externalGame->getStartDateTime());
-                    $this->againstGameRepos->save($game);
-                    if ($this->eventSender instanceof ImportGameEvent) {
-                        $this->eventSender->sendUpdateGameEvent($game, $oldStartDateTime);
-                    }
-                }
-                if ($gameCreated || $gameRescheduled) {
-                    if ($this->eventSender !== null && $this->eventSender instanceof ImportGameEvent) {
-                        $this->eventSender->sendUpdateGameEvent($game);
-                    }
-                }
+                $this->importScoresLineupsAndEvents($externalSource, $externalGame);
             }
         }
     }
@@ -160,40 +141,45 @@ class Against
         }
 
         $this->againstGameRepos->save($game);
+        $this->importGameEventsSender?->sendCreateEvent($game);
         return $game;
     }
 
-    public function importDetails(ExternalSource $externalSource, AgainstGame $externalGame): void
+    public function importBasics(ExternalSource $externalSource, AgainstGame $externalGame): void
     {
-        $externalId = $externalGame->getId();
-        $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
-            $externalSource,
-            (string)$externalId
-        );
-        if ($gameAttacher === null) {
-            $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
-            $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
-            $placeLocationMap = new CompetitorMap($teamCompetitors);
-            $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
-            $gameOutput->output($externalGame, "no game found for external  ");
-            $this->logger->warning("no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName() ."\"") ;
+        $game = $this->getGameFromExternal($externalSource, $externalGame);
+        if ($game === null) {
             return;
         }
 
-
-        $game = $gameAttacher->getImportable();
-//        if ($game === null) {
-//            $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
-//            $placeLocationMap = new CompetitorMap($teamCompetitors);
-//            $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
-//            $gameOutput->output($externalGame, "no game found for external  ");
-//            $this->logger->warning("no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName() ."\"") ;
-//        }
-
         $game->setState($externalGame->getState());
 
-        $this->removeDetails($game);
+        $oldStartDateTime = $game->getStartDateTime();
+        $rescheduled = false;
+        if ($game->getStartDateTime()->getTimestamp() !== $externalGame->getStartDateTime()->getTimestamp()) {
+            $game->setStartDateTime($externalGame->getStartDateTime());
+            $rescheduled = true;
+        }
 
+        $this->againstGameRepos->save($game);
+        $this->importGameEventsSender?->sendUpdateBasicsEvent($game);
+        $rescheduledDescr = '';
+        if ($rescheduled) {
+            $this->importGameEventsSender?->sendRescheduleEvent($oldStartDateTime, $game);
+            $rescheduledDescr = '(rescheduled)';
+        }
+
+        $this->outputGame($game, 'updated basics' . $rescheduledDescr . ' => ');
+    }
+
+    public function importScoresLineupsAndEvents(ExternalSource $externalSource, AgainstGame $externalGame): void
+    {
+        $game = $this->getGameFromExternal($externalSource, $externalGame);
+        if ($game === null) {
+            return;
+        }
+
+        $this->removeScoresLineupsAndEvents($game);
         (new ScoreCreator())->addAgainstScores($game, array_values($externalGame->getScores()->toArray()));
 
         foreach ($externalGame->getPlaces() as $externalGamePlace) {
@@ -237,9 +223,31 @@ class Against
             }
         }
         $this->againstGameRepos->save($game);
-        if ($this->eventSender !== null && $this->eventSender instanceof ImportGameDetailsEvent) {
-            $this->eventSender->sendUpdateGameDetailsEvent($game);
+        $this->importGameEventsSender?->sendUpdateScoresLineupsAndEventsEvent($game);
+        $this->outputGame($game, "updated scores,lineups,events => ", false);
+    }
+
+    protected function getGameFromExternal(ExternalSource $externalSource, AgainstGame $externalGame): AgainstGame|null
+    {
+        $externalId = $externalGame->getId();
+        $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
+            $externalSource,
+            (string)$externalId
+        );
+        if ($gameAttacher === null) {
+            $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
+            $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
+            $placeLocationMap = new CompetitorMap($teamCompetitors);
+            $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
+            $gameOutput->output($externalGame, "no game found for external  ");
+            $this->logger->warning(
+                "no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName(
+                ) . "\""
+            );
+            return null;
         }
+
+        return $gameAttacher->getImportable();
     }
 
     protected function getGamePlaceFromExternal(AgainstGame $game, int $placeNr): AgainstGamePlace
@@ -339,7 +347,7 @@ class Against
     }
 
 
-    protected function removeDetails(AgainstGame $game): void
+    protected function removeScoresLineupsAndEvents(AgainstGame $game): void
     {
         foreach ($game->getPlaces() as $gamePlace) {
             while ($participation = $gamePlace->getParticipations()->first()) {
@@ -350,5 +358,30 @@ class Against
         $this->againstScoreRepos->removeScores($game);
 
         $this->againstGameRepos->save($game);
+    }
+
+    protected function outputGame(AgainstGame $game, string $prefix, bool $onlyBasics = true): void
+    {
+        $teamCompetitors = $game->getRound()->getNumber()->getCompetition()->getTeamCompetitors()->toArray();
+        $competitorMap = new CompetitorMap(array_values($teamCompetitors));
+        $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
+        $columns = $this->getGameColumns();
+        if (!$onlyBasics) {
+            $columns[] = GameColumn::ScoresLineupsAndEvents;
+        }
+        $gameOutput->output($game, $prefix, $columns);
+    }
+
+    /**
+     * @return list<GameColumn>
+     */
+    protected function getGameColumns(): array
+    {
+        return [
+            GameColumn::State,
+            GameColumn::StartDateTime,
+            GameColumn::GameRoundNumber,
+            GameColumn::ScoreAndPlaces
+        ];
     }
 }

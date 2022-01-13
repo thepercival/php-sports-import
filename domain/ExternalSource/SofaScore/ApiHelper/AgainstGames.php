@@ -6,20 +6,17 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
-use Sports\Game\Against as AgainstGame;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\CacheInfo;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameDetails as AgainstGameDetailsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use stdClass;
 
 class AgainstGames extends ApiHelper
 {
     public function __construct(
-        protected AgainstGameDetailsApiHelper $againstGameDetailsApiHelper,
+        protected AgainstGameApiHelper $againstGameDetailsApiHelper,
         SofaScore $sofaScore,
         CacheItemDbRepository $cacheItemDbRepos,
         LoggerInterface $logger
@@ -32,12 +29,12 @@ class AgainstGames extends ApiHelper
      * @param int $gameRoundNumber
      * @return list<AgainstGameData>
      */
-    public function getAgainstGames(Competition $competition, int $gameRoundNumber): array
+    public function getAgainstGamesBasics(Competition $competition, int $gameRoundNumber): array
     {
         /** @var stdClass $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($competition, $gameRoundNumber),
-            $this->getCacheId($competition, $gameRoundNumber),
+            $this->getCacheId($competition, $gameRoundNumber, true),
             $this->getCacheMinutes()
         );
 
@@ -45,13 +42,47 @@ class AgainstGames extends ApiHelper
         /** @var list<stdClass> $events */
         $events = $apiData->events;
         foreach ($events as $event) {
-            $againstGameData = $this->convertApiDataRow($event);
+            $againstGameData = $this->convertBasicsApiDataRow($event);
             if ($againstGameData !== null) {
                 $againstGamesData[] = $againstGameData;
             }
         }
         return $againstGamesData;
     }
+
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @param bool $resetCache
+     * @return list<AgainstGameData>
+     */
+    public function getAgainstGamesComplete(Competition $competition, int $gameRoundNumber, bool $resetCache): array
+    {
+        $cacheId = $this->getCacheId($competition, $gameRoundNumber, false);
+        if ($resetCache) {
+            $this->resetDataFromCache($cacheId);
+        }
+
+        /** @var stdClass $apiData */
+        $apiData = $this->getData(
+            $this->getEndPoint($competition, $gameRoundNumber),
+            $cacheId,
+            $this->getCacheMinutes()
+        );
+
+        $againstGamesData = [];
+        /** @var list<stdClass> $events */
+        $events = $apiData->events;
+        foreach ($events as $event) {
+            $againstGameData = $this->convertBasicsApiDataRow($event);
+            if ($againstGameData !== null) {
+                $this->againstGameDetailsApiHelper->finishAgainstGameData($againstGameData, $resetCache);
+                $againstGamesData[] = $againstGameData;
+            }
+        }
+        return $againstGamesData;
+    }
+
 //
     //if (array_key_exists($externalGame->event->id, $this->cache)) {
     //return $this->cache[$externalGame->event->id];
@@ -72,9 +103,9 @@ class AgainstGames extends ApiHelper
     //}
     //$game->setId($externalGame->event->id);
 
-    protected function convertApiDataRow(stdClass $apiDataRow): AgainstGameData|null
+    protected function convertBasicsApiDataRow(stdClass $apiDataRow): AgainstGameData|null
     {
-        $againstGameData = $this->againstGameDetailsApiHelper->convertApiDataRow($apiDataRow);
+        $againstGameData = $this->againstGameDetailsApiHelper->convertBasicsApiDataRow($apiDataRow);
         if ($againstGameData === null) {
             return null;
         }
@@ -86,9 +117,9 @@ class AgainstGames extends ApiHelper
         return 60 * 24 * 7;
     }
 
-    public function getCacheId(Competition $competition, int $gameRoundNumber): string
+    public function getCacheId(Competition $competition, int $gameRoundNumber, bool $onlyScheduled): string
     {
-        return $this->getEndPointSuffix($competition, $gameRoundNumber);
+        return $this->getEndPointSuffix($competition, $gameRoundNumber) . (!$onlyScheduled ? '-scheduled' : '');
     }
 
     public function getDefaultEndPoint(): string

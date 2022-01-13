@@ -4,45 +4,43 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Game;
 
-use DateTimeImmutable;
 use Exception;
 use League\Period\Period;
 use Psr\Log\LoggerInterface;
+use Sports\Competition;
+use Sports\Competitor\Map as CompetitorMap;
 use Sports\Competitor\Team as TeamCompetitor;
-use Sports\Game\Participation;
-use Sports\Game\Phase as GamePhase;
-use Sports\Game\Event\Goal as GoalEvent;
+use Sports\Game\Against as AgainstGame;
 use Sports\Game\Event\Card as CardEvent;
+use Sports\Game\Event\Goal as GoalEvent;
+use Sports\Game\Participation;
+use Sports\Game\Participation as GameParticipation;
+use Sports\Game\Phase as GamePhase;
+use Sports\Game\Place\Against as AgainstGamePlace;
+use Sports\Game\State as GameState;
 use Sports\Person;
-use SportsHelpers\Against\Side as AgainstSide;
-use Sports\Sport;
+use Sports\Place;
+use Sports\Poule;
+use Sports\Score\Against as AgainstScore;
+use Sports\Team;
 use Sports\Team\Player as TeamPlayer;
+use SportsHelpers\Against\Side as AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameDetails as AgainstGameDetailsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
-use stdClass;
-use Sports\Game\Place\Against as AgainstGamePlace;
+use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
-use Sports\Competitor\Map as CompetitorMap;
-use Sports\Competition;
-use Sports\Game\Participation as GameParticipation;
-use Sports\Poule;
-use Sports\Place;
-use Sports\Team;
-use Sports\Game\Against as AgainstGame;
-use Sports\Score\Against as AgainstScore;
-use Sports\State;
-use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
-use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
+use stdClass;
 
 /**
  * @template-extends SofaScoreHelper<AgainstGame>
@@ -54,8 +52,8 @@ class Against extends SofaScoreHelper
     public function __construct(
         protected TeamHelper $teamHelper,
         protected PersonHelper $personHelper,
-        protected AgainstGamesApiHelper  $againstGamesApiHelper,
-        protected AgainstGameDetailsApiHelper $againstGameDetailsApiHelper,
+        protected AgainstGamesApiHelper $againstGamesApiHelper,
+        protected AgainstGameApiHelper $againstGameApiHelper,
         protected AgainstGameLineupsApiHelper $againstGameLineupsApiHelper,
         protected AgainstGameEventsApiHelper $againstGameEventsApiHelper,
         protected PlayerApiHelper $playerApiHelper,
@@ -79,8 +77,37 @@ class Against extends SofaScoreHelper
      * @return array<int|string, AgainstGame>
      * @throws Exception
      */
-    public function getAgainstGames(Competition $competition, int $gameRoundNumber): array
+    public function getAgainstGameBasics(Competition $competition, int $gameRoundNumber): array
     {
+        return $this->getAgainstGamesHelper($competition, $gameRoundNumber, true, false);
+    }
+
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @param bool $resetCache
+     * @return array<int|string, AgainstGame>
+     * @throws Exception
+     */
+    public function getAgainstGamesComplete(Competition $competition, int $gameRoundNumber, bool $resetCache): array
+    {
+        return $this->getAgainstGamesHelper($competition, $gameRoundNumber, false, $resetCache);
+    }
+
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @param bool $onlyBasics
+     * @param bool $resetCache
+     * @return array<int|string, AgainstGame>
+     * @throws Exception
+     */
+    protected function getAgainstGamesHelper(
+        Competition $competition,
+        int $gameRoundNumber,
+        bool $onlyBasics,
+        bool $resetCache
+    ): array {
         $competitionGames = [];
         $structure = $this->parent->getStructure($competition);
         $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
@@ -90,7 +117,16 @@ class Against extends SofaScoreHelper
             return $competitionGames;
         }
 
-        $againstGamesData = $this->againstGamesApiHelper->getAgainstGames($competition, $gameRoundNumber);
+        if ($onlyBasics) {
+            $againstGamesData = $this->againstGamesApiHelper->getAgainstGamesBasics($competition, $gameRoundNumber);
+        } else {
+            $againstGamesData = $this->againstGamesApiHelper->getAgainstGamesComplete(
+                $competition,
+                $gameRoundNumber,
+                $resetCache
+            );
+        }
+
         foreach ($againstGamesData as $againstGameData) {
             $game = $this->convertDataToAgainstGame($competition, $firstPoule, $againstGameData);
             if ($game === null) {
@@ -117,7 +153,7 @@ class Against extends SofaScoreHelper
         $competitionSport = $competition->getSingleSport();
         $gameRoundNumber = $againstGameData->roundInfo->round;
         $game = new AgainstGame($poule, $gameRoundNumber, $againstGameData->start, $competitionSport, $gameRoundNumber);
-        $game->setState($againstGameData->status);
+        $game->setState($againstGameData->state);
         $game->setId($againstGameData->id);
         // referee
         // field
@@ -138,7 +174,7 @@ class Against extends SofaScoreHelper
         $awayGamePlace = new AgainstGamePlace($game, $awayPlace, AgainstSide::Away);
 
         /** @psalm-suppress RedundantCondition */
-        if ($game->getState() === State::Finished) {
+        if ($game->getState() === GameState::Finished) {
             $home = $againstGameData->homeScore->current;
             $away = $againstGameData->awayScore->current;
             new AgainstScore($game, $home, $away, GamePhase::RegularTime);
@@ -185,9 +221,9 @@ class Against extends SofaScoreHelper
         return null;
     }
 
-    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null
+    public function getAgainstGame(Competition $competition, string|int $id, bool $resetCache): AgainstGame|null
     {
-        $againstGameData = $this->againstGameDetailsApiHelper->getAgainstGame($id, $removeFromGameCache);
+        $againstGameData = $this->againstGameApiHelper->getAgainstGame($id, $resetCache);
         if ($againstGameData === null) {
             return null;
         }

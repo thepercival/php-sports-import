@@ -4,58 +4,51 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource;
 
-use Sports\Competition as CompetitionBase;
-use Sports\Person;
-use Sports\Team\Role as TeamRole;
-use stdClass;
-use SportsImport\ExternalSource as ExternalSourceBase;
-use SportsImport\ExternalSource;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use Psr\Log\LoggerInterface;
-
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Association as AssociationHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\League as LeagueHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Season as SeasonHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Competition as CompetitionHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Structure as StructureApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Competitor\Team as TeamCompetitorHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameDetails as AgainstGameDetailsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Game\Against as AgainstGameHelper;
-//use SportsImport\ExternalSource\SofaScore\ApiHelper\Team\Role as TeamRoleApiHelper;
-//use SportsImport\ExternalSource\SofaScore\Helper\Team\Role as TeamRoleHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Game\RoundNumbers as GameRoundNumbersHelper;
-
-use Sports\Sport;
 use Sports\Association;
-use Sports\Season;
-use Sports\League;
 use Sports\Competition;
-use Sports\Team;
+use Sports\Competition as CompetitionBase;
 use Sports\Competitor\Team as TeamCompetitor;
-use Sports\Structure;
 use Sports\Game\Against as AgainstGame;
+use Sports\League;
+use Sports\Person;
+use Sports\Season;
+use Sports\Sport;
+use Sports\Structure;
+use Sports\Team;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
+use SportsImport\ExternalSource;
+use SportsImport\ExternalSource as ExternalSourceBase;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Association as AssociationHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Competition as CompetitionHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Competitor\Team as TeamCompetitorHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Game\Against as AgainstGameHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Game\RoundNumbers as GameRoundNumbersHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\League as LeagueHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Season as SeasonHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
 
 class SofaScore implements
     Implementation,
     Competitions,
     CompetitionStructure,
-    CompetitionDetails,
+    GamesAndPlayers,
     Proxy
 {
     public const NAME = "SofaScore";
@@ -119,7 +112,7 @@ class SofaScore implements
 
         $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
-        $againstGameDetailsApiHelper = new AgainstGameDetailsApiHelper(
+        $againstGameApiHelper = new AgainstGameApiHelper(
             $againstGameLineupsApiHelper,
             $againstGameEventsApiHelper,
             $teamApiHelper,
@@ -127,14 +120,14 @@ class SofaScore implements
             $cacheItemDbRepos,
             $logger
         );
-        $againstGamesApiHelper = new AgainstGamesApiHelper($againstGameDetailsApiHelper, $this, $cacheItemDbRepos, $logger);
+        $againstGamesApiHelper = new AgainstGamesApiHelper($againstGameApiHelper, $this, $cacheItemDbRepos, $logger);
 
 
         $this->againstGameHelper = new AgainstGameHelper(
             $this->teamHelper,
             $this->personHelper,
             $againstGamesApiHelper,
-            $againstGameDetailsApiHelper,
+            $againstGameApiHelper,
             $againstGameLineupsApiHelper,
             $againstGameEventsApiHelper,
             $playerApiHelper,
@@ -151,7 +144,6 @@ class SofaScore implements
 
 //        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
 //        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
-
 
 
         $this->cacheItemDbRepos = $cacheItemDbRepos;
@@ -292,14 +284,26 @@ class SofaScore implements
      * @return array<int|string, AgainstGame>
      * @throws \Exception
      */
-    public function getAgainstGames(Competition $competition, int $gameRoundNumber): array
+    public function getAgainstGamesBasics(Competition $competition, int $gameRoundNumber): array
     {
-        return $this->againstGameHelper->getAgainstGames($competition, $gameRoundNumber);
+        return $this->againstGameHelper->getAgainstGameBasics($competition, $gameRoundNumber);
     }
 
-    public function getAgainstGame(Competition $competition, string|int $id, bool $removeFromGameCache): AgainstGame|null
+    /**
+     * @param Competition $competition
+     * @param int $gameRoundNumber
+     * @param bool $resetCache
+     * @return array<int|string, AgainstGame>
+     * @throws \Exception
+     */
+    public function getAgainstGamesComplete(Competition $competition, int $gameRoundNumber, bool $resetCache): array
     {
-        return $this->againstGameHelper->getAgainstGame($competition, $id, $removeFromGameCache);
+        return $this->againstGameHelper->getAgainstGamesComplete($competition, $gameRoundNumber, $resetCache);
+    }
+
+    public function getAgainstGame(Competition $competition, string|int $id, bool $resetCache): AgainstGame|null
+    {
+        return $this->againstGameHelper->getAgainstGame($competition, $id, $resetCache);
     }
 
 //    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {

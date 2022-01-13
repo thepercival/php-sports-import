@@ -50,6 +50,12 @@ class GameRoundNumbers extends ApiHelper
                 $this->logger->error('could not find stdClass-property "round"');
                 continue;
             }
+            if (property_exists($gameRoundData, "slug") && property_exists($gameRoundData, "prefix")) {
+                $this->logger->warning(
+                    'only FirstRound-GameRounds : "' . (string)$gameRoundData->slug . '" => prefix "' . (string)$gameRoundData->prefix . '"'
+                );
+                continue;
+            }
             $gameRoundsDataRetVal[] = (int)$gameRoundData->round;
         }
         return $gameRoundsDataRetVal;

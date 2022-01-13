@@ -5,32 +5,28 @@ declare(strict_types=1);
 namespace SportsImport;
 
 use Psr\Log\LoggerInterface;
-
 use Sports\Association;
 use Sports\Competition;
-use Sports\Competitor\Map as CompetitorMap;
-use Sports\League;
-use Sports\Output\Game\Against as AgainstGameOutput;
-use Sports\Season;
-use Sports\Game\Against as AgainstGame;
 use Sports\Competition\Repository as CompetitionRepository;
+use Sports\Game\Against as AgainstGame;
 use Sports\Game\Against\Repository as AgainstGameRepository;
+use Sports\League;
+use Sports\Season;
 use Sports\Sport;
-use SportsImport\ExternalSource\CompetitionDetails;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
+use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
 use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
+use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
+use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
-use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
+use SportsImport\ExternalSource\GamesAndPlayers;
+use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 
 class Getter
 {
-    protected ImportGameEvent|ImportGameDetailsEvent|null $eventSender = null;
+    protected ImportGameEvents|null $importGameEventsSender = null;
 
     public function __construct(
         protected ImporterHelpers\Sport $sportImportService,
@@ -57,9 +53,9 @@ class Getter
     ) {
     }
 
-    public function setEventSender(ImportGameEvent | ImportGameDetailsEvent $eventSender): void
+    public function setEventSender(ImportGameEvents $importGameEventsSender): void
     {
-        $this->eventSender = $eventSender;
+        $this->importGameEventsSender = $importGameEventsSender;
     }
 
     public function getSport(
@@ -82,11 +78,11 @@ class Getter
     }
 
     public function getAgainstGame(
-        CompetitionDetails $externalSourceCompetitionDetails,
+        GamesAndPlayers $externalSourceGamesAndPlayers,
         ExternalSource $externalSource,
         Competition $externalCompetition,
         string|int $gameId,
-        bool $removeFromGameCache
+        bool $resetCache
     ): AgainstGame {
 //        $gameAttacher = $this->againstGameAttacherRepos->findOneByExternalId(
 //            $externalSource,
@@ -102,7 +98,7 @@ class Getter
         ////            $gameOutput->output($againstGame, 'there is no externalId for external source "' . $externalSource->getName() .' and game');
 //            throw new \Exception('there is no externalId for external source "' . $externalSource->getName() .'" and external gameid "' . (string)$againstGame->getId() . '"', E_ERROR);
 //        }
-        $externalGame = $externalSourceCompetitionDetails->getAgainstGame($externalCompetition, $gameId, $removeFromGameCache);
+        $externalGame = $externalSourceGamesAndPlayers->getAgainstGame($externalCompetition, $gameId, $resetCache);
         if ($externalGame === null) {
             throw new \Exception('externalSource "' . $externalSource->getName() .'" could not find a game for id "' . $gameId . '"', E_ERROR);
         }

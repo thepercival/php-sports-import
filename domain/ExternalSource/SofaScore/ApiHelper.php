@@ -9,7 +9,7 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
-use Sports\State;
+use Sports\Game\State as GameState;
 use SportsHelpers\Dev\ByteFormatter;
 use SportsHelpers\SportRange;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
@@ -62,7 +62,7 @@ abstract class ApiHelper
         ];
     }
 
-    protected function removeDataFromCache(string $cacheId): void
+    protected function resetDataFromCache(string $cacheId): void
     {
         $this->cacheItemDbRepos->removeItem($cacheId);
     }
@@ -197,16 +197,16 @@ abstract class ApiHelper
         return $newName;
     }
 
-    public function convertState(int $state): int
+    public function convertState(int $state): GameState
     {
         if ($state === 0) { // not started
-            return State::Created;
+            return GameState::Created;
         } elseif ($state === 60) { // postponed
-            return State::Canceled;
+            return GameState::Canceled;
         } elseif ($state === 70) { // canceled
-            return State::Canceled;
+            return GameState::Canceled;
         } elseif ($state === 100) { // finished
-            return State::Finished;
+            return GameState::Finished;
         }
         throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
     }

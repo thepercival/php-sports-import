@@ -33,7 +33,7 @@ class RoundNumbers extends SofaScoreHelper
             return $this->cache[$competitionId];
         }
         $gameRoundNumbers = $this->apiHelper->getGameRoundNumbers($competition);
-        ;
+
         $this->cache[$competitionId] = $gameRoundNumbers;
         return $gameRoundNumbers;
     }

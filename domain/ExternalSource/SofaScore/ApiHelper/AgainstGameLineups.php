@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsHelpers\Against\Side as AgainstSide;
+use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
@@ -26,12 +26,17 @@ class AgainstGameLineups extends ApiHelper
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
     }
 
-    public function getLineups(string|int $gameId): AgainstGameLineupsData
+    public function getLineups(string|int $gameId, bool $resetCache): AgainstGameLineupsData
     {
+        $cacheId = $this->getCacheId($gameId);
+        if ($resetCache) {
+            $this->resetDataFromCache($cacheId);
+        }
+
         /** @var stdClass $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($gameId),
-            $this->getCacheId($gameId),
+            $cacheId,
             $this->getCacheMinutes()
         );
         if (!property_exists($apiData, "home") || !property_exists($apiData, "away")) {

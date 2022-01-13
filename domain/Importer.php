@@ -4,43 +4,37 @@ declare(strict_types=1);
 
 namespace SportsImport;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use League\Period\Period;
 use Psr\Log\LoggerInterface;
-
 use Sports\Association;
 use Sports\Competition;
-use Sports\Team as TeamBase;
+use Sports\Competition\Repository as CompetitionRepository;
 use Sports\Competitor\Map as CompetitorMap;
+use Sports\Competitor\Team as TeamCompetitorBase;
+use Sports\Game\Against\Repository as AgainstGameRepository;
+use Sports\Game\State as GameState;
 use Sports\League;
 use Sports\Output\Game\Against as AgainstGameOutput;
 use Sports\Season;
-use Sports\Competitor\Team as TeamCompetitorBase;
-use Sports\Competition\Repository as CompetitionRepository;
-use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Sport;
-use Sports\State;
+use Sports\Team as TeamBase;
 use Sports\Team\Player;
 use SportsHelpers\SportRange;
-use SportsImport\ExternalSource\CompetitionDetails;
-use SportsImport\ExternalSource\Competitions;
-use SportsImport\ExternalSource\CompetitionStructure;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
+use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
 use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
+use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
+use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use SportsImport\Queue\Game\ImportEvent as ImportGameEvent;
-use SportsImport\Queue\Game\ImportDetailsEvent as ImportGameDetailsEvent;
-
-use function Amp\Iterator\toArray;
+use SportsImport\ExternalSource\Competitions;
+use SportsImport\ExternalSource\CompetitionStructure;
+use SportsImport\ExternalSource\GamesAndPlayers;
+use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 
 class Importer
 {
-    protected ImportGameEvent|ImportGameDetailsEvent|null $eventSender = null;
+    protected ImportGameEvents|null $importGameEventsSender = null;
 
     public function __construct(
         protected Getter $getter,
@@ -69,9 +63,9 @@ class Importer
     ) {
     }
 
-    public function setEventSender(ImportGameEvent | ImportGameDetailsEvent $eventSender): void
+    public function setEventSender(ImportGameEvents $importGameEventsSender): void
     {
-        $this->eventSender = $eventSender;
+        $this->importGameEventsSender = $importGameEventsSender;
     }
 
     public function importSports(
@@ -202,15 +196,67 @@ class Importer
         $this->structureImportService->import($externalSource, $structure);
     }
 
-    public function importSchedule(
+    public function importGamesBasics(
         Competitions $externalSourceCompetitions,
         CompetitionStructure $externalSourceCompetitionStructure,
-        CompetitionDetails $externalSourceCompetitionDetails,
+        GamesAndPlayers $externalSourceGamesAndPlayers,
         ExternalSource $externalSource,
         Sport $sport,
         League $league,
         Season $season,
+        bool $resetCache,
         SportRange|null $gameRoundRange = null
+    ): void {
+        $this->importGamesHelper(
+            $externalSourceCompetitions,
+            $externalSourceCompetitionStructure,
+            $externalSourceGamesAndPlayers,
+            $externalSource,
+            $sport,
+            $league,
+            $season,
+            true,
+            $resetCache,
+            $gameRoundRange
+        );
+    }
+
+    public function importGamesComplete(
+        Competitions $externalSourceCompetitions,
+        CompetitionStructure $externalSourceCompetitionStructure,
+        GamesAndPlayers $externalSourceGamesAndPlayers,
+        ExternalSource $externalSource,
+        Sport $sport,
+        League $league,
+        Season $season,
+        bool $resetCache,
+        SportRange|null $gameRoundRange = null
+    ): void {
+        $this->importGamesHelper(
+            $externalSourceCompetitions,
+            $externalSourceCompetitionStructure,
+            $externalSourceGamesAndPlayers,
+            $externalSource,
+            $sport,
+            $league,
+            $season,
+            false,
+            $resetCache,
+            $gameRoundRange
+        );
+    }
+
+    protected function importGamesHelper(
+        Competitions $externalSourceCompetitions,
+        CompetitionStructure $externalSourceCompetitionStructure,
+        GamesAndPlayers $externalSourceGamesAndPlayers,
+        ExternalSource $externalSource,
+        Sport $sport,
+        League $league,
+        Season $season,
+        bool $onlyBasics,
+        bool $resetCache,
+        SportRange|null $gameRoundRange
     ): void {
         $externalCompetition = $this->getter->getCompetition(
             $externalSourceCompetitions,
@@ -225,10 +271,8 @@ class Importer
             $this->logger->warning("no structure found for external competition " . $externalCompetition->getName());
             return;
         }
-        if ($this->eventSender !== null) {
-            if ($this->eventSender instanceof ImportGameEvent) {
-                $this->againstGameImportService->setEventSender($this->eventSender);
-            }
+        if ($this->importGameEventsSender instanceof ImportGameEvents) {
+            $this->againstGameImportService->setEventSender($this->importGameEventsSender);
         }
         $competition = $this->competitionRepos->findOneExt($league, $season);
         if ($competition === null) {
@@ -239,33 +283,42 @@ class Importer
             $this->logger->warning("no competitors found for external competition " . $externalCompetition->getName());
         }
 
-        $gameRoundNumbers = $externalSourceCompetitionDetails->getGameRoundNumbers($externalCompetition);
+        $gameRoundNumbers = $externalSourceGamesAndPlayers->getGameRoundNumbers($externalCompetition);
         if ($gameRoundRange !== null) {
-            $gameRoundNumbers = array_filter($gameRoundNumbers, fn (int $number) => $gameRoundRange->isWithIn($number));
-            $gameRoundNumbers = array_values($gameRoundNumbers);
+            $gameRoundNumbers = array_filter($gameRoundNumbers, fn(int $number) => $gameRoundRange->isWithIn($number));
+        } else {
+            $gameRoundNumbers = $this->getGameRoundNumbersToImport($competition, $nrOfPlaces, $gameRoundNumbers);
         }
-        $filteredGameRoundNumbers = $this->getGameRoundNumbersToImport($competition, $nrOfPlaces, $gameRoundNumbers);
-
-        foreach ($filteredGameRoundNumbers as $gameRoundNumber) {
-            $externalGames = $externalSourceCompetitionDetails->getAgainstGames($externalCompetition, $gameRoundNumber);
-
-            $this->againstGameImportService->importSchedule(
-                $externalSource,
-                array_values($externalGames)
-            );
+        foreach ($gameRoundNumbers as $gameRoundNumber) {
+            if ($onlyBasics) {
+                $externalGames = $externalSourceGamesAndPlayers->getAgainstGamesBasics(
+                    $externalCompetition,
+                    $gameRoundNumber
+                );
+            } else {
+                $externalGames = $externalSourceGamesAndPlayers->getAgainstGamesComplete(
+                    $externalCompetition,
+                    $gameRoundNumber,
+                    $resetCache
+                );
+                foreach ($externalGames as $externalGame) {
+                    $this->personImportService->importByAgainstGame($externalSource, $externalGame);
+                }
+            }
+            $this->againstGameImportService->importGames($externalSource, array_values($externalGames), $onlyBasics);
         }
     }
 
-    public function importAgainstGameDetails(
+    public function importAgainstGameLineupsAndEvents(
         ExternalSource\Competitions $externalSourceCompetitions,
         ExternalSource\CompetitionStructure $externalSourceCompetitionStructure,
-        ExternalSource\CompetitionDetails $externalSourceCompetitionDetails,
+        ExternalSource\GamesAndPlayers $externalSourceCompetitionGames,
         ExternalSource $externalSource,
         Sport $sport,
         League $league,
         Season $season,
         string $externalGameId,
-        bool $removeFromGameCache
+        bool $resetCache
     ): void {
         $externalCompetition = $this->getter->getCompetition(
             $externalSourceCompetitions,
@@ -283,7 +336,10 @@ class Importer
 
         $competition = $this->competitionRepos->findOneExt($league, $season);
         if ($competition === null) {
-            $this->logger->warning("the competition could not be found for league " . $league->getName() . " and season " . $season->getName());
+            $this->logger->warning(
+                "the competition could not be found for league " . $league->getName(
+                ) . " and season " . $season->getName()
+            );
             return;
         }
         if ($competition->getTeamCompetitors()->count() === 0) {
@@ -291,14 +347,18 @@ class Importer
         }
 
 
-        if ($this->eventSender !== null) {
-            if ($this->eventSender instanceof ImportGameDetailsEvent) {
-                $this->againstGameImportService->setEventSender($this->eventSender);
-            }
+        if ($this->importGameEventsSender instanceof ImportGameEvents) {
+            $this->againstGameImportService->setEventSender($this->importGameEventsSender);
         }
         try {
-            $externalGame = $this->getter->getAgainstGame($externalSourceCompetitionDetails, $externalSource, $externalCompetition, $externalGameId, $removeFromGameCache);
-            if ($externalGame->getState() !== State::Finished) {
+            $externalGame = $this->getter->getAgainstGame(
+                $externalSourceCompetitionGames,
+                $externalSource,
+                $externalCompetition,
+                $externalGameId,
+                $resetCache
+            );
+            if ($externalGame->getState() !== GameState::Finished) {
                 $this->logger->info("game " . (string)$externalGame->getId() . " is not finished");
                 return;
             }
@@ -307,7 +367,7 @@ class Importer
                 $externalGame
             );
 
-            $this->againstGameImportService->importDetails(
+            $this->againstGameImportService->importScoresLineupsAndEvents(
                 $externalSource,
                 $externalGame
             );
@@ -323,7 +383,7 @@ class Importer
     }
 
     public function importPlayerImages(
-        ExternalSource\CompetitionDetails $externalSourceCompetitionDetails,
+        ExternalSource\GamesAndPlayers $externalSourceGamesAndPlayers,
         ExternalSource $externalSource,
         League $league,
         Season $season,
@@ -345,7 +405,7 @@ class Importer
             });
             foreach ($activePlayers as $activePlayer) {
                 $this->playerImportService->importImage(
-                    $externalSourceCompetitionDetails,
+                    $externalSourceGamesAndPlayers,
                     $externalSource,
                     $activePlayer,
                     $localOutputPath
@@ -421,7 +481,7 @@ class Importer
         foreach ($gameRoundNumbers as $gameRoundNumber) {
             $gameRoundGamePlaces = $this->againstGameRepos->getNrOfCompetitionGamePlaces(
                 $competition,
-                State::Finished,
+                [GameState::Finished],
                 $gameRoundNumber
             );
             if ($gameRoundGamePlaces >= ($nrOfPlaces-1)) {

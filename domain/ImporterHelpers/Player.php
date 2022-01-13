@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SportsImport\ImporterHelpers;
 
 use Sports\Person as PersonBase;
-use Sports\Team\Player as TeamPlayer;
 use Sports\Person\Repository as PersonRepository;
+use Sports\Team\Player as TeamPlayer;
 use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
@@ -21,7 +21,7 @@ class Player
     }
 
     public function importImage(
-        ExternalSource\CompetitionDetails $externalSourcePlayer,
+        ExternalSource\GamesAndPlayers $externalSourcePlayer,
         ExternalSource $externalSource,
         TeamPlayer $player,
         string $localOutputPath
@@ -72,7 +72,7 @@ class Player
     }
 
     protected function getImageAndSaveOnDisk(
-        ExternalSource\CompetitionDetails $externalSourcePlayer,
+        ExternalSource\GamesAndPlayers $externalSourcePlayer,
         string $personExternalId,
         string $localFilePath,
     ): bool {

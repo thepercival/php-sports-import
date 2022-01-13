@@ -15,8 +15,8 @@ class Entity
 
     public const TEAMCOMPETITORS = 64;
     public const TEAMS = 128;
-    public const GAMES = 256;
-    public const SCHEDULE = 512;
-    public const GAMEDETAILS = 1024;
+    public const GAMES_BASICS = 256;
+    public const GAMES_COMPLEET = 512;
+    public const GAME = 1024;
     public const PLAYERS = 2048;
 }
