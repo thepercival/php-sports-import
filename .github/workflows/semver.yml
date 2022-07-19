@@ -7,16 +7,17 @@ on:
 
 jobs:
   build:
-    name: Generate tag
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@master
-        with:
-          fetch-depth: '0'
-
+      - uses: actions/checkout@v2
       - name: Bump version and push tag
-        uses: ChloePlanet/github-tag-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
