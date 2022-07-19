@@ -48,8 +48,8 @@ abstract class ApiHelper
             // CURLOPT_SSL_VERIFYPEER => false,
             // CURLOPT_SSL_VERIFYHOST => false,
             // CURLOPT_HEADER => false,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CONNECTTIMEOUT => 30
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_CONNECTTIMEOUT => 6
         ];
         $proxyOptions = $this->sofaScore->getProxy();
         if ($proxyOptions !== null) {

@@ -8,7 +8,8 @@ use Exception;
 use League\Period\Period;
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
-use Sports\Competitor\Map as CompetitorMap;
+use Sports\Competitor;
+use Sports\Competitor\StartLocationMap;
 use Sports\Competitor\Team as TeamCompetitor;
 use Sports\Game\Against as AgainstGame;
 use Sports\Game\Event\Card as CardEvent;
@@ -47,7 +48,7 @@ use stdClass;
  */
 class Against extends SofaScoreHelper
 {
-    protected CompetitorMap|null $competitorMap = null;
+    protected StartLocationMap|null $startLocationMap = null;
 
     public function __construct(
         protected TeamHelper $teamHelper,
@@ -63,12 +64,12 @@ class Against extends SofaScoreHelper
         parent::__construct($parent, $logger);
     }
 
-    protected function getCompetitorMap(Competition $competition): CompetitorMap
+    protected function getStartLocationMap(Competition $competition): StartLocationMap
     {
-        if ($this->competitorMap === null) {
-            $this->competitorMap = new CompetitorMap($this->parent->getTeamCompetitors($competition));
+        if ($this->startLocationMap === null) {
+            $this->startLocationMap = new StartLocationMap($this->parent->getTeamCompetitors($competition));
         }
-        return $this->competitorMap;
+        return $this->startLocationMap;
     }
 
     /**
@@ -110,7 +111,12 @@ class Against extends SofaScoreHelper
     ): array {
         $competitionGames = [];
         $structure = $this->parent->getStructure($competition);
-        $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
+        try {
+            $rootRound = $structure->getSingleCategory()->getRootRound();
+        }
+        catch(Exception $e) {
+            $rootRound = false;
+        }
         $firstPoule = $rootRound === false ? false : $rootRound->getPoules()->first();
         if ($firstPoule === false) {
             $this->logger->error('could not find first poule for competition ' . $competition->getName());
@@ -158,15 +164,15 @@ class Against extends SofaScoreHelper
         // referee
         // field
 
-        $competitorMap = $this->getCompetitorMap($competition);
+        $startLocationMap = $this->getStartLocationMap($competition);
         $association = $competition->getLeague()->getAssociation();
         $homeTeam = $this->teamHelper->convertDataToTeam($association, $againstGameData->homeTeam);
-        $homePlace = $this->getPlaceFromPoule($poule, $competitorMap, $homeTeam);
+        $homePlace = $this->getPlaceFromPoule($poule, $startLocationMap, $homeTeam);
         if ($homePlace === null) {
             return null;
         }
         $awayTeam = $this->teamHelper->convertDataToTeam($association, $againstGameData->awayTeam);
-        $awayPlace = $this->getPlaceFromPoule($poule, $competitorMap, $awayTeam);
+        $awayPlace = $this->getPlaceFromPoule($poule, $startLocationMap, $awayTeam);
         if ($awayPlace === null) {
             return null;
         }
@@ -180,19 +186,20 @@ class Against extends SofaScoreHelper
             new AgainstScore($game, $home, $away, GamePhase::RegularTime);
         }
 
-        $lineups = $againstGameData->lineups;
-        if ($lineups !== null) {
+        $players = $againstGameData->players;
+        if ($players !== null) {
             foreach ([$homeGamePlace, $awayGamePlace] as $sideGamePlace) {
                 // use ($competitorMap, $lineups): void
-                $competitors =  $game->getCompetitors($competitorMap, $sideGamePlace->getSide());
+                $competitors =  $this->getGameCompetitors($game, $startLocationMap, $sideGamePlace->getSide());
                 if (count($competitors) === 1) {
                     $competitor = reset($competitors);
                     if ($competitor instanceof TeamCompetitor) {
-                        $side = $sideGamePlace->getSide() === AgainstSide::Away ? $lineups->away : $lineups->home;
-                        $this->addGameParticipations($sideGamePlace, $competitor, $side->players);
+                        $sidePlayers = $sideGamePlace->getSide() === AgainstSide::Away ? $players->awayPlayers : $players->homePlayers;
+                        $this->addAppearedGameParticipations($sideGamePlace, $competitor, $sidePlayers->players);
+                        $this->addNonAppearedGameParticipationsWithCardEvent($sideGamePlace, $competitor, $againstGameData->events, $sidePlayers->players);
                     }
                 }
-            };
+            }
         }
 
         $this->addGameEvents($game, $againstGameData->events);
@@ -204,10 +211,32 @@ class Against extends SofaScoreHelper
         return $game;
     }
 
-    protected function getPlaceFromPoule(Poule $poule, CompetitorMap $competitorMap, Team $team): ?Place
+    /**
+     * @param AgainstGame $game
+     * @param StartLocationMap $startLocationMap
+     * @param AgainstSide|null $side
+     * @return list<Competitor|null>
+     */
+    public function getGameCompetitors(
+        AgainstGame $game, StartLocationMap $startLocationMap, AgainstSide $side = null): array
+    {
+        return array_map(
+            function (AgainstGamePlace $gamePlace) use ($startLocationMap): Competitor|null {
+                $startLocation = $gamePlace->getPlace()->getStartLocation();
+                return $startLocation !== null ? $startLocationMap->getCompetitor($startLocation) : null;
+            },
+            $game->getSidePlaces($side)
+        );
+    }
+
+    protected function getPlaceFromPoule(Poule $poule, StartLocationMap $startLocationMap, Team $team): ?Place
     {
         foreach ($poule->getPlaces() as $placeIt) {
-            $teamCompetitor = $competitorMap->getCompetitor($placeIt);
+            $startLocation = $placeIt->getStartLocation();
+            if ($startLocation === null) {
+                return null;
+            }
+            $teamCompetitor = $startLocationMap->getCompetitor($startLocation);
             if ($teamCompetitor === null) {
                 return null;
             }
@@ -228,7 +257,12 @@ class Against extends SofaScoreHelper
             return null;
         }
         $structure = $this->parent->getStructure($competition);
-        $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
+        try {
+            $rootRound = $structure->getSingleCategory()->getRootRound();
+        }
+        catch(Exception $e) {
+            $rootRound = false;
+        }
         $firstPoule = $rootRound === false ? false : $rootRound->getPoules()->first();
         return $firstPoule === false ? null : $this->convertDataToAgainstGame(
             $competition,
@@ -240,29 +274,65 @@ class Against extends SofaScoreHelper
     /**
      * @param AgainstGamePlace $againstGamePlace
      * @param TeamCompetitor $teamCompetitor
-     * @param list<PlayerData> $players
+     * @param list<PlayerData> $playersData
      */
-    protected function addGameParticipations(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, array $players): void
+    protected function addAppearedGameParticipations(
+        AgainstGamePlace $againstGamePlace,
+        TeamCompetitor $teamCompetitor,
+        array $playersData
+    ): void
     {
-        foreach ($players as $playerData) {
-//            if (count($externPlayer->statistics) === 0) {
-//                return;
-//            }
-            // $playerData = $this->convertApiDataToPerson($externPlayer->player);
-            // $person = $this->con($playerData);
-            $game = $againstGamePlace->getGame();
-            $seasonEndDateTime = $game->getPoule()->getCompetition()->getSeason()->getEndDateTime();
-            $period = new Period($game->getStartDateTime(), $seasonEndDateTime);
-
-            $person = $this->personHelper->convertDataToPerson($playerData);
-            if ($person === null) {
-                throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+        foreach ($playersData as $playerData) {
+            if ($playerData->nrOfMinutesPlayed === 0) {
+                continue;
             }
-
-            $teamPlayer = new TeamPlayer($teamCompetitor->getTeam(), $person, $period, $playerData->line);
-
-            new GameParticipation($againstGamePlace, $teamPlayer, 0, 0);
+            $this->createGameParticipation($againstGamePlace, $teamCompetitor, $playerData);
         }
+    }
+
+    /**
+     * @param AgainstGamePlace $againstGamePlace
+     * @param TeamCompetitor $teamCompetitor
+     * @param list<CardEventData|GoalEventData|SubstitutionEventData> $eventsData
+     * @param list<PlayerData> $sidePlayersData
+     * @return void
+     */
+    protected function addNonAppearedGameParticipationsWithCardEvent(
+        AgainstGamePlace $againstGamePlace,
+        TeamCompetitor $teamCompetitor,
+        array $eventsData,
+        array $sidePlayersData
+    ): void
+    {
+        foreach ($eventsData as $eventData) {
+            if (!($eventData instanceof CardEventData)) {
+                continue;
+            }
+            $eventPlayer = $eventData->player;
+            $sidePlayers = array_filter($sidePlayersData, function (PlayerData $playerData) use ($eventPlayer): bool {
+                return $playerData->id === $eventPlayer->id;
+            });
+            $sidePlayer = reset($sidePlayers);
+            if ($sidePlayer !== false && $sidePlayer->nrOfMinutesPlayed === 0) {
+                $this->createGameParticipation($againstGamePlace, $teamCompetitor, $eventData->player);
+            }
+        }
+    }
+
+    protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): GameParticipation
+    {
+        $game = $againstGamePlace->getGame();
+        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->modify('+3 hours'));
+
+        $person = $this->personHelper->convertDataToPerson($playerData);
+        if ($person === null) {
+            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+        }
+
+        $teamPlayer = new TeamPlayer($teamCompetitor->getTeam(), $person, $period, $playerData->line->value);
+
+        $beginMinute =  $playerData->nrOfMinutesPlayed === 0 ? -1 : 0;
+        return new GameParticipation($againstGamePlace, $teamPlayer, $beginMinute);
     }
 
     /**
@@ -306,7 +376,7 @@ class Against extends SofaScoreHelper
 
     protected function convertApiDataToPerson(stdClass $personApiData): Person
     {
-        $playerData = $this->playerApiHelper->convertApiDataRow($personApiData);
+        $playerData = $this->playerApiHelper->convertApiDataRow($personApiData, null);
         if ($playerData === null) {
             throw new Exception('"'.(string)$personApiData->id.'" kon niet worden gevonden als speler', E_ERROR);
         }

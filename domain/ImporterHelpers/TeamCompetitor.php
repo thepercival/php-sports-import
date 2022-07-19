@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SportsImport\ImporterHelpers;
 
 use Exception;
+use Sports\Competitor\StartLocation;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
@@ -71,7 +72,8 @@ class TeamCompetitor
             (string)$externalSourceTeamCompetitor->getTeam()->getId()
         );
         if ($team === null) {
-            throw new \Exception('team not found for teamcompetitor: "' . $externalSourceTeamCompetitor->getRoundLocationId() .'"');
+            $location = $externalSourceTeamCompetitor->getStartId();
+            throw new \Exception('team not found for teamcompetitor: "' . $location .'"');
         }
         $competition = $this->competitionAttacherRepos->findImportable(
             $externalSource,
@@ -80,10 +82,14 @@ class TeamCompetitor
         if ($competition === null) {
             return null;
         }
+        $singleCategory = $competition->getSingleCategory();
         $teamCompetitor = new TeamCompetitorBase(
             $competition,
-            $externalSourceTeamCompetitor->getPouleNr(),
-            $externalSourceTeamCompetitor->getPlaceNr(),
+            new StartLocation(
+                $singleCategory->getNumber(),
+                $externalSourceTeamCompetitor->getPouleNr(),
+                $externalSourceTeamCompetitor->getPlaceNr()
+            ),
             $team,
         );
         $teamCompetitor->setRegistered($externalSourceTeamCompetitor->getRegistered());

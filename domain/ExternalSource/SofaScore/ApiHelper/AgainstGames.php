@@ -114,7 +114,8 @@ class AgainstGames extends ApiHelper
 
     public function getCacheMinutes(): int
     {
-        return 60 * 24 * 7;
+        // return 60 * 24 * 7;
+        return 1555000; // @TODO DEPRECATED CDK 55
     }
 
     public function getCacheId(Competition $competition, int $gameRoundNumber, bool $onlyScheduled): string

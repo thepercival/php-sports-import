@@ -6,6 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
 use Sports\Competition\Sport as CompetitionSport;
+use Sports\Ranking\PointsCalculation;
 use SportsHelpers\Sport\PersistVariant;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
@@ -82,6 +83,7 @@ class Competition extends SofaScoreHelper
         new CompetitionSport(
             $sport,
             $competition,
+            PointsCalculation::AgainstGamePoints,
             new PersistVariant(
                 $sport->getDefaultGameMode(),
                 $sport->getDefaultNrOfSidePlaces(),

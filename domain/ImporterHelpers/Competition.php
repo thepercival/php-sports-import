@@ -97,7 +97,8 @@ class Competition
                 $nrOfH2H,
                 $nrOfGamesPerPlace
             );*/
-            new CompetitionSport($sport, $competition, $externalCompetitionSport);
+            $defaultPointsCalculation = $externalCompetitionSport->getDefaultPointsCalculation();
+            new CompetitionSport($sport, $competition, $defaultPointsCalculation, $externalCompetitionSport);
         }
         $this->competitionRepos->customPersist($competition);
         $this->competitionRepos->save($competition);

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Sports\Competitor\Map as CompetitorMap;
+use Sports\Competitor\StartLocationMap;
 use Sports\Game;
 use Sports\Game\Against as AgainstGame;
 use Sports\Game\Against\Repository as AgainstGameRepository;
@@ -101,12 +102,14 @@ class Against
 
                 $this->outputGame($game, "created => ");
             } else {
+                $game = $gameAttacher->getImportable();
                 $this->importBasics($externalSource, $externalGame);
             }
 
             if ($externalGame->getState() === GameState::Finished && !$onlyBasics) {
                 $this->personHelper->importByAgainstGame(
                     $externalSource,
+                    $game->getCompetitionSport()->getCompetition()->getSeason(),
                     $externalGame
                 );
                 $this->importScoresLineupsAndEvents($externalSource, $externalGame);
@@ -237,8 +240,7 @@ class Against
         if ($gameAttacher === null) {
             $externalCompetition = $externalGame->getPoule()->getRound()->getNumber()->getCompetition();
             $teamCompetitors = array_values($externalCompetition->getTeamCompetitors()->toArray());
-            $placeLocationMap = new CompetitorMap($teamCompetitors);
-            $gameOutput = new AgainstGameOutput($placeLocationMap, $this->logger);
+            $gameOutput = new AgainstGameOutput(new StartLocationMap($teamCompetitors), $this->logger);
             $gameOutput->output($externalGame, "no game found for external  ");
             $this->logger->warning(
                 "no game found for external gameid " . (string)$externalId . " and external source \"" . $externalSource->getName(
@@ -287,10 +289,15 @@ class Against
             return null;
         }
         $structure = $this->structureRepos->getStructure($competition);
-        $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
-        if ($rootRound === false) {
+        // $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
+        try {
+            $rootRound = $structure->getSingleCategory()->getRootRound();
+        } catch(Exception $e ) {
             return null;
         }
+//        if ($rootRound === false) {
+//            return null;
+//        }
         $firstPoule = $rootRound->getPoules()->first();
         if ($firstPoule === false) {
             return null;
@@ -362,9 +369,10 @@ class Against
 
     protected function outputGame(AgainstGame $game, string $prefix, bool $onlyBasics = true): void
     {
-        $teamCompetitors = $game->getRound()->getNumber()->getCompetition()->getTeamCompetitors()->toArray();
-        $competitorMap = new CompetitorMap(array_values($teamCompetitors));
-        $gameOutput = new AgainstGameOutput($competitorMap, $this->logger);
+        $teamCompetitorsTmp = $game->getRound()->getNumber()->getCompetition()->getTeamCompetitors();
+        $teamCompetitors = array_values($teamCompetitorsTmp->toArray());
+        $startLocationMap = new StartLocationMap($teamCompetitors);
+        $gameOutput = new AgainstGameOutput($startLocationMap, $this->logger);
         $columns = $this->getGameColumns();
         if (!$onlyBasics) {
             $columns[] = GameColumn::ScoresLineupsAndEvents;

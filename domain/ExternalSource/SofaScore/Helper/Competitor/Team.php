@@ -4,6 +4,8 @@ namespace SportsImport\ExternalSource\SofaScore\Helper\Competitor;
 
 use Psr\Log\LoggerInterface;
 use Sports\Association;
+use Sports\Category;
+use Sports\Competitor\StartLocation;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
@@ -79,7 +81,8 @@ class Team extends SofaScoreHelper
         }
         $association = $competition->getLeague()->getAssociation();
         $team = $this->teamHelper->convertDataToTeam($association, $externalTeamCompetitor->team);
-        $teamCompetitor = new TeamCompetitorBase($competition, $pouleNr, $placeNr, $team);
+        $startLocation = new StartLocation(1, $pouleNr, $placeNr);
+        $teamCompetitor = new TeamCompetitorBase($competition, $startLocation, $team);
         $teamCompetitor->setId($externalTeamCompetitor->id);
         $this->cache[$externalTeamCompetitor->id] = $teamCompetitor;
         return $teamCompetitor;

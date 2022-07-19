@@ -157,7 +157,7 @@ class AgainstGameEvents extends ApiHelper
 
     protected function convertPlayerApiDataHelper(stdClass $playerApiData): PlayerData
     {
-        $player = $this->playerApiHelper->convertApiDataRow($playerApiData);
+        $player = $this->playerApiHelper->convertApiDataRow($playerApiData, null);
         if ($player === null) {
             throw new \Exception('player could not be found', E_ERROR);
         }
@@ -165,7 +165,7 @@ class AgainstGameEvents extends ApiHelper
     }
     public function getCacheMinutes(): int
     {
-        return 1555000; // @TODO CDK 55
+        return 1555000; // @TODO DEPRECATED CDK 55
     }
 
     public function getCacheId(string|int $gameId): string

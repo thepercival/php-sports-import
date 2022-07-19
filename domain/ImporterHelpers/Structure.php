@@ -38,7 +38,7 @@ class Structure
         $hasStructure = $this->structureRepos->hasStructure($competition);
         if ($hasStructure === false) {
             $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
-            $this->structureRepos->add($newStructure, 1);
+            $this->structureRepos->add($newStructure);
             $this->logger->info("structure added for external competition " . $externalCompetition->getName());
             return $newStructure;
         }
@@ -48,8 +48,8 @@ class Structure
 
         $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
 
-        $roundNumberAsValue = 1;
-        $this->structureRepos->removeAndAdd($competition, $newStructure, $roundNumberAsValue);
+        $this->structureRepos->remove($competition);
+        $this->structureRepos->add($newStructure);
 
         $this->logger->info("structure updated for external competition " . $externalCompetition->getName());
         return $newStructure;

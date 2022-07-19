@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper\Team;
 
+use Sports\Competitor\StartLocationMap;
 use Sports\Team\Role as TeamRole;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
 use Psr\Log\LoggerInterface;
-use Sports\Competitor\Map as CompetitorMap;
 use SportsImport\ExternalSource\SofaScore;
 
 /**
@@ -16,7 +16,7 @@ use SportsImport\ExternalSource\SofaScore;
  */
 class Role extends SofaScoreHelper
 {
-    protected CompetitorMap|null $placeLocationMap = null;
+    protected StartLocationMap|null $placeLocationMap = null;
 
 
 //    /**

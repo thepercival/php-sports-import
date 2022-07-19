@@ -26,70 +26,64 @@ class AgainstGameLineups extends ApiHelper
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
     }
 
-    public function getLineups(string|int $gameId, bool $resetCache): AgainstGameLineupsData
+    public function getPlayers(string|int $gameId, bool $resetCache): AgainstGameLineupsData
     {
         $cacheId = $this->getCacheId($gameId);
         if ($resetCache) {
             $this->resetDataFromCache($cacheId);
         }
 
-        /** @var stdClass $apiData */
+        /** @var stdClass|null $apiData */
         $apiData = $this->getData(
             $this->getEndPoint($gameId),
             $cacheId,
             $this->getCacheMinutes()
         );
-        if (!property_exists($apiData, "home") || !property_exists($apiData, "away")) {
+        if ($apiData === null || !property_exists($apiData, 'home') || !property_exists($apiData, 'away')) {
             throw new \Exception('apidatarow should contain properties home and away', E_ERROR);
         }
         /** @var stdClass $homePlayers */
         $homePlayers = $apiData->home;
-        $homeLineup = $this->convertApiLineup(AgainstSide::Home, $homePlayers);
+        $homeLineup = $this->convertApiPlayers(AgainstSide::Home, $homePlayers);
         /** @var stdClass $awayPlayers */
         $awayPlayers = $apiData->away;
-        $awayLineup = $this->convertApiLineup(AgainstSide::Away, $awayPlayers);
+        $awayLineup = $this->convertApiPlayers(AgainstSide::Away, $awayPlayers);
         return new AgainstGameLineupsData($homeLineup, $awayLineup);
     }
 
-    protected function convertApiLineup(AgainstSide $againstSide, stdClass $apiLineup): AgainstGameSidePlayersData
+    protected function convertApiPlayers(AgainstSide $againstSide, stdClass $apiPlayers): AgainstGameSidePlayersData
     {
-        if (!property_exists($apiLineup, "players") || !is_array($apiLineup->players)) {
+        if (!property_exists($apiPlayers, "players") || !is_array($apiPlayers->players)) {
             throw new \Exception('api-lineup does not contain properties home and away', E_ERROR);
         }
         /** @var list<stdClass> $playersApiData */
-        $playersApiData = $apiLineup->players;
+        $playersApiData = $apiPlayers->players;
 
-        // remove players which will not appear
-        $appearedPlayersApiData = array_filter($playersApiData, function (stdClass $playerApiData): bool {
-            if (!property_exists($playerApiData, "statistics")) {
-                return false;
+        $players = array_map(function (stdClass $playerApiData): PlayerData {
+            if (!property_exists($playerApiData, "player")) {
+                throw new \Exception('player-apidata does not contain property player', E_ERROR);
             }
-            /** @var stdClass $statistics */
-            $statistics = $playerApiData->statistics;
-            return property_exists($statistics, "minutesPlayed");
-        });
+            /** @var stdClass $playerApiDataRow */
+            $playerApiDataRow = $playerApiData->player;
+            /** @var stdClass|null $statistics */
+            $statistics = null;
+            if (property_exists($playerApiData, "statistics")) {
+                /** @var stdClass $statistics */
+                $statistics = $playerApiData->statistics;
+            }
+            $playerData = $this->playerApiHelper->convertApiDataRow($playerApiDataRow, $statistics);
+            if ($playerData === null) {
+                throw new \Exception('player should not be null', E_ERROR);
+            }
+            return $playerData;
+        }, $playersApiData);
 
-        $appearedPlayersApiData = array_values(
-            array_map(function (stdClass $playerApiData): PlayerData {
-                if (!property_exists($playerApiData, "player")) {
-                    throw new \Exception('player-apidata does not contain property player', E_ERROR);
-                }
-                /** @var stdClass $playerApiDataRow */
-                $playerApiDataRow = $playerApiData->player;
-                $playerData = $this->playerApiHelper->convertApiDataRow($playerApiDataRow);
-                if ($playerData === null) {
-                    throw new \Exception('player should not be null', E_ERROR);
-                }
-                return $playerData;
-            }, $appearedPlayersApiData)
-        );
-
-        return new AgainstGameSidePlayersData($againstSide, $appearedPlayersApiData);
+        return new AgainstGameSidePlayersData($againstSide, $players);
     }
 
     public function getCacheMinutes(): int
     {
-        return 1555000; // @TODO CDK 55
+        return 1555000; // @TODO DEPRECATED CDK 55
     }
 
     public function getCacheId(string|int $gameId): string

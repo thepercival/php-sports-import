@@ -48,7 +48,7 @@ class AgainstGame extends ApiHelper
     public function finishAgainstGameData(AgainstGameData $againstGameData, bool $resetCache): void
     {
         if ($againstGameData->state === GameState::Finished) {
-            $againstGameData->lineups = $this->lineupApiHelper->getLineups($againstGameData->id, $resetCache);
+            $againstGameData->players = $this->lineupApiHelper->getPlayers($againstGameData->id, $resetCache);
             $againstGameData->events = $this->eventApiHelper->getEvents($againstGameData->id, $resetCache);
         }
     }
@@ -133,7 +133,7 @@ class AgainstGame extends ApiHelper
 
     public function getCacheMinutes(): int
     {
-        return 1555000; // @TODO CDK 55
+        return 1555000; // @TODO DEPRECATED CDK 55
     }
 
     public function getCacheId(string|int $gameId, bool $onlyScheduled): string

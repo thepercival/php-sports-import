@@ -12,13 +12,16 @@ class NameAnalyzer
      * @var list<string>
      */
     protected static array $defaultNameInsertions = array(
-        "van",
-        "der",
-        "de",
-        "den",
-        "te",
-        "ten",
-        "ter"
+        'van',
+        'der',
+        'de',
+        'den',
+        'te',
+        'ten',
+        'ter',
+        'Bel',
+        'Þór',
+        'El'
     );
 
     public function __construct(string $name)
@@ -44,46 +47,62 @@ class NameAnalyzer
     protected function analyse(string $name): void
     {
         $arrNameParts = explode(" ", str_replace(".", "", $name));
-        for ($nI = 0; $nI < count($arrNameParts); $nI++) {
-            $namePart = $arrNameParts[$nI];
-            if ($nI === 0 and count($arrNameParts) > 1) {
-                $this->firstName = $namePart;
-            } elseif ($nI < (count($arrNameParts) - 1)) {
-                if ($this->inDefaultNameInsertions($namePart)) {
-                    $this->addNameInsertionsPart($namePart);
-                }
-            } else {
-                if ($nI === (count($arrNameParts) - 1)) {
-                    $this->addLastNamePart($namePart);
-                }
+        if (count($arrNameParts) ===  1) {
+            $this->addLastNamePart($arrNameParts[0]);
+            return;
+        }
+
+        for ($namePartNr = 1; $namePartNr <= count($arrNameParts); $namePartNr++) {
+            $namePart = $arrNameParts[$namePartNr-1];
+
+            // make sure LastName has priority
+            if ($namePartNr === count($arrNameParts) && strlen($this->lastName) === 0) {
+                $this->addLastNamePart($namePart);
+                return;
             }
+
+            $defaultNameInsertion = $this->getDefaultNameInsertions($namePart);
+            if ($defaultNameInsertion !== null) {
+                $this->addNameInsertionsPart($defaultNameInsertion);
+                continue;
+            }
+            if ($namePartNr === 1) {
+                $this->firstName = $namePart;
+                continue;
+            }
+            $this->addLastNamePart($namePart);
         }
     }
 
     protected function addNameInsertionsPart(string $namePart): void
     {
         if ($this->nameInsertions !== null) {
-            $this->nameInsertions .= " " . strtolower($namePart);
+            $this->nameInsertions .= " " . $namePart;
         } else {
-            $this->nameInsertions = strtolower($namePart);
+            $this->nameInsertions = $namePart;
         }
     }
 
     protected function addLastNamePart(string $namePart): void
     {
-        if (strlen($this->lastName) > 0) {
+        if (mb_strlen($this->lastName) > 0) {
             $this->lastName .= " ";
         }
         $this->lastName .= $namePart;
     }
 
-    protected function inDefaultNameInsertions(string $needle): bool
+    protected function inDefaultNameInsertions(string $nameInsertionInput): bool
+    {
+        return $this->getDefaultNameInsertions($nameInsertionInput) !== null;
+    }
+
+    protected function getDefaultNameInsertions(string $nameInsertionInput): string|null
     {
         foreach (static::$defaultNameInsertions as $value) {
-            if (strtolower($value) === $needle) {
-                return true;
+            if (mb_strtolower($value) === mb_strtolower($nameInsertionInput)) {
+                return $value;
             }
         }
-        return false;
+        return null;
     }
 }

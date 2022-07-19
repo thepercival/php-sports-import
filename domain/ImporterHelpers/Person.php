@@ -6,14 +6,15 @@ namespace SportsImport\ImporterHelpers;
 
 use Sports\Game\Against as AgainstGame;
 use Sports\Person as PersonBase;
-use Sports\Team\Player;
+use Sports\Sport\FootballLine;
+use Sports\Season;
+use Sports\Team;
 use Sports\Person\Repository as PersonRepository;
 use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
 use SportsImport\Attacher\Person as PersonAttacher;
 use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use Sports\Team\Role\Combiner as RoleCombiner;
+use Sports\Team\Role\Editor as RoleEditor;
 use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\Person as ExternalSourcePerson;
 
 class Person
 {
@@ -24,10 +25,10 @@ class Person
     ) {
     }
 
-    public function importByAgainstGame(ExternalSource $externalSource, AgainstGame $externalGame): void
+    public function importByAgainstGame(ExternalSource $externalSource, Season $season, AgainstGame $externalGame): void
     {
-        foreach ($externalGame->getPlaces() as $externalGamePlaces) {
-            foreach ($externalGamePlaces->getParticipations() as $externalParticipation) {
+        foreach ($externalGame->getPlaces() as $externalGamePlace) {
+            foreach ($externalGamePlace->getParticipations() as $externalParticipation) {
                 $externalPerson = $externalParticipation->getPlayer()->getPerson();
 
                 $externalId = $externalPerson->getId();
@@ -49,7 +50,15 @@ class Person
                 } else {
                     $person = $personAttacher->getImportable();
                 }
-                $this->updatePlayerPeriods($externalSource, $person, $externalParticipation->getPlayer());
+
+                $this->updatePlayerPeriods(
+                    $externalSource,
+                    $season,
+                    $person,
+                    $externalGame->getStartDateTime(),
+                    $externalParticipation->getPlayer()->getTeam(),
+                    $externalParticipation->getPlayer()->getLine()
+                );
             }
         }
     }
@@ -70,21 +79,24 @@ class Person
 
     protected function updatePlayerPeriods(
         ExternalSource $externalSource,
+        Season $season,
         PersonBase $person,
-        Player $externalPlayer
+        \DateTimeImmutable $gameDateTime,
+        Team $externalTeam,
+        int $line
     ): void {
+        $externalTeamId = (string)$externalTeam->getId();
         $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
             $externalSource,
-            (string)$externalPlayer->getTeam()->getId()
+            $externalTeamId
         );
         if ($teamAttacher === null) {
-            throw new \Exception('no team found for externalsource "'.$externalSource->getName().'" and extern teamid ' . (string)$externalPlayer->getTeam()->getId(), E_ERROR);
+            throw new \Exception('no team found for externalsource "'.$externalSource->getName().'" and extern teamid ' . $externalTeamId, E_ERROR);
         }
         $newTeam = $teamAttacher->getImportable();
-        $newLine = $externalPlayer->getLine();
-        $newPeriod = $externalPlayer->getPeriod();
+        $newLine = FootballLine::from($line);
 
-        $roleCombiner = new RoleCombiner($person);
-        $roleCombiner->combineWithPast($newTeam, $newPeriod, $newLine);
+        $roleEditor = new RoleEditor();
+        $roleEditor->update($season, $person, $gameDateTime, $newTeam, $newLine);
     }
 }

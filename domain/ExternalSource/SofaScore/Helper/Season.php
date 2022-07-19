@@ -75,8 +75,15 @@ class Season extends SofaScoreHelper
             $start = $name . "-01-01";
             $end = (((int)$name)+1) . "-01-01";
         }
-        $startDateTime = \DateTimeImmutable::createFromFormat("Y-m-d\TH:i:s", $start . "T00:00:00", new \DateTimeZone('UTC'));
-        $endDateTime = \DateTimeImmutable::createFromFormat("Y-m-d\TH:i:s", $end . "T00:00:00", new \DateTimeZone('UTC'));
+        $format = 'Y-m-d';
+        $startDateTime = \DateTimeImmutable::createFromFormat($format . '\TH:i:s', $start . 'T00:00:00', new \DateTimeZone('UTC'));
+        $endDateTime = \DateTimeImmutable::createFromFormat($format . '\TH:i:s', $end . 'T00:00:00', new \DateTimeZone('UTC'));
+        if ($startDateTime === false) {
+            throw new \Exception('start has incorrect format("' . $format . '")', E_ERROR);
+        }
+        if ($endDateTime === false) {
+            throw new \Exception('end has incorrect format("' . $format . '")', E_ERROR);
+        }
         return new Period($startDateTime, $endDateTime);
     }
 }

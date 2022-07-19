@@ -6,7 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
-use Sports\Sport\Custom as SportCustom;
+use Sports\Sport\FootballLine;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
@@ -70,7 +70,7 @@ class Player extends ApiHelper
      * }
      * @throws \Exception
      */
-    public function convertApiDataRow(stdClass $apiDataRow): PlayerData|null
+    public function convertApiDataRow(stdClass $apiDataRow, stdClass|null $apiDataStatistics): PlayerData|null
     {
         if (!property_exists($apiDataRow, 'id')) {
             $this->logger->error('could not find stdClass-property "id"');
@@ -98,23 +98,33 @@ class Player extends ApiHelper
 
         $line = $this->convertLine((string)$apiDataRow->position);
 
-        return new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth);
+        $playerData = new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth);
+        if ($apiDataStatistics !== null) {
+            if (property_exists($apiDataStatistics, "minutesPlayed")) {
+                /** @var string|int $minutesPlayed */
+                $minutesPlayed = $apiDataStatistics->minutesPlayed;
+                if ($minutesPlayed > 0) {
+                    $playerData->nrOfMinutesPlayed = (int)$minutesPlayed;
+                }
+            }
+        }
+        return $playerData;
     }
 
     /**
      * G, D, M, F
      */
-    public function convertLine(string $line): int
+    public function convertLine(string $line): FootballLine
     {
         if ($line === "G") {
-            return SportCustom::Football_Line_GoalKepeer;
+            return FootballLine::GoalKeeper;
         } elseif ($line === "D") {
-            return SportCustom::Football_Line_Defense;
+            return FootballLine::Defense;
         } elseif ($line === "M") {
-            return SportCustom::Football_Line_Midfield;
+            return FootballLine::Midfield;
         } elseif ($line === "F") {
-            return SportCustom::Football_Line_Forward;
+            return FootballLine::Forward;
         }
-        return 0;
+        throw new \Exception('unknown line: "' . $line . '"');
     }
 }

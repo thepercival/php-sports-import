@@ -9,6 +9,7 @@ use Sports\Association;
 use Sports\Competition;
 use Sports\Competition\Repository as CompetitionRepository;
 use Sports\Competitor\Map as CompetitorMap;
+use Sports\Competitor\StartLocationMap;
 use Sports\Competitor\Team as TeamCompetitorBase;
 use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Game\State as GameState;
@@ -285,7 +286,7 @@ class Importer
 
         $gameRoundNumbers = $externalSourceGamesAndPlayers->getGameRoundNumbers($externalCompetition);
         if ($gameRoundRange !== null) {
-            $gameRoundNumbers = array_filter($gameRoundNumbers, fn(int $number) => $gameRoundRange->isWithIn($number));
+            $gameRoundNumbers = array_filter($gameRoundNumbers, fn (int $number) => $gameRoundRange->isWithIn($number));
         } else {
             $gameRoundNumbers = $this->getGameRoundNumbersToImport($competition, $nrOfPlaces, $gameRoundNumbers);
         }
@@ -302,7 +303,7 @@ class Importer
                     $resetCache
                 );
                 foreach ($externalGames as $externalGame) {
-                    $this->personImportService->importByAgainstGame($externalSource, $externalGame);
+                    $this->personImportService->importByAgainstGame($externalSource, $season, $externalGame);
                 }
             }
             $this->againstGameImportService->importGames($externalSource, array_values($externalGames), $onlyBasics);
@@ -364,6 +365,7 @@ class Importer
             }
             $this->personImportService->importByAgainstGame(
                 $externalSource,
+                $season,
                 $externalGame
             );
 
@@ -376,7 +378,7 @@ class Importer
             if ($game !== null) {
                 // all batch should be stopped, because of editing playerperiods
                 $competitors = array_values($competition->getTeamCompetitors()->toArray());
-                $gameOutput = new AgainstGameOutput(new CompetitorMap($competitors), $this->logger);
+                $gameOutput = new AgainstGameOutput(new StartLocationMap($competitors), $this->logger);
                 $gameOutput->output($game, $e->getMessage());
             }
         }

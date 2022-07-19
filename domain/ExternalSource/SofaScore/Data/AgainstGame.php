@@ -16,7 +16,7 @@ class AgainstGame
      * @var list<CardEventData|GoalEventData|SubstitutionEventData>
      */
     public array $events = [];
-    public AgainstGameLineups|null $lineups = null;
+    public AgainstGameLineups|null $players = null;
 
     public function __construct(
         public string $id,
