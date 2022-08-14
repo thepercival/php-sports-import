@@ -34,7 +34,7 @@ class Team extends ApiHelper
 
     public function getDefaultEndPoint(): string
     {
-        return "images/team-logo/football_**teamId**.png";
+        return "team/**teamIdId**/image";
     }
 
     public function getImageEndPoint(string $externalId): string

@@ -8,15 +8,16 @@ use Psr\Log\LoggerInterface;
 use Sports\Association;
 use Sports\Competition;
 use Sports\Competition\Repository as CompetitionRepository;
-use Sports\Competitor\Map as CompetitorMap;
 use Sports\Competitor\StartLocationMap;
 use Sports\Competitor\Team as TeamCompetitorBase;
 use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Game\State as GameState;
 use Sports\League;
 use Sports\Output\Game\Against as AgainstGameOutput;
+use Sports\Person;
 use Sports\Season;
 use Sports\Sport;
+use Sports\Team;
 use Sports\Team as TeamBase;
 use Sports\Team\Player;
 use SportsHelpers\SportRange;
@@ -389,7 +390,8 @@ class Importer
         ExternalSource $externalSource,
         League $league,
         Season $season,
-        string $localOutputPath
+        string $localOutputPath,
+        Person|null $person = null
     ): void {
         $competition = $league->getCompetition($season);
         if ($competition === null) {
@@ -398,13 +400,27 @@ class Importer
 //        $nrUpdated = 0;
 //        $maxUpdated = 20;
 
+        if ($person !== null) {
+            $personExternalId = $this->personAttacherRepos->findExternalId(
+                $externalSource,
+                $person
+            );
+            if ($personExternalId === null) {
+                return;
+            }
+        }
+
         $teams = array_map(function (TeamCompetitorBase $teamCompetitor): TeamBase {
             return $teamCompetitor->getTeam();
         }, $competition->getTeamCompetitors()->toArray());
         foreach ($teams as $team) {
-            $activePlayers = array_filter($team->getPlayers()->toArray(), function (Player $player) use ($season): bool {
-                return $player->getEndDateTime() > $season->getStartDateTime();
-            });
+            $activePlayers = array_filter(
+                $team->getPlayers()->toArray(),
+                function (Player $player) use ($season, $person): bool {
+                    return $player->getEndDateTime() > $season->getStartDateTime()
+                        && ($person === null || $person === $player->getPerson());
+                }
+            );
             foreach ($activePlayers as $activePlayer) {
                 $this->playerImportService->importImage(
                     $externalSourceGamesAndPlayers,
@@ -422,7 +438,8 @@ class Importer
         League $league,
         Season $season,
         string $localOutputPath,
-        int $maxWidth
+        int $maxWidth,
+        Team|null $teamFilter = null
     ): void {
         $competition = $league->getCompetition($season);
         if ($competition === null) {
@@ -433,6 +450,9 @@ class Importer
             return $teamCompetitor->getTeam();
         });
         foreach ($teams as $team) {
+            if ($teamFilter !== null && $teamFilter !== $team) {
+                continue;
+            }
             $teamExternalId = $this->teamAttacherRepos->findExternalId(
                 $externalSource,
                 $team

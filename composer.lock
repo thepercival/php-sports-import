@@ -3268,19 +3268,19 @@
             "time": "2022-06-20T12:01:07+00:00"
         },
         {
-            "name": "thepercival/php-sports",
-            "version": "v1.0.100",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thepercival/php-sports.git",
-                "reference": "44974ae93c3d0738bd01b7313feaee1c61fae0a0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thepercival/php-sports/zipball/44974ae93c3d0738bd01b7313feaee1c61fae0a0",
-                "reference": "44974ae93c3d0738bd01b7313feaee1c61fae0a0",
-                "shasum": ""
-            },
+          "name": "thepercival/php-sports",
+          "version": "v1.0.102",
+          "source": {
+            "type": "git",
+            "url": "https://github.com/thepercival/php-sports.git",
+            "reference": "7e81352e6b64d79139cac7e81fa785b78dc863e3"
+          },
+          "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/thepercival/php-sports/zipball/7e81352e6b64d79139cac7e81fa785b78dc863e3",
+            "reference": "7e81352e6b64d79139cac7e81fa785b78dc863e3",
+            "shasum": ""
+          },
             "require": {
                 "ahamed/jsphp": "^0.5.0",
                 "doctrine/orm": "^2.10",
@@ -3341,9 +3341,9 @@
             "support": {
                 "email": "coendunnink@gmail.com",
                 "issues": "https://github.com/thepercival/php-sports/issues",
-                "source": "https://github.com/thepercival/php-sports/tree/v1.0.100"
+              "source": "https://github.com/thepercival/php-sports/tree/v1.0.102"
             },
-            "time": "2022-07-19T06:02:31+00:00"
+          "time": "2022-07-24T11:08:30+00:00"
         },
         {
             "name": "thepercival/php-sports-helpers",
@@ -4159,20 +4159,20 @@
             },
             "time": "2022-03-02T22:36:06+00:00"
         },
-        {
-            "name": "friendsofphp/php-cs-fixer",
-            "version": "v3.9.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
-                "reference": "093466b1c3ff3e3b469bdbc9827bb2362de6b2fa"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/093466b1c3ff3e3b469bdbc9827bb2362de6b2fa",
-                "reference": "093466b1c3ff3e3b469bdbc9827bb2362de6b2fa",
-                "shasum": ""
-            },
+      {
+        "name": "friendsofphp/php-cs-fixer",
+        "version": "v3.9.5",
+        "source": {
+          "type": "git",
+          "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
+          "reference": "4465d70ba776806857a1ac2a6f877e582445ff36"
+        },
+        "dist": {
+          "type": "zip",
+          "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/4465d70ba776806857a1ac2a6f877e582445ff36",
+          "reference": "4465d70ba776806857a1ac2a6f877e582445ff36",
+          "shasum": ""
+        },
             "require": {
                 "composer/semver": "^3.2",
                 "composer/xdebug-handler": "^3.0.3",
@@ -4238,7 +4238,7 @@
             "description": "A tool to automatically fix PHP code style",
             "support": {
                 "issues": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/issues",
-                "source": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/tree/v3.9.4"
+              "source": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/tree/v3.9.5"
             },
             "funding": [
                 {
@@ -4246,7 +4246,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-07-15T21:04:49+00:00"
+        "time": "2022-07-22T08:43:51+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -4902,20 +4902,20 @@
             },
             "time": "2020-12-13T13:06:13+00:00"
         },
-        {
-            "name": "phpstan/phpstan",
-            "version": "1.8.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "8dbba631fa32f4b289404469c2afd6122fd61d67"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/8dbba631fa32f4b289404469c2afd6122fd61d67",
-                "reference": "8dbba631fa32f4b289404469c2afd6122fd61d67",
-                "shasum": ""
-            },
+      {
+        "name": "phpstan/phpstan",
+        "version": "1.8.2",
+        "source": {
+          "type": "git",
+          "url": "https://github.com/phpstan/phpstan.git",
+          "reference": "c53312ecc575caf07b0e90dee43883fdf90ca67c"
+        },
+        "dist": {
+          "type": "zip",
+          "url": "https://api.github.com/repos/phpstan/phpstan/zipball/c53312ecc575caf07b0e90dee43883fdf90ca67c",
+          "reference": "c53312ecc575caf07b0e90dee43883fdf90ca67c",
+          "shasum": ""
+        },
             "require": {
                 "php": "^7.2|^8.0"
             },
@@ -4939,7 +4939,7 @@
             "description": "PHPStan - PHP Static Analysis Tool",
             "support": {
                 "issues": "https://github.com/phpstan/phpstan/issues",
-                "source": "https://github.com/phpstan/phpstan/tree/1.8.1"
+              "source": "https://github.com/phpstan/phpstan/tree/1.8.2"
             },
             "funding": [
                 {
@@ -4959,22 +4959,22 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-07-12T16:08:06+00:00"
+        "time": "2022-07-20T09:57:31+00:00"
         },
-        {
-            "name": "phpstan/phpstan-doctrine",
-            "version": "1.3.10",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpstan/phpstan-doctrine.git",
-                "reference": "e6a149b380a4a00aea27a176a09691a8cb5f0cc7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-doctrine/zipball/e6a149b380a4a00aea27a176a09691a8cb5f0cc7",
-                "reference": "e6a149b380a4a00aea27a176a09691a8cb5f0cc7",
-                "shasum": ""
-            },
+      {
+        "name": "phpstan/phpstan-doctrine",
+        "version": "1.3.11",
+        "source": {
+          "type": "git",
+          "url": "https://github.com/phpstan/phpstan-doctrine.git",
+          "reference": "3ef6399761bb33fdfa0d5546d4b6e7d8811e8850"
+        },
+        "dist": {
+          "type": "zip",
+          "url": "https://api.github.com/repos/phpstan/phpstan-doctrine/zipball/3ef6399761bb33fdfa0d5546d4b6e7d8811e8850",
+          "reference": "3ef6399761bb33fdfa0d5546d4b6e7d8811e8850",
+          "shasum": ""
+        },
             "require": {
                 "php": "^7.2 || ^8.0",
                 "phpstan/phpstan": "^1.8.0"
@@ -5025,9 +5025,9 @@
             "description": "Doctrine extensions for PHPStan",
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-doctrine/issues",
-                "source": "https://github.com/phpstan/phpstan-doctrine/tree/1.3.10"
+              "source": "https://github.com/phpstan/phpstan-doctrine/tree/1.3.11"
             },
-            "time": "2022-07-13T10:42:52+00:00"
+        "time": "2022-07-20T14:54:37+00:00"
         },
         {
             "name": "phpstan/phpstan-phpunit",

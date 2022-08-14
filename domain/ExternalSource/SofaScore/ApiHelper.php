@@ -21,7 +21,7 @@ abstract class ApiHelper
     private SportRange|null $sleepRangeInSeconds = null;
     private Client|null $client = null;
 
-    public const IMAGEBASEURL = "https://www.sofascore.com/";
+    public const IMAGEBASEURL = "https://api.sofascore.app/api/v1/";
 
     public function __construct(
         protected SofaScore $sofaScore,

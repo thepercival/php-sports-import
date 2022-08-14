@@ -36,7 +36,7 @@ class Player extends ApiHelper
 
     public function getDefaultEndPoint(): string
     {
-        return "images/player/image_**personId**.png";
+        return "player/**personId**/image";
     }
 
     public function getImageEndPoint(string $externalId): string
