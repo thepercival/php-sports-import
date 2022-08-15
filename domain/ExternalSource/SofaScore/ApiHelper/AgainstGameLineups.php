@@ -83,7 +83,7 @@ class AgainstGameLineups extends ApiHelper
 
     public function getCacheMinutes(): int
     {
-        return 1555000; // @TODO DEPRECATED CDK 55
+        return 14; // @TODO ADD CACHE FOR DEV MODE
     }
 
     public function getCacheId(string|int $gameId): string

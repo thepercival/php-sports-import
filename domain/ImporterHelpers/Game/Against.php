@@ -7,7 +7,6 @@ namespace SportsImport\ImporterHelpers\Game;
 use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
-use Sports\Competitor\Map as CompetitorMap;
 use Sports\Competitor\StartLocationMap;
 use Sports\Game;
 use Sports\Game\Against as AgainstGame;
@@ -154,10 +153,9 @@ class Against
         if ($game === null) {
             return;
         }
-
+        $oldStartDateTime = $game->getStartDateTime();
         $game->setState($externalGame->getState());
 
-        $oldStartDateTime = $game->getStartDateTime();
         $rescheduled = false;
         if ($game->getStartDateTime()->getTimestamp() !== $externalGame->getStartDateTime()->getTimestamp()) {
             $game->setStartDateTime($externalGame->getStartDateTime());
