@@ -52,7 +52,7 @@ class Repository extends EntityRepository
         $expireDateTime = null;
         if ($nrOfMinutesToExpire !== null) {
             $expireDateTime = new \DateTimeImmutable();
-            $expireDateTime = $expireDateTime->add(new \DateInterval('P7M'));
+            $expireDateTime = $expireDateTime->add(new \DateInterval('PT7M'));
         }
         if ($cacheItem === null) {
             $cacheItem = new CacheItemDb($name, $value, $expireDateTime);

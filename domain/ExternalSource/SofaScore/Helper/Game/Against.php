@@ -322,7 +322,7 @@ class Against extends SofaScoreHelper
     protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): GameParticipation
     {
         $game = $againstGamePlace->getGame();
-        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('P3H')));
+        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('PT3H')));
 
         $person = $this->personHelper->convertDataToPerson($playerData);
 //        if ($person === null) {

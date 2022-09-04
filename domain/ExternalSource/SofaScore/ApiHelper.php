@@ -179,7 +179,7 @@ abstract class ApiHelper
         if ($expireDateTime === null) {
             return "cachereport => cached: no, minutes-cached: " . $cacheMinutes;
         }
-        $cachedDateTime = $expireDateTime->sub(new \DateInterval('P' . $this->getCacheMinutes() . 'M'));
+        $cachedDateTime = $expireDateTime->sub(new \DateInterval('PT' . $this->getCacheMinutes() . 'M'));
 
         $cachedAt = $cachedDateTime !== false ? $cachedDateTime->format(DateTimeInterface::ISO8601) : '?';
         $expiredAt = $expireDateTime->format(DateTimeInterface::ISO8601);
