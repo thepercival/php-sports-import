@@ -19,46 +19,59 @@ class JsonToDataConverter
     ) {
     }
 
+    /**
+     * @param stdClass $transferJson
+     * @return TransferData|null
+     * @throws \Exception
+     */
     public function convertTransferJsonToData(stdClass $transferJson): TransferData|null
     {
         if (!property_exists($transferJson, 'player')) {
             $this->logger->warning('could not find stdClass-property "player"');
             return null;
         }
-        /** @var stdClass $transferJson- >player */
-        $playerData = $this->convertPlayerJsonToData($transferJson->player, null);
+        /** @var stdClass $player */
+        $player = $transferJson->player;
+        $playerData = $this->convertPlayerJsonToData($player, null);
         if ($playerData === null) {
             $this->logger->warning('no player data found for transfer');
             return null;
         }
-        /** @var int $transferJson- >transferDateTimestamp */
+
         if (!property_exists($transferJson, 'transferDateTimestamp')) {
             $this->logger->warning('could not find stdClass-property "transferDateTimestamp"');
             return null;
         }
+        /** @var int $transferDateTimestamp */
+        $transferDateTimestamp = $transferJson->transferDateTimestamp;
+
         if (!property_exists($transferJson, 'transferFrom')) {
             $this->logger->warning('could not find stdClass-property "transferFrom"');
             return null;
         }
-        /** @var stdClass $transferJson- >transferFrom */
-        $teamFrom = $this->convertTeamJsonToData($transferJson->transferFrom);
+
+        /** @var stdClass $transferFrom */
+        $transferFrom = $transferJson->transferFrom;
+        $teamFrom = $this->convertTeamJsonToData($transferFrom);
         if ($teamFrom === null) {
             $this->logger->warning('no from-team-data found for transfer');
             return null;
         }
+
         if (!property_exists($transferJson, 'transferTo')) {
             $this->logger->warning('could not find stdClass-property "transferTo"');
             return null;
         }
-        /** @var stdClass $transferJson- >transferTo */
-        $teamTo = $this->convertTeamJsonToData($transferJson->transferTo);
+        /** @var stdClass $transferTo */
+        $transferTo = $transferJson->transferTo;
+        $teamTo = $this->convertTeamJsonToData($transferTo);
         if ($teamTo === null) {
             $this->logger->warning('no to-team-data found for transfer');
             return null;
         }
         return new TransferData(
             $playerData,
-            new DateTimeImmutable("@" . $transferJson->transferDateTimestamp),
+            new DateTimeImmutable("@" . $transferDateTimestamp),
             $teamFrom,
             $teamTo
         );

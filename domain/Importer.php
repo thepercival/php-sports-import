@@ -79,6 +79,11 @@ class Importer
         $this->importPersonEventsSender = $importPersonEventsSender;
     }
 
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
+    }
+
     public function importSports(
         ExternalSource\Competitions $externalSourceCompetitions,
         ExternalSource $externalSource
