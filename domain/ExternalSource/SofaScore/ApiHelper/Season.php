@@ -31,7 +31,7 @@ class Season extends ApiHelper
     public function getSeasons(): array
     {
         $seasons = [];
-        $twoYearsInFuture = (new \DateTimeImmutable())->modify("+2 years")->format("Y");
+        $twoYearsInFuture = (new \DateTimeImmutable())->add(new \DateInterval('P2Y'))->format("Y");
         for ($year = 2014; $year <= $twoYearsInFuture; $year++) {
             $seasons[] = new SeasonData($year . '/' . ($year + 1));
             $seasons[] = new SeasonData((string)$year);
