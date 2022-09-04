@@ -2,10 +2,30 @@
 
 namespace SportsImport\Event;
 
-enum Game: string
+use Sports\Game\Against as AgainstGame;
+use SportsImport\Event\Action\Game as GameAction;
+
+class Game
 {
-    case Create = 'game-create';
-    case UpdateBasics = 'game-update-basics';
-    case Reschedule = 'game-reschedule';
-    case UpdateScoresLineupsAndEvents = 'game-update-scores-lines-and-events';
+    public function __construct(
+        protected GameAction $action,
+        protected AgainstGame $game,
+        protected \DateTimeImmutable|null $oldDateTime
+    ) {
+    }
+
+    public function getAction(): GameAction
+    {
+        return $this->action;
+    }
+
+    public function getGame(): AgainstGame
+    {
+        return $this->game;
+    }
+
+    public function getOldDateTime(): \DateTimeImmutable|null
+    {
+        return $this->oldDateTime;
+    }
 }

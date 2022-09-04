@@ -31,7 +31,7 @@ use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameAp
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
@@ -57,7 +57,7 @@ class Against extends SofaScoreHelper
         protected AgainstGameApiHelper $againstGameApiHelper,
         protected AgainstGameLineupsApiHelper $againstGameLineupsApiHelper,
         protected AgainstGameEventsApiHelper $againstGameEventsApiHelper,
-        protected PlayerApiHelper $playerApiHelper,
+        protected JsonToDataConverter $jsonToDataConverter,
         SofaScore $parent,
         LoggerInterface $logger
     ) {
@@ -322,16 +322,16 @@ class Against extends SofaScoreHelper
     protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): GameParticipation
     {
         $game = $againstGamePlace->getGame();
-        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->modify('+3 hours'));
+        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('P3H')));
 
         $person = $this->personHelper->convertDataToPerson($playerData);
-        if ($person === null) {
-            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
-        }
+//        if ($person === null) {
+//            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+//        }
 
         $teamPlayer = new TeamPlayer($teamCompetitor->getTeam(), $person, $period, $playerData->line->value);
 
-        $beginMinute =  $playerData->nrOfMinutesPlayed === 0 ? -1 : 0;
+        $beginMinute = $playerData->nrOfMinutesPlayed === 0 ? -1 : 0;
         return new GameParticipation($againstGamePlace, $teamPlayer, $beginMinute);
     }
 
@@ -376,14 +376,14 @@ class Against extends SofaScoreHelper
 
     protected function convertApiDataToPerson(stdClass $personApiData): Person
     {
-        $playerData = $this->playerApiHelper->convertApiDataRow($personApiData, null);
+        $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($personApiData, null);
         if ($playerData === null) {
-            throw new Exception('"'.(string)$personApiData->id.'" kon niet worden gevonden als speler', E_ERROR);
+            throw new Exception('"' . (string)$personApiData->id . '" kon niet worden gevonden als speler', E_ERROR);
         }
         $person = $this->personHelper->convertDataToPerson($playerData);
-        if ($person === null) {
-            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
-        }
+//        if ($person === null) {
+//            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+//        }
         return $person;
     }
 
@@ -400,12 +400,14 @@ class Against extends SofaScoreHelper
     protected function convertPlayerDataToParticipation(AgainstGame $game, PlayerData $playerData): Participation
     {
         $person = $this->personHelper->convertDataToPerson($playerData);
-        if ($person === null) {
-            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
-        }
+//        if ($person === null) {
+//            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+//        }
         $participation = $game->getParticipation($person);
         if ($participation === null) {
-            throw new Exception($person->getName() . "(".(string)$person->getId().") kon niet worden gevonden als speler", E_ERROR);
+            throw new Exception(
+                $person->getName() . "(" . (string)$person->getId() . ") kon niet worden gevonden als speler", E_ERROR
+            );
         }
         return $participation;
     }

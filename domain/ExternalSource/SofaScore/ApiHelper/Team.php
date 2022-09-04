@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
+use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
 use stdClass;
 
 class Team extends ApiHelper
@@ -21,47 +21,85 @@ class Team extends ApiHelper
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
     }
 
+    /**
+     * @param string $externalTeamId
+     * @return list<TransferData>
+     * @throws \Exception
+     */
+    public function getTransfers(string $externalTeamId): array
+    {
+        /** @var stdClass $json */
+        $json = $this->getData(
+            $this->getTransfersEndPoint($externalTeamId),
+            $this->getTransfersCacheId($externalTeamId),
+            $this->getCacheMinutes()
+        );
+
+        /** @var list<stdClass> $transfersInJson */
+        $transfersInJson = $json->transfersIn;
+        $transfersInData = array_map(function (stdClass $transferInJson): TransferData|null {
+            return $this->jsonToDataConverter->convertTransferJsonToData($transferInJson);
+        }, $transfersInJson);
+
+        /** @var list<stdClass> $transfersOutJson */
+        $transfersOutJson = $json->transfersOut;
+        $transfersOutData = array_map(function (stdClass $transfersOutJson): TransferData|null {
+            return $this->jsonToDataConverter->convertTransferJsonToData($transfersOutJson);
+        }, $transfersOutJson);
+
+        $transfersData = array_merge($transfersInData, $transfersOutData);
+
+        $validTransfersData = array_filter($transfersData, function (TransferData|null $transfer): bool {
+            return $transfer !== null;
+        });
+        return array_values($validTransfersData);
+    }
+
+    public function getTransfersDefaultEndPoint(): string
+    {
+        return "team/**teamId**/transfers";
+    }
+
+    public function getTransfersEndPoint(string $externalId): string
+    {
+        return $this->sofaScore->getExternalSource()->getApiurl() . $this->getTransfersEndPointSuffix($externalId);
+    }
+
+    protected function getTransfersEndPointSuffix(string $externalId): string
+    {
+        $endpointSuffix = $this->getTransfersDefaultEndPoint();
+        return str_replace("**teamId**", $externalId, $endpointSuffix);
+    }
+
     public function getImage(string $externalId): string
     {
         return $this->getImgData($this->getImageEndPoint($externalId));
+    }
+
+    public function getImageDefaultEndPoint(): string
+    {
+        return "team/**teamId**/image";
+    }
+
+    public function getImageEndPoint(string $externalId): string
+    {
+        return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
+    }
+
+    protected function getImageEndPointSuffix(string $externalId): string
+    {
+        $endpointSuffix = $this->getImageDefaultEndPoint();
+        return str_replace("**teamId**", $externalId, $endpointSuffix);
+    }
+
+    public function getTransfersCacheId(string $externalTeamId): string
+    {
+        return $this->getTransfersEndPointSuffix($externalTeamId);
     }
 
     public function getCacheMinutes(): int
     {
         // case ExternalSource::DATA_TEAM_IMAGE:
         return 60 * 24;
-    }
-
-    public function getDefaultEndPoint(): string
-    {
-        return "team/**teamIdId**/image";
-    }
-
-    public function getImageEndPoint(string $externalId): string
-    {
-        return self::IMAGEBASEURL . $this->getImageEndPointSuffix($externalId);
-        // return $this->sofaScore->getExternalSource()->getApiurl() . $this->getImageEndPointSuffix($externalId);
-    }
-
-    protected function getImageEndPointSuffix(string $externalId): string
-    {
-        $endpointSuffix = $this->getDefaultEndPoint();
-        return str_replace("**teamId**", $externalId, $endpointSuffix);
-    }
-
-    public function convertApiDataRow(stdClass $apiDataRow): TeamData|null
-    {
-        if (!property_exists($apiDataRow, "id")) {
-            $this->logger->error('could not find stdClass-property "id"');
-            return null;
-        }
-        if (!property_exists($apiDataRow, 'shortName')) {
-            $this->logger->error('could not find stdClass-property "shortName"');
-            return null;
-        }
-        return new TeamData(
-            (string)$apiDataRow->id,
-            (string)$apiDataRow->shortName
-        );
     }
 }

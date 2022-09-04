@@ -19,4 +19,5 @@ class Entity
     public const GAMES_COMPLEET = 512;
     public const GAME = 1024;
     public const PLAYERS = 2048;
+    public const TRANSFERS = 4096;
 }

@@ -12,7 +12,6 @@ use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as EventsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as LineupsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRoundData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameScoreData;
@@ -23,7 +22,6 @@ class AgainstGame extends ApiHelper
     public function __construct(
         protected LineupsApiHelper $lineupApiHelper,
         protected EventsApiHelper $eventApiHelper,
-        protected TeamApiHelper $teamApiHelper,
         SofaScore $sofaScore,
         CacheItemDbRepository $cacheItemDbRepos,
         LoggerInterface $logger
@@ -93,10 +91,10 @@ class AgainstGame extends ApiHelper
         }
         /** @var stdClass $homeTeamApiData */
         $homeTeamApiData = $apiDataRow->homeTeam;
-        $homeTeamData = $this->teamApiHelper->convertApiDataRow($homeTeamApiData);
+        $homeTeamData = $this->jsonToDataConverter->convertTeamJsonToData($homeTeamApiData);
         /** @var stdClass $awayTeamApiData */
         $awayTeamApiData = $apiDataRow->awayTeam;
-        $awayTeamData = $this->teamApiHelper->convertApiDataRow($awayTeamApiData);
+        $awayTeamData = $this->jsonToDataConverter->convertTeamJsonToData($awayTeamApiData);
         if ($homeTeamData === null || $awayTeamData === null) {
             throw new \Exception('home- or awayteam could not be found', E_ERROR);
         }

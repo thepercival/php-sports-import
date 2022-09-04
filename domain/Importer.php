@@ -32,11 +32,14 @@ use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource\Competitions;
 use SportsImport\ExternalSource\CompetitionStructure;
 use SportsImport\ExternalSource\GamesAndPlayers;
+use SportsImport\ExternalSource\Transfers;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
+use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
 
 class Importer
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
+    protected ImportPersonEvents|null $importPersonEventsSender = null;
 
     public function __construct(
         protected Getter $getter,
@@ -51,6 +54,7 @@ class Importer
         protected ImporterHelpers\Game\Against $againstGameImportService,
         protected ImporterHelpers\Person $personImportService,
         protected ImporterHelpers\Player $playerImportService,
+        protected ImporterHelpers\Transfers $transfersImportService,
         protected SportAttacherRepository $sportAttacherRepos,
         protected AssociationAttacherRepository $associationAttacherRepos,
         protected LeagueAttacherRepository $leagueAttacherRepos,
@@ -65,9 +69,14 @@ class Importer
     ) {
     }
 
-    public function setEventSender(ImportGameEvents $importGameEventsSender): void
+    public function setGameEventSender(ImportGameEvents $importGameEventsSender): void
     {
         $this->importGameEventsSender = $importGameEventsSender;
+    }
+
+    public function setPersonEventSender(ImportPersonEvents $importPersonEventsSender): void
+    {
+        $this->importPersonEventsSender = $importPersonEventsSender;
     }
 
     public function importSports(
@@ -198,6 +207,59 @@ class Importer
         $this->structureImportService->import($externalSource, $structure);
     }
 
+
+    public function importTeamTransfers(
+        Competitions $externalSourceCompetitions,
+        CompetitionStructure $externalSourceCompetitionStructure,
+        Transfers $externalSourceTransfers,
+        ExternalSource $externalSource,
+        Sport $sport,
+        League $league,
+        Season $season,
+        Team $team
+    ): void {
+        $externalCompetition = $this->getter->getCompetition(
+            $externalSourceCompetitions,
+            $externalSource,
+            $sport,
+            $league,
+            $season
+        );
+
+        $competition = $this->competitionRepos->findOneExt($league, $season);
+        if ($competition === null) {
+            $this->logger->error("no compettition could be found for external league and season");
+            return;
+        }
+        if ($competition->getTeamCompetitors()->count() === 0) {
+            $this->logger->warning("no competitors found for external competition " . $externalCompetition->getName());
+        }
+
+        $externalTeamId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
+        if ($externalTeamId === null) {
+            $this->logger->error(
+                'no externalId found for team "' . $team->getName() . '" (' . (string)$team->getId() . ')'
+            );
+            return;
+        }
+
+        $externalTeam = $externalSourceCompetitionStructure->getTeam($externalCompetition, $externalTeamId);
+        if ($externalTeam === null) {
+            $this->logger->error('no external team found for externalId "' . $externalTeamId . '"');
+            return;
+        }
+
+        $externalTransfers = $externalSourceTransfers->getTransfers($competition, $externalTeam);
+        if ($this->importPersonEventsSender instanceof ImportPersonEvents) {
+            $this->personImportService->setEventSender($this->importPersonEventsSender);
+        }
+        foreach ($externalTransfers as $externalTransfer) {
+            $this->personImportService->importPerson($externalSource, $externalTransfer->getPerson(), $season);
+        }
+
+        $this->transfersImportService->import($externalSource, $competition, $externalTransfers);
+    }
+
     public function importGamesBasics(
         Competitions $externalSourceCompetitions,
         CompetitionStructure $externalSourceCompetitionStructure,
@@ -311,7 +373,7 @@ class Importer
         }
     }
 
-    public function importAgainstGameLineupsAndEvents(
+    public function importAgainstGameBasicsLineupsAndEvents(
         ExternalSource\Competitions $externalSourceCompetitions,
         ExternalSource\CompetitionStructure $externalSourceCompetitionStructure,
         ExternalSource\GamesAndPlayers $externalSourceCompetitionGames,
@@ -369,6 +431,8 @@ class Importer
                 $season,
                 $externalGame
             );
+
+            $this->againstGameImportService->importBasics($externalSource, $externalGame);
 
             $this->againstGameImportService->importScoresLineupsAndEvents(
                 $externalSource,

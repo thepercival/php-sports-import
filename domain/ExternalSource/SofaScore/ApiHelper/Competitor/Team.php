@@ -7,20 +7,14 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor;
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\CacheInfo;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
-use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
-use Sports\Sport;
 use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
 use stdClass;
 
 class Team extends ApiHelper
 {
     public function __construct(
-        protected TeamApiHelper $teamApiHelper,
         SofaScore $sofaScore,
         CacheItemDbRepository $cacheItemDbRepos,
         LoggerInterface $logger
@@ -92,7 +86,7 @@ class Team extends ApiHelper
             $this->logger->error('could not find stdClass-property "team"');
             return null;
         }
-        $teamData = $this->teamApiHelper->convertApiDataRow($standingRow->team);
+        $teamData = $this->jsonToDataConverter->convertTeamJsonToData($standingRow->team);
         if ($teamData === null) {
             return null;
         }

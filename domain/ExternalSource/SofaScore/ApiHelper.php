@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -14,20 +15,21 @@ use SportsHelpers\Dev\ByteFormatter;
 use SportsHelpers\SportRange;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
 
 abstract class ApiHelper
 {
     private const NrOfRetries = 2;
     private SportRange|null $sleepRangeInSeconds = null;
     private Client|null $client = null;
-
-    public const IMAGEBASEURL = "https://api.sofascore.app/api/v1/";
+    protected JsonToDataConverter $jsonToDataConverter;
 
     public function __construct(
         protected SofaScore $sofaScore,
         protected CacheItemDbRepository $cacheItemDbRepos,
         protected LoggerInterface $logger
     ) {
+        $this->jsonToDataConverter = new JsonToDataConverter($logger);
     }
 
     protected function getClient(): Client
@@ -177,11 +179,11 @@ abstract class ApiHelper
         if ($expireDateTime === null) {
             return "cachereport => cached: no, minutes-cached: " . $cacheMinutes;
         }
-        $cachedDateTime = $expireDateTime->modify("- " . $this->getCacheMinutes() . "minutes");
+        $cachedDateTime = $expireDateTime->sub(new \DateInterval('P' . $this->getCacheMinutes() . 'M'));
 
-        $cachedAt = $cachedDateTime->format("'Y-m-d\TH:i:s\Z'");
-        $expiredAt = $expireDateTime->format("'Y-m-d\TH:i:s\Z'");
-        return "cachereport => cached:" . $cachedAt . ", minutes-cached: " . $cacheMinutes . ", expired: " . $expiredAt;
+        $cachedAt = $cachedDateTime !== false ? $cachedDateTime->format(DateTimeInterface::ISO8601) : '?';
+        $expiredAt = $expireDateTime->format(DateTimeInterface::ISO8601);
+        return 'cachereport => cached:' . $cachedAt . ', minutes-cached: ' . $cacheMinutes . ', expired: ' . $expiredAt;
     }
 
     public function convertToSeasonId(string $name): string

@@ -157,7 +157,7 @@ class AgainstGameEvents extends ApiHelper
 
     protected function convertPlayerApiDataHelper(stdClass $playerApiData): PlayerData
     {
-        $player = $this->playerApiHelper->convertApiDataRow($playerApiData, null);
+        $player = $this->jsonToDataConverter->convertPlayerJsonToData($playerApiData, null);
         if ($player === null) {
             throw new \Exception('player could not be found', E_ERROR);
         }

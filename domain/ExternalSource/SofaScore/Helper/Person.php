@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
-use Sports\Person as PersonBase;
 use Sports\Game;
+use Sports\Person as PersonBase;
+use SportsImport\ExternalSource\NameAnalyzer;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
-use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\NameAnalyzer;
 
 /**
  * @template-extends SofaScoreHelper<PersonBase>
@@ -48,10 +47,10 @@ class Person extends SofaScoreHelper
      * }
      *
      * @param PlayerData $playerData
-     * @return ?PersonBase
+     * @return PersonBase
      * @throws \Exception
      */
-    public function convertDataToPerson(PlayerData $playerData): ?PersonBase
+    public function convertDataToPerson(PlayerData $playerData): PersonBase
     {
         if (array_key_exists($playerData->id, $this->cache)) {
             return $this->cache[$playerData->id];

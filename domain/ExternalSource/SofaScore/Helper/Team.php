@@ -6,13 +6,14 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
 use Sports\Association;
+use Sports\Competition;
 use Sports\Competitor\Team as TeamCompetitor;
+use Sports\Team as TeamBase;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Sports\Team as TeamBase;
-use Sports\Competition;
+use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
 
 /**
  * @template-extends SofaScoreHelper<TeamBase>
@@ -20,6 +21,7 @@ use Sports\Competition;
 class Team extends SofaScoreHelper
 {
     public function __construct(
+        protected PersonHelper $personHelper,
         protected TeamApiHelper $apiHelper,
         SofaScore $parent,
         LoggerInterface $logger
@@ -40,9 +42,9 @@ class Team extends SofaScoreHelper
 
     public function getTeam(Competition $competition, string|int $id): TeamBase|null
     {
-        $competitionTeams = $this->getTeams($competition);
-        if (array_key_exists($id, $competitionTeams)) {
-            return $competitionTeams[$id];
+        $this->getTeams($competition);
+        if (array_key_exists($id, $this->cache)) {
+            return $this->cache[$id];
         }
         return null;
     }

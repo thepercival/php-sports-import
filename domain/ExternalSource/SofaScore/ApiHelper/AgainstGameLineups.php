@@ -71,7 +71,7 @@ class AgainstGameLineups extends ApiHelper
                 /** @var stdClass $statistics */
                 $statistics = $playerApiData->statistics;
             }
-            $playerData = $this->playerApiHelper->convertApiDataRow($playerApiDataRow, $statistics);
+            $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($playerApiDataRow, $statistics);
             if ($playerData === null) {
                 throw new \Exception('player should not be null', E_ERROR);
             }

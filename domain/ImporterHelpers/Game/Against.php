@@ -154,6 +154,7 @@ class Against
             return;
         }
         $oldStartDateTime = $game->getStartDateTime();
+        $stateChanged = $game->getState() !== $externalGame->getState();
         $game->setState($externalGame->getState());
 
         $rescheduled = false;
@@ -163,7 +164,9 @@ class Against
         }
 
         $this->againstGameRepos->save($game);
-        $this->importGameEventsSender?->sendUpdateBasicsEvent($game);
+        if ($stateChanged || $rescheduled) {
+            $this->importGameEventsSender?->sendUpdateBasicsEvent($game);
+        }
         $rescheduledDescr = '';
         if ($rescheduled) {
             $this->importGameEventsSender?->sendRescheduleEvent($oldStartDateTime, $game);
@@ -290,7 +293,7 @@ class Against
         // $rootRound = $structure->getFirstRoundNumber()->getRounds()->first();
         try {
             $rootRound = $structure->getSingleCategory()->getRootRound();
-        } catch(Exception $e ) {
+        } catch (Exception $e) {
             return null;
         }
 //        if ($rootRound === false) {

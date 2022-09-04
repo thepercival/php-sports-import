@@ -27,6 +27,7 @@ use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationAp
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
@@ -43,15 +44,18 @@ use SportsImport\ExternalSource\SofaScore\Helper\Season as SeasonHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Transfer as TransferHelper;
+use SportsImport\Transfer;
 
 class SofaScore implements
     Implementation,
     Competitions,
     CompetitionStructure,
     GamesAndPlayers,
+    Transfers,
     Proxy
 {
-    public const NAME = "SofaScore";
+    public const NAME = 'SofaScore';
     /**
      * @var array<string, string>|null
      */
@@ -64,12 +68,15 @@ class SofaScore implements
     protected CompetitionHelper $competitionHelper;
 
     protected PersonHelper $personHelper;
+    protected TransferHelper $transferHelper;
     protected SofaScore\Helper\Structure $structureHelper;
     protected SofaScore\Helper\Team $teamHelper;
     protected SofaScore\Helper\Competitor\Team $teamCompetitorHelper;
     protected SofaScore\Helper\Game\Against $againstGameHelper;
     protected SofaScore\Helper\Player $playerHelper;
     // protected SofaScore\Helper\Team\Role $teamRoleHelper;
+
+    // protected TransfersApiHelper $transfersApiHelper;
 
     protected SofaScore\Helper\Game\RoundNumbers $gameRoundsHelper;
 
@@ -93,10 +100,22 @@ class SofaScore implements
         $competitionApiHelper = new CompetitionApiHelper($this, $cacheItemDbRepos, $logger);
         $this->competitionHelper = new CompetitionHelper($competitionApiHelper, $this, $this->logger);
 
-        $teamApiHelper = new TeamApiHelper($this, $cacheItemDbRepos, $logger);
-        $this->teamHelper = new TeamHelper($teamApiHelper, $this, $this->logger);
+        $playerApiHelper = new PlayerApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->personHelper = new PersonHelper($playerApiHelper, $this, $this->logger);
+        $this->playerHelper = new SofaScore\Helper\Player($playerApiHelper, $this, $this->logger);
 
-        $teamCompetitorApiHelper = new TeamCompetitorApiHelper($teamApiHelper, $this, $cacheItemDbRepos, $logger);
+        $teamApiHelper = new TeamApiHelper($this, $cacheItemDbRepos, $logger);
+        $this->teamHelper = new TeamHelper($this->personHelper, $teamApiHelper, $this, $this->logger);
+
+        $this->transferHelper = new TransferHelper(
+            $this->personHelper,
+            $this->teamHelper,
+            $teamApiHelper,
+            $this,
+            $this->logger
+        );
+
+        $teamCompetitorApiHelper = new TeamCompetitorApiHelper($this, $cacheItemDbRepos, $logger);
         $this->teamCompetitorHelper = new TeamCompetitorHelper(
             $this->teamHelper,
             $teamCompetitorApiHelper,
@@ -106,16 +125,13 @@ class SofaScore implements
 
         $this->structureHelper = new StructureHelper($teamCompetitorApiHelper, $this, $this->logger);
 
-        $playerApiHelper = new PlayerApiHelper($this, $cacheItemDbRepos, $logger);
-        $this->personHelper = new PersonHelper($playerApiHelper, $this, $this->logger);
-        $this->playerHelper = new SofaScore\Helper\Player($playerApiHelper, $this, $this->logger);
+
 
         $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
         $againstGameApiHelper = new AgainstGameApiHelper(
             $againstGameLineupsApiHelper,
             $againstGameEventsApiHelper,
-            $teamApiHelper,
             $this,
             $cacheItemDbRepos,
             $logger
@@ -130,7 +146,7 @@ class SofaScore implements
             $againstGameApiHelper,
             $againstGameLineupsApiHelper,
             $againstGameEventsApiHelper,
-            $playerApiHelper,
+            new JsonToDataConverter($this->logger),
             $this,
             $this->logger
         );
@@ -141,6 +157,8 @@ class SofaScore implements
             $this,
             $this->logger
         );
+
+        // $this->transfersApiHelper = new TransfersApiHelper
 
 //        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
 //        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
@@ -315,6 +333,15 @@ class SofaScore implements
         return $this->personHelper->getPerson($againstGame, $id);
     }
 
+//    /**
+//     * @param CompetitionBase $competition
+//     * @return list<TransferData>
+//     */
+//    public function getTransfers(Competition $competition): array
+//    {
+//        return $this->tra->getPerson($againstGame, $id);
+//    }
+
 //    public function convertToPerson(stdClass $externalPerson): ?Person
 //    {
 //        return $this->personHelper->convertToPerson($externalPerson);
@@ -325,6 +352,15 @@ class SofaScore implements
         return $this->playerHelper->getImagePlayer($personExternalId);
     }
 
+    /**
+     * @param Competition $competition
+     * @param Team $team
+     * @return list<Transfer>
+     */
+    public function getTransfers(Competition $competition, Team $team): array
+    {
+        return $this->transferHelper->getTransfers($team);
+    }
 //    protected function showMetadata(
 //        Competitions|CompetitionStructure|CompetitionDetails $externalSourceImpl,
 //        int $entity

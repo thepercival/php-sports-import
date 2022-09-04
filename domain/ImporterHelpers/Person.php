@@ -4,25 +4,35 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Psr\Log\LoggerInterface;
 use Sports\Game\Against as AgainstGame;
 use Sports\Person as PersonBase;
-use Sports\Sport\FootballLine;
-use Sports\Season;
-use Sports\Team;
 use Sports\Person\Repository as PersonRepository;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Person as PersonAttacher;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use Sports\Season;
+use Sports\Sport\FootballLine;
+use Sports\Team;
 use Sports\Team\Role\Editor as RoleEditor;
+use SportsImport\Attacher\Person as PersonAttacher;
+use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
+use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
+use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
 
 class Person
 {
+    protected ImportPersonEvents|null $importPersonEventsSender = null;
+
     public function __construct(
         protected PersonRepository $personRepos,
         protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos
+        protected TeamAttacherRepository $teamAttacherRepos,
+        protected LoggerInterface $logger
     ) {
+    }
+
+    public function setEventSender(ImportPersonEvents $importPersonEventsSender): void
+    {
+        $this->importPersonEventsSender = $importPersonEventsSender;
     }
 
     public function importByAgainstGame(ExternalSource $externalSource, Season $season, AgainstGame $externalGame): void
@@ -35,21 +45,7 @@ class Person
                 if ($externalId === null) {
                     continue;
                 }
-                $personAttacher = $this->personAttacherRepos->findOneByExternalId(
-                    $externalSource,
-                    (string)$externalId
-                );
-                if ($personAttacher === null) {
-                    $person = $this->createPerson($externalPerson);
-                    $personAttacher = new PersonAttacher(
-                        $person,
-                        $externalSource,
-                        (string)$externalId
-                    );
-                    $this->personAttacherRepos->save($personAttacher);
-                } else {
-                    $person = $personAttacher->getImportable();
-                }
+                $person = $this->importPerson($externalSource, $externalPerson, $season);
 
                 $this->updatePlayerPeriods(
                     $externalSource,
@@ -61,6 +57,35 @@ class Person
                 );
             }
         }
+    }
+
+    public function importPerson(
+        ExternalSource $externalSource,
+        PersonBase $externalPerson,
+        Season $season
+    ): PersonBase {
+        $externalId = $externalPerson->getId();
+        if ($externalId === null) {
+            throw new \Exception('no id for externalperson', E_ERROR);
+        }
+        $personAttacher = $this->personAttacherRepos->findOneByExternalId(
+            $externalSource,
+            (string)$externalId
+        );
+        if ($personAttacher === null) {
+            $person = $this->createPerson($externalPerson);
+            $personAttacher = new PersonAttacher(
+                $person,
+                $externalSource,
+                (string)$externalId
+            );
+            $this->personAttacherRepos->save($personAttacher);
+
+            $this->importPersonEventsSender?->sendCreatePersonEvent($person, $season);
+        } else {
+            $person = $personAttacher->getImportable();
+        }
+        return $person;
     }
 
     protected function createPerson(PersonBase $externalPerson): PersonBase
@@ -96,7 +121,7 @@ class Person
         $newTeam = $teamAttacher->getImportable();
         $newLine = FootballLine::from($line);
 
-        $roleEditor = new RoleEditor();
+        $roleEditor = new RoleEditor($this->logger);
         $roleEditor->update($season, $person, $gameDateTime, $newTeam, $newLine);
     }
 }
