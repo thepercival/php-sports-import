@@ -351,6 +351,10 @@ class Against extends SofaScoreHelper
             $goalEvent = new GoalEvent($event->time, $participation);
             $goalEvent->setOwn($event->own);
             $goalEvent->setPenalty($event->penalty);
+            if ($event->assist) {
+                $assistGameParticipation = $this->convertPlayerDataToParticipation($game, $event->assist);
+                $goalEvent->setAssistGameParticipation($assistGameParticipation);
+            }
         };
 
         $updateGameParticipations = function (AgainstGame $game, SubstitutionEventData $event): void {

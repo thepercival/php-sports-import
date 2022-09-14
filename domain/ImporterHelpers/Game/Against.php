@@ -13,6 +13,7 @@ use Sports\Game\Against as AgainstGame;
 use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Game\Event\Card;
 use Sports\Game\Event\Goal;
+use Sports\Game\Participation as GameParticipation;
 use Sports\Game\Place\Against as AgainstGamePlace;
 use Sports\Game\State as GameState;
 use Sports\Output\Game\Against as AgainstGameOutput;
@@ -186,18 +187,29 @@ class Against
         $this->removeScoresLineupsAndEvents($game);
         (new ScoreCreator())->addAgainstScores($game, array_values($externalGame->getScores()->toArray()));
 
+        // create gameParticipations
         foreach ($externalGame->getPlaces() as $externalGamePlace) {
             foreach ($externalGamePlace->getParticipations() as $externalParticipation) {
                 $player = $this->getPlayerFromExternal($game, $externalSource, $externalParticipation->getPlayer());
                 if ($player === null) {
                     continue;
                 }
-                $gameParticipation = new Game\Participation(
+                new Game\Participation(
                     $this->getGamePlaceFromExternal($game, $externalGamePlace->getPlace()->getPlaceNr()),
                     $player,
                     $externalParticipation->getBeginMinute(),
                     $externalParticipation->getEndMinute()
                 );
+            }
+        }
+
+        foreach ($externalGame->getPlaces() as $externalGamePlace) {
+            foreach ($externalGamePlace->getParticipations() as $externalParticipation) {
+                $gameParticipation = $this->getGameParticipation($game, $externalSource, $externalParticipation);
+                if ($gameParticipation === null) {
+                    $this->logger->info('no gameparticipation found');
+                    continue;
+                }
 
                 foreach ($externalParticipation->getCards() as $card) {
                     new Card($card->getMinute(), $gameParticipation, $card->getType());
@@ -206,20 +218,17 @@ class Against
                     $goal = new Goal($externalGoal->getMinute(), $gameParticipation);
                     $goal->setPenalty($externalGoal->getPenalty());
                     $goal->setOwn($externalGoal->getOwn());
-                    if ($externalGoal->getAssistGameParticipation() === null) {
+                    $externalAssistGameParticipation = $externalGoal->getAssistGameParticipation();
+                    if ($externalAssistGameParticipation === null) {
                         continue;
                     }
-                    $externalAssistParticipation = $externalGoal->getAssistGameParticipation();
-                    if ($externalAssistParticipation === null) {
-                        continue;
-                    }
-                    $externalAssistPlayer = $externalAssistParticipation->getPlayer();
-                    $assistPlayer = $this->getPlayerFromExternal($game, $externalSource, $externalAssistPlayer);
-                    if ($assistPlayer === null) {
-                        continue;
-                    }
-                    $assistGameParticipation = $game->getParticipation($assistPlayer->getPerson());
+                    $assistGameParticipation = $this->getGameParticipation(
+                        $game,
+                        $externalSource,
+                        $externalAssistGameParticipation
+                    );
                     if ($assistGameParticipation === null) {
+                        $this->logger->info('no assist-gameparticipation found');
                         continue;
                     }
                     $goal->setAssistGameParticipation($assistGameParticipation);
@@ -229,6 +238,19 @@ class Against
         $this->againstGameRepos->save($game);
         $this->importGameEventsSender?->sendUpdateScoresLineupsAndEventsEvent($game);
         $this->outputGame($game, "updated scores,lineups,events => ", false);
+    }
+
+    protected function getGameParticipation(
+        AgainstGame $game,
+        ExternalSource $externalSource,
+        GameParticipation $externalParticipation
+    ): GameParticipation|null {
+        $externalPlayer = $externalParticipation->getPlayer();
+        $player = $this->getPlayerFromExternal($game, $externalSource, $externalPlayer);
+        if ($player === null) {
+            return null;
+        }
+        return $game->getParticipation($player->getPerson());
     }
 
     protected function getGameFromExternal(ExternalSource $externalSource, AgainstGame $externalGame): AgainstGame|null
