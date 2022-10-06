@@ -108,6 +108,11 @@ abstract class ApiHelper
             if ($nrOfRetries < self::NrOfRetries) {
                 return $this->getData($endpoint, $cacheId, $cacheMinutes, $nrOfRetries + 1);
             }
+            throw new Exception("req: could not get sofascore-data after retries: cacheid => " . $cacheId, E_ERROR);
+        } catch (Exception $e) {
+            if ($nrOfRetries < self::NrOfRetries) {
+                return $this->getData($endpoint, $cacheId, $cacheMinutes, $nrOfRetries + 1);
+            }
             throw new Exception("could not get sofascore-data after retries: cacheid => " . $cacheId, E_ERROR);
         }
         $content = $response->getBody()->getContents();
