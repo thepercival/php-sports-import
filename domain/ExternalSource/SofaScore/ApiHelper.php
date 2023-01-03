@@ -186,7 +186,7 @@ abstract class ApiHelper
         }
         $cachedDateTime = $expireDateTime->sub(new \DateInterval('PT' . $this->getCacheMinutes() . 'M'));
 
-        $cachedAt = $cachedDateTime !== false ? $cachedDateTime->format(DateTimeInterface::ISO8601) : '?';
+        $cachedAt = $cachedDateTime->format(DateTimeInterface::ISO8601);
         $expiredAt = $expireDateTime->format(DateTimeInterface::ISO8601);
         return 'cachereport => cached:' . $cachedAt . ', minutes-cached: ' . $cacheMinutes . ', expired: ' . $expiredAt;
     }
