@@ -83,7 +83,7 @@ class Competition extends SofaScoreHelper
         new CompetitionSport(
             $sport,
             $competition,
-            PointsCalculation::AgainstGamePoints,
+            PointsCalculation::AgainstGamePoints, 3, 1, 3, 1, 0,
             new PersistVariant(
                 $sport->getDefaultGameMode(),
                 $sport->getDefaultNrOfSidePlaces(),
