@@ -25,6 +25,7 @@ use Sports\Poule;
 use Sports\Score\Against as AgainstScore;
 use Sports\Team;
 use Sports\Team\Player as TeamPlayer;
+use SportsHelpers\Against\Side;
 use SportsHelpers\Against\Side as AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
@@ -36,7 +37,9 @@ use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
+use SportsImport\ExternalSource\SofaScore\Data\Player;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
@@ -191,14 +194,14 @@ class Against extends SofaScoreHelper
             foreach ([$homeGamePlace, $awayGamePlace] as $sideGamePlace) {
                 // use ($competitorMap, $lineups): void
                 $competitors =  $this->getGameCompetitors($game, $startLocationMap, $sideGamePlace->getSide());
-                if (count($competitors) === 1) {
-                    $competitor = reset($competitors);
-                    if ($competitor instanceof TeamCompetitor) {
-                        $sidePlayers = $sideGamePlace->getSide() === AgainstSide::Away ? $players->awayPlayers : $players->homePlayers;
-                        $this->addAppearedGameParticipations($sideGamePlace, $competitor, $sidePlayers->players);
-                        $this->addNonAppearedGameParticipationsWithCardEvent($sideGamePlace, $competitor, $againstGameData->events, $sidePlayers->players);
-                    }
+                $competitor = reset($competitors);
+                if (count($competitors) !== 1 || !($competitor instanceof TeamCompetitor)) {
+                    continue;
                 }
+                $sidePlayers = $sideGamePlace->getSide() === AgainstSide::Away ? $players->awayPlayers : $players->homePlayers;
+                $this->addAppearedGameParticipations($sideGamePlace, $competitor, $sidePlayers->players);
+                $this->addNonAppearedGameParticipationsWithCardEvent($sideGamePlace, $competitor, $againstGameData->events, $sidePlayers->players);
+                $this->addAppearedGameParticipationsWithoutMinutesFromSubstituteEvent($sideGamePlace, $competitor, $againstGameData->events, $sidePlayers->players);
             }
         }
 
@@ -316,6 +319,46 @@ class Against extends SofaScoreHelper
             if ($sidePlayer !== false && $sidePlayer->nrOfMinutesPlayed === 0) {
                 $this->createGameParticipation($againstGamePlace, $teamCompetitor, $eventData->player);
             }
+        }
+    }
+    /**
+     * @param AgainstGamePlace $againstGamePlace
+     * @param TeamCompetitor $teamCompetitor
+     * @param list<CardEventData|GoalEventData|SubstitutionEventData> $eventsData
+     * @param list<PlayerData> $sidePlayersData
+     * @return void
+     */
+    protected function addAppearedGameParticipationsWithoutMinutesFromSubstituteEvent(
+        AgainstGamePlace $againstGamePlace,
+        TeamCompetitor $teamCompetitor,
+        array $eventsData,
+        array $sidePlayersData
+    ): void
+    {
+        foreach ($eventsData as $eventData) {
+            if (!($eventData instanceof SubstitutionEventData)) {
+                continue;
+            }
+            if( $eventData->substitute->nrOfMinutesPlayed > 0 ) {
+                continue;
+            }
+
+            $foundPlayers = array_filter($sidePlayersData, function (Player $player) use ($eventData): bool {
+                return $eventData->player->id == $player->id;
+            });
+            if (count($foundPlayers) === 0) {
+                continue;
+            }
+            $person = $this->personHelper->convertDataToPerson($eventData->substitute);
+            $foundSubs = $againstGamePlace->getParticipations()->filter(
+                function (GameParticipation $gameParticipation) use ($person): bool {
+                    return $gameParticipation->getPlayer()->getPerson()->getId() == $person->getId();
+                }
+            );
+            if (count($foundSubs) > 0) {
+                continue;
+            }
+            $this->createGameParticipation($againstGamePlace, $teamCompetitor, $eventData->substitute);
         }
     }
 
