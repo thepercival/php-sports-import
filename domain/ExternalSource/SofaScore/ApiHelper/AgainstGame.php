@@ -7,14 +7,17 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Sports\Game\State as GameState;
+use SportsHelpers\Against\Side;
 use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as EventsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as LineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRoundData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameScoreData;
+use SportsImport\ExternalSource\SofaScore\Data\Player;
 use stdClass;
 
 class AgainstGame extends ApiHelper
@@ -48,6 +51,36 @@ class AgainstGame extends ApiHelper
         if ($againstGameData->state === GameState::Finished) {
             $againstGameData->players = $this->lineupApiHelper->getPlayers($againstGameData->id, $resetCache);
             $againstGameData->events = $this->eventApiHelper->getEvents($againstGameData->id, $resetCache);
+            $this->addPlayersFromEvents($againstGameData);
+        }
+    }
+
+    protected function addPlayersFromEvents(AgainstGameData $againstGameData) : void {
+        foreach([Side::Home, Side::Away] as $side) {
+            $playersGameData = $againstGameData->getPlayers($side);
+            if( $playersGameData === null) {
+                continue;
+            }
+            $players = $playersGameData->players;
+
+            foreach( $againstGameData->events as $event ) {
+                if( !($event instanceof Substitution)) {
+                    continue;
+                }
+                $foundPlayers = array_filter($players, function (Player $player) use ($event): bool {
+                    return $event->player->id == $player->id;
+                });
+                if (count($foundPlayers) === 0) {
+                    continue;
+                }
+                $foundSubs = array_filter($players, function (Player $player) use ($event): bool {
+                    return $event->substitute->id == $player->id;
+                });
+                if (count($foundSubs) > 0) {
+                    continue;
+                }
+                $players[] = $event->substitute;
+            }
         }
     }
 

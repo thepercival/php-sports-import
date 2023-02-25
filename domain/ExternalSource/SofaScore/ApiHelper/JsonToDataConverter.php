@@ -98,13 +98,13 @@ class JsonToDataConverter
             return null;
         }
         if (!property_exists($apiDataRow, 'slug')) {
-            $this->logger->error('could not find stdClass-property "slug"');
+            $this->logger->error('could not find stdClass-property ('.(string)$apiDataRow->id.') "slug"');
             // throw new \Exception('could not find stdClass-property "slug"', E_ERROR);
             return null;
         }
         if (!property_exists($apiDataRow, 'position')) {
             // throw new \Exception('could not find stdClass-property "position"', E_ERROR);
-            $this->logger->error('could not find stdClass-property "position"');
+            $this->logger->error('could not find stdClass-property ('.(string)$apiDataRow->slug.') "position"');
             return null;
         }
 
