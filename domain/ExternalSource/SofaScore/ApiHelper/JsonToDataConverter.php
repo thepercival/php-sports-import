@@ -93,18 +93,18 @@ class JsonToDataConverter
     public function convertPlayerJsonToData(stdClass $apiDataRow, stdClass|null $apiDataStatistics): PlayerData|null
     {
         if (!property_exists($apiDataRow, 'id')) {
-            $this->logger->error('could not find stdClass-property "id"');
+            $this->logger->warning('could not find stdClass-property "id"');
             // throw new \Exception('could not find stdClass-property "id"', E_ERROR);
             return null;
         }
         if (!property_exists($apiDataRow, 'slug')) {
-            $this->logger->error('could not find stdClass-property ('.(string)$apiDataRow->id.') "slug"');
+            $this->logger->warning('could not find stdClass-property ('.(string)$apiDataRow->id.') "slug"');
             // throw new \Exception('could not find stdClass-property "slug"', E_ERROR);
             return null;
         }
         if (!property_exists($apiDataRow, 'position')) {
             // throw new \Exception('could not find stdClass-property "position"', E_ERROR);
-            $this->logger->error('could not find stdClass-property ('.(string)$apiDataRow->slug.') "position"');
+            $this->logger->warning('could not find stdClass-property ('.(string)$apiDataRow->slug.') "position"');
             return null;
         }
 

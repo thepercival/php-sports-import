@@ -59,7 +59,7 @@ class AgainstGameLineups extends ApiHelper
         /** @var list<stdClass> $playersApiData */
         $playersApiData = $apiPlayers->players;
 
-        $players = array_map(function (stdClass $playerApiData): PlayerData {
+        $players = array_map(function (stdClass $playerApiData): PlayerData|null {
             if (!property_exists($playerApiData, "player")) {
                 throw new \Exception('player-apidata does not contain property player', E_ERROR);
             }
@@ -71,12 +71,12 @@ class AgainstGameLineups extends ApiHelper
                 /** @var stdClass $statistics */
                 $statistics = $playerApiData->statistics;
             }
-            $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($playerApiDataRow, $statistics);
-            if ($playerData === null) {
-                throw new \Exception('player should not be null', E_ERROR);
-            }
-            return $playerData;
+            return $this->jsonToDataConverter->convertPlayerJsonToData($playerApiDataRow, $statistics);
         }, $playersApiData);
+
+        $players = array_values( array_filter($players, function (PlayerData|null $playerApiData): bool {
+            return $playerApiData !== null;
+        }));
 
         return new AgainstGameSidePlayersData($againstSide, $players);
     }
