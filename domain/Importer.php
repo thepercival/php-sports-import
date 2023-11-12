@@ -515,9 +515,9 @@ class Importer
             return;
         }
 
-        $teams = $competition->getTeamCompetitors()->map(function (TeamCompetitorBase $teamCompetitor): TeamBase {
+        $teams = array_map(function (TeamCompetitorBase $teamCompetitor): TeamBase {
             return $teamCompetitor->getTeam();
-        });
+        }, $competition->getTeamCompetitors()->toArray() );
         foreach ($teams as $team) {
             if ($teamFilter !== null && $teamFilter !== $team) {
                 continue;

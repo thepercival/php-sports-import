@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Structure as StructureBase;
 use Sports\Structure\Editor as StructureEditor;
-use Sports\Competition\Sport\Service as CompetitionSportService;
+use Sports\Competition\Sport\Editor as CompetitionSportEditor;
 use Sports\Planning\Config\Service as PlanningConfigService;
 use stdClass;
 
@@ -30,7 +30,7 @@ class Structure extends SofaScoreHelper
     ) {
         parent::__construct($parent, $logger);
         $this->structureEditor = new StructureEditor(
-            new CompetitionSportService(),
+            new CompetitionSportEditor(),
             new PlanningConfigService()
         );
     }
