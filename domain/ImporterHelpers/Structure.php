@@ -2,13 +2,10 @@
 
 namespace SportsImport\ImporterHelpers;
 
-use Exception;
-use SportsImport\Attacher;
 use Sports\Structure\Repository as StructureRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\ExternalSource;
 use Sports\Structure as StructureBase;
-use Sports\Competition;
 use Sports\Structure\Copier as StructureCopier;
 use Psr\Log\LoggerInterface;
 
@@ -20,7 +17,6 @@ class Structure
         private CompetitionAttacherRepository $competitionAttacherRepos,
         private LoggerInterface $logger
     ) {
-        $this->structureCopier->setSportMappingPropertyToName();
     }
 
     public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure): ?StructureBase

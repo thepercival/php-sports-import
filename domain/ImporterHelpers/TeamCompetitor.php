@@ -92,8 +92,9 @@ class TeamCompetitor
             ),
             $team,
         );
-        $teamCompetitor->setRegistered($externalSourceTeamCompetitor->getRegistered());
-        $teamCompetitor->setInfo($externalSourceTeamCompetitor->getInfo());
+        $teamCompetitor->setPresent($externalSourceTeamCompetitor->getPresent());
+        $teamCompetitor->setPublicInfo($externalSourceTeamCompetitor->getPublicInfo());
+        $teamCompetitor->setPrivateInfo($externalSourceTeamCompetitor->getPrivateInfo());
 
         $this->teamCompetitorRepos->save($teamCompetitor);
         return $teamCompetitor;
@@ -101,8 +102,9 @@ class TeamCompetitor
 
     protected function editTeamCompetitor(TeamCompetitorBase $teamCompetitor, TeamCompetitorBase $externalSourceTeamCompetitor): void
     {
-        $teamCompetitor->setRegistered($externalSourceTeamCompetitor->getRegistered());
-        $teamCompetitor->setInfo($externalSourceTeamCompetitor->getInfo());
+        $teamCompetitor->setPresent($externalSourceTeamCompetitor->getPresent());
+        $teamCompetitor->setPublicInfo($externalSourceTeamCompetitor->getPublicInfo());
+        $teamCompetitor->setPrivateInfo($externalSourceTeamCompetitor->getPrivateInfo());
         $this->teamCompetitorRepos->save($teamCompetitor);
     }
 }

@@ -58,6 +58,24 @@ abstract class ApiHelper
             $curlOptions[CURLOPT_PROXY] = $proxyOptions["username"] . ":" . $proxyOptions["password"]
                 . "@" . $proxyOptions["host"] . ":" . $proxyOptions["port"];
         }
+
+//        :authority:        api.sofascore.com
+//:method:HEAD
+//:path:/api/v1/event/11388466/odds/1/all
+//:scheme:https
+//Accept:*/*
+//    Accept-Encoding: gzip, deflate, br
+//Accept-Language: nl,en;q=0.9,en-GB;q=0.8,en-US;q=0.7
+//Origin: https://www.sofascore.com
+//Referer: https://www.sofascore.com/
+//Sec-Ch-Ua: "Chromium";v="122", "Not(A:Brand";v="24", "Microsoft Edge";v="122"
+//Sec-Ch-Ua-Mobile: ?0
+//Sec-Ch-Ua-Platform: "Linux"
+//Sec-Fetch-Dest: empty
+//Sec-Fetch-Mode: cors
+//Sec-Fetch-Site: same-site
+//User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0
+
         return [
             'curl' => $curlOptions,
             'headers' => [/*"User:agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"*/]
