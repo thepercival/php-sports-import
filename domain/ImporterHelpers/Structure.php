@@ -2,6 +2,10 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Sports\Competition\Sport\FromToMapper as CompetitionSportFromToMapper;
+use Sports\Competition\Sport\FromToMapStrategy;
+use Sports\Poule\Horizontal\Creator as HorizontalPouleCreator;
+use Sports\Qualify\Rule\Creator as QualifyRuleCreator;
 use Sports\Structure\Repository as StructureRepository;
 use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
 use SportsImport\ExternalSource;
@@ -12,7 +16,6 @@ use Psr\Log\LoggerInterface;
 class Structure
 {
     public function __construct(
-        private StructureCopier $structureCopier,
         private StructureRepository $structureRepos,
         private CompetitionAttacherRepository $competitionAttacherRepos,
         private LoggerInterface $logger
@@ -29,22 +32,32 @@ class Structure
         if ($competitionAttacher === null) {
             return null;
         }
-        $competition = $competitionAttacher->getImportable();
+        $toCompetition = $competitionAttacher->getImportable();
 
-        $hasStructure = $this->structureRepos->hasStructure($competition);
+        $structureCopier = new StructureCopier(
+            new HorizontalPouleCreator(),
+            new QualifyRuleCreator(),
+            new CompetitionSportFromToMapper (
+                array_values($externalSourceStructure->getFirstRoundNumber()->getCompetition()->getSports()->toArray()),
+                array_values($toCompetition->getSports()->toArray()),
+                FromToMapStrategy::ByProperties
+            )
+        );
+
+        $hasStructure = $this->structureRepos->hasStructure($toCompetition);
         if ($hasStructure === false) {
-            $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
+            $newStructure = $structureCopier->copy($externalSourceStructure, $toCompetition);
             $this->structureRepos->add($newStructure);
             $this->logger->info("structure added for external competition " . $externalCompetition->getName());
             return $newStructure;
         }
 
         // is needed for initialization
-        $this->structureRepos->getStructure($competition);
+        $this->structureRepos->getStructure($toCompetition);
 
-        $newStructure = $this->structureCopier->copy($externalSourceStructure, $competition);
+        $newStructure = $structureCopier->copy($externalSourceStructure, $toCompetition);
 
-        $this->structureRepos->remove($competition);
+        $this->structureRepos->remove($toCompetition);
         $this->structureRepos->add($newStructure);
 
         $this->logger->info("structure updated for external competition " . $externalCompetition->getName());
