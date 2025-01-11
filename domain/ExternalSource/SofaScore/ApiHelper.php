@@ -230,7 +230,10 @@ abstract class ApiHelper
             return GameState::Canceled;
         } elseif ($state === 70) { // canceled
             return GameState::Canceled;
-        } elseif ($state === 100) { // finished
+        } elseif ($state === 90) { // abandoned
+            return GameState::Canceled;
+        }
+        elseif ($state === 100) { // finished
             return GameState::Finished;
         }
         throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
