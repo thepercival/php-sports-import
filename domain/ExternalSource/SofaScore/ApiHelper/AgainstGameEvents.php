@@ -141,10 +141,10 @@ class AgainstGameEvents extends ApiHelper
         return new GoalEventData($player, (int)$apiDataRow->time, $penalty, $own, $assist);
     }
 
-    protected function createSubstitution(stdClass $apiDataRow): SubstitutionEventData
+    protected function createSubstitution(stdClass $apiDataRow): SubstitutionEventData|null
     {
-        if ($apiDataRow->playerOut === null || $apiDataRow->playerIn === null) {
-            throw new \Exception('substitution should have a playerIn and a playerOut', E_ERROR);
+        if ($apiDataRow->playerOut === null || $apiDataRow->playerIn === null ) {
+            return null;
         }
         /** @var stdClass $playerOutApiData */
         $playerOutApiData = $apiDataRow->playerOut;
