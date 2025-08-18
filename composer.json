@@ -22,7 +22,7 @@
     "symfony/yaml": "^6.0",
     "monolog/monolog": "^2.0",
     "guzzlehttp/guzzle": "^7.3",
-    "thepercival/php-sports-helpers": "^1.0",
+    "thepercival/php-sports-helpers": "1.2.57",
     "thepercival/php-sports": "^1.0",
     "ext-curl": "*",
     "ext-json": "*",

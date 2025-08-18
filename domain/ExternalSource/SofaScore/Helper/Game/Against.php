@@ -373,6 +373,7 @@ class Against extends SofaScoreHelper
 //        }
 
         $teamPlayer = new TeamPlayer($teamCompetitor->getTeam(), $person, $period, $playerData->line->value);
+        $teamPlayer->setMarketValue($playerData->marketValue);
 
         $beginMinute = $playerData->nrOfMinutesPlayed === 0 ? -1 : 0;
         return new GameParticipation($againstGamePlace, $teamPlayer, $beginMinute);

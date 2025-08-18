@@ -53,7 +53,8 @@ class Person
                     $person,
                     $externalGame->getStartDateTime(),
                     $externalParticipation->getPlayer()->getTeam(),
-                    $externalParticipation->getPlayer()->getLine()
+                    $externalParticipation->getPlayer()->getLine(),
+                    $externalParticipation->getPlayer()->getMarketValue(),
                 );
             }
         }
@@ -108,7 +109,8 @@ class Person
         PersonBase $person,
         \DateTimeImmutable $gameDateTime,
         Team $externalTeam,
-        int $line
+        int $line,
+        int $marketValue
     ): void {
         $externalTeamId = (string)$externalTeam->getId();
         $teamAttacher = $this->teamAttacherRepos->findOneByExternalId(
@@ -122,6 +124,6 @@ class Person
         $newLine = FootballLine::from($line);
 
         $roleEditor = new RoleEditor($this->logger);
-        $roleEditor->update($season, $person, $gameDateTime, $newTeam, $newLine);
+        $roleEditor->update($season, $person, $gameDateTime, $newTeam, $newLine, $marketValue);
     }
 }

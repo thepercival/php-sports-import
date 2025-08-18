@@ -79,7 +79,8 @@ class Transfers
                     $person,
                     $externalTransfer->getDateTime(),
                     $teamTo,
-                    $externalTransfer->getToLine()
+                    $externalTransfer->getToLine(),
+                    0
                 );
             } elseif ($teamFrom !== null) {
                 $roleEditor->stop($competition->getSeason(), $person, $externalTransfer->getDateTime());

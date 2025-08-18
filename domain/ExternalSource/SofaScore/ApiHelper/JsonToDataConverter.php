@@ -86,6 +86,7 @@ class JsonToDataConverter
      *      "userCount":209,
      *      "id":556696,
      *      "marketValueCurrency":"\u20ac",
+     *      "proposedMarketValueRaw": { "value": 1100000, "currency": "EUR" }
      *      "dateOfBirthTimestamp":885427200
      * }
      * @throws \Exception
@@ -102,6 +103,15 @@ class JsonToDataConverter
             // throw new \Exception('could not find stdClass-property "slug"', E_ERROR);
             return null;
         }
+        // addMissingPositionToPlayer
+        if (!property_exists($apiDataRow, 'position') ) {
+            if( $apiDataRow->slug === 'caner-demircioglu') {
+                $apiDataRow->position = 'F'; // G D M F
+            } else if( $apiDataRow->slug === 'coen-dunnink') {
+                $apiDataRow->position = 'M'; // G D M F
+            }
+        }
+
         if (!property_exists($apiDataRow, 'position')) {
             // throw new \Exception('could not find stdClass-property "position"', E_ERROR);
             $this->logger->warning('could not find stdClass-property ('.(string)$apiDataRow->slug.') "position"');
@@ -116,9 +126,17 @@ class JsonToDataConverter
             $dateOfBirth = new DateTimeImmutable("@" . $dateOfBirthTimestamp);
         }
 
+        $marketValue = 0;
+        if (property_exists($apiDataRow, "proposedMarketValueRaw")) {
+            $proposedMarketValueRaw = (object)$apiDataRow->proposedMarketValueRaw;
+            if (property_exists($proposedMarketValueRaw, "value")) {
+                $marketValue = (int)$proposedMarketValueRaw->value;
+            }
+        }
+
         $line = $this->convertLine((string)$apiDataRow->position);
 
-        $playerData = new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth);
+        $playerData = new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth, $marketValue);
         if ($apiDataStatistics !== null) {
             if (property_exists($apiDataStatistics, "minutesPlayed")) {
                 /** @var string|int $minutesPlayed */

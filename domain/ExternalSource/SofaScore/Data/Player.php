@@ -16,6 +16,7 @@ class Player
         public string $name,
         public FootballLine $line,
         public DateTimeImmutable|null $dateOfBirth = null,
+        public int $marketValue = 0
     ) {
     }
 }
