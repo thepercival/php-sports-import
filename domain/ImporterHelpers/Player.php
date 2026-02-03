@@ -7,11 +7,11 @@ namespace SportsImport\ImporterHelpers;
 use Sports\Person as PersonBase;
 use Sports\Person\Repository as PersonRepository;
 use Sports\Team\Player as TeamPlayer;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use SportsImport\Attachers\Person\AttacherRepository as PersonAttacherRepository;
+use SportsImport\Attachers\Team\AttacherRepository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
 
-class Player
+final class Player
 {
     public function __construct(
         protected PersonRepository $personRepos,

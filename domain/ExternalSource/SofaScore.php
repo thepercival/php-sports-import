@@ -16,7 +16,6 @@ use Sports\Season;
 use Sports\Sport;
 use Sports\Structure;
 use Sports\Team;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource;
 use SportsImport\ExternalSource as ExternalSourceBase;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
@@ -45,9 +44,10 @@ use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Transfer as TransferHelper;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use SportsImport\Transfer;
 
-class SofaScore implements
+final class SofaScore implements
     Implementation,
     Competitions,
     CompetitionStructure,
@@ -55,7 +55,7 @@ class SofaScore implements
     Transfers,
     Proxy
 {
-    public const NAME = 'SofaScore';
+    public const string NAME = 'SofaScore';
     /**
      * @var array<string, string>|null
      */
@@ -74,7 +74,7 @@ class SofaScore implements
     protected SofaScore\Helper\Competitor\Team $teamCompetitorHelper;
     protected SofaScore\Helper\Game\Against $againstGameHelper;
     protected SofaScore\Helper\Player $playerHelper;
-    // protected SofaScore\Helper\Team\Role $teamRoleHelper;
+    // protected SofaScore\Helper\TeamCompetitorAttacher\Role $teamRoleHelper;
 
     // protected TransfersApiHelper $transfersApiHelper;
 
@@ -172,6 +172,7 @@ class SofaScore implements
          );*/
     }
 
+    #[\Override]
     public function getExternalSource(): ExternalSource
     {
         return $this->externalSource;
@@ -180,11 +181,13 @@ class SofaScore implements
     /**
      * @return array<int|string, Sport>
      */
+    #[\Override]
     public function getSports(): array
     {
         return $this->sportHelper->getSports();
     }
 
+    #[\Override]
     public function getSport(string|int $id): Sport|null
     {
         return $this->sportHelper->getSport($id);
@@ -193,11 +196,13 @@ class SofaScore implements
     /**
      * @return array<int|string, Association>
      */
+    #[\Override]
     public function getAssociations(Sport $sport): array
     {
         return $this->associationHelper->getAssociations($sport);
     }
 
+    #[\Override]
     public function getAssociation(Sport $sport, string|int $id): Association|null
     {
         return $this->associationHelper->getAssociation($sport, $id);
@@ -206,11 +211,13 @@ class SofaScore implements
     /**
      * @return array<int|string, Season>
      */
+    #[\Override]
     public function getSeasons(): array
     {
         return $this->seasonHelper->getSeasons();
     }
 
+    #[\Override]
     public function getSeason(string|int $id): ?Season
     {
         return $this->seasonHelper->getSeason($id);
@@ -220,11 +227,13 @@ class SofaScore implements
      * @param Association $association
      * @return array<int|string, League>
      */
+    #[\Override]
     public function getLeagues(Association $association): array
     {
         return $this->leagueHelper->getLeagues($association);
     }
 
+    #[\Override]
     public function getLeague(Association $association, string|int $id): League|null
     {
         return $this->leagueHelper->getLeague($association, $id);
@@ -235,6 +244,7 @@ class SofaScore implements
      * @param League $league
      * @return array<int|string, CompetitionBase>
      */
+    #[\Override]
     public function getCompetitions(Sport $sport, League $league): array
     {
         return $this->competitionHelper->getCompetitions($sport, $league);
@@ -246,6 +256,7 @@ class SofaScore implements
      * @param Season $season
      * @return CompetitionBase|null
      */
+    #[\Override]
     public function getCompetition(Sport $sport, League $league, Season $season): ?CompetitionBase
     {
         return $this->competitionHelper->getCompetition($sport, $league, $season);
@@ -254,16 +265,19 @@ class SofaScore implements
     /**
      * @return list<Team>
      */
+    #[\Override]
     public function getTeams(Competition $competition): array
     {
         return $this->teamHelper->getTeams($competition);
     }
 
+    #[\Override]
     public function getTeam(Competition $competition, string|int $id): Team|null
     {
         return $this->teamHelper->getTeam($competition, $id);
     }
 
+    #[\Override]
     public function getImageTeam(string $teamExternalId): string
     {
         return $this->teamHelper->getImageTeam($teamExternalId);
@@ -272,16 +286,19 @@ class SofaScore implements
     /**
      * @return list<TeamCompetitor>
      */
+    #[\Override]
     public function getTeamCompetitors(Competition $competition): array
     {
         return $this->teamCompetitorHelper->getTeamCompetitors($competition);
     }
 
+    #[\Override]
     public function getTeamCompetitor(Competition $competition, string|int $id): ?TeamCompetitor
     {
         return $this->teamCompetitorHelper->getTeamCompetitor($competition, $id);
     }
 
+    #[\Override]
     public function getStructure(Competition $competition): Structure
     {
         return $this->structureHelper->getStructure($competition);
@@ -291,6 +308,7 @@ class SofaScore implements
      * @param Competition $competition
      * @return list<int>
      */
+    #[\Override]
     public function getGameRoundNumbers(Competition $competition): array
     {
         return $this->gameRoundsHelper->getGameRoundNumbers($competition);
@@ -302,6 +320,7 @@ class SofaScore implements
      * @return array<int|string, AgainstGame>
      * @throws \Exception
      */
+    #[\Override]
     public function getAgainstGamesBasics(Competition $competition, int $gameRoundNumber): array
     {
         return $this->againstGameHelper->getAgainstGameBasics($competition, $gameRoundNumber);
@@ -314,30 +333,32 @@ class SofaScore implements
      * @return array<int|string, AgainstGame>
      * @throws \Exception
      */
+    #[\Override]
     public function getAgainstGamesComplete(Competition $competition, int $gameRoundNumber, bool $resetCache): array
     {
         return $this->againstGameHelper->getAgainstGamesComplete($competition, $gameRoundNumber, $resetCache);
     }
 
+    #[\Override]
     public function getAgainstGame(Competition $competition, string|int $id, bool $resetCache): AgainstGame|null
     {
         return $this->againstGameHelper->getAgainstGame($competition, $id, $resetCache);
     }
 
-//    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole): TeamRole {
+//    public function convertToTeamRole( Game $game, TeamCompetitorAttacher $team, stdClass $externalTeamRole): TeamRole {
 //        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
 //    }
 
-    public function getPerson(AgainstGame $againstGame, string|int $id): Person|null
+    public function getPerson(string|int $id): Person|null
     {
-        return $this->personHelper->getPerson($againstGame, $id);
+        return $this->personHelper->getPerson($id);
     }
 
 //    /**
 //     * @param CompetitionBase $competition
 //     * @return list<TransferData>
 //     */
-//    public function getTransfers(Competition $competition): array
+//    public function getTransfers(CompetitionAttacher $competition): array
 //    {
 //        return $this->tra->getPerson($againstGame, $id);
 //    }
@@ -347,6 +368,7 @@ class SofaScore implements
 //        return $this->personHelper->convertToPerson($externalPerson);
 //    }
 
+    #[\Override]
     public function getImagePlayer(string $personExternalId): string
     {
         return $this->playerHelper->getImagePlayer($personExternalId);
@@ -357,6 +379,7 @@ class SofaScore implements
      * @param Team $team
      * @return list<Transfer>
      */
+    #[\Override]
     public function getTransfers(Competition $competition, Team $team): array
     {
         return $this->transferHelper->getTransfers($team);
@@ -410,6 +433,7 @@ class SofaScore implements
     /**
      * @param array<string, string> $options
      */
+    #[\Override]
     public function setProxy(array $options): void
     {
         $this->proxyOptions["username"] = $options["username"];

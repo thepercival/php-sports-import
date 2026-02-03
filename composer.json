@@ -7,37 +7,36 @@
   "authors": [
     {
       "name": "Coen Dunnink",
-      "email": "coendunnink@gmail.com"
+      "email": "cdkdev@pm.me"
     }
   ],
   "support": {
-	"email": "coendunnink@gmail.com"
+	"email": "cdkdev@pm.me"
   },
   "require": {
-    "php": ">=8.2",
-    "vlucas/phpdotenv": "^v5.1",
-    "league/period": "^4.9",
-    "doctrine/orm": "^2.10",
-    "jms/serializer": "^3.4",
-    "symfony/yaml": "^6.0",
-    "monolog/monolog": "^2.0",
-    "guzzlehttp/guzzle": "^7.3",
-    "thepercival/php-sports-helpers": "1.2.57",
-    "thepercival/php-sports": "^1.0",
-    "ext-curl": "*",
+    "php": ">=8.4",
     "ext-json": "*",
-    "ext-gd": "*"
+    "ext-curl": "*",
+    "ext-gd": "*",
+    "vlucas/phpdotenv": "^v5.1",
+    "league/period": "^5.0",
+    "doctrine/orm": "^3.0",
+    "monolog/monolog": "^3.0",
+    "jms/serializer": "^3.0",
+    "thepercival/php-sports-helpers": "^1.0",
+    "thepercival/php-sports": "^1.0",
+    "guzzlehttp/guzzle": "^7.3"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.5",
-    "phpstan/phpstan": "^1.2",
-    "phpstan/phpstan-doctrine": "^1.0",
+    "phpunit/phpunit": "^12.0",
+    "phpstan/phpstan": "^2.0",
+    "phpstan/phpstan-doctrine": "^2.0",
     "phpstan/extension-installer": "^1.0",
-    "phpstan/phpstan-phpunit": "^1.0",
-    "phpstan/phpstan-strict-rules": "^1.1",
-    "friendsofphp/php-cs-fixer": "^3.2",
-    "vimeo/psalm": "^4.15",
-    "psalm/plugin-phpunit": "^0.16",
+    "phpstan/phpstan-phpunit": "^2.0",
+    "phpstan/phpstan-strict-rules": "^2.0",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "vimeo/psalm": "^6.0",
+    "psalm/plugin-phpunit": "^0.19",
     "weirdan/doctrine-psalm-plugin": "^2.0"
   },
   "autoload": {

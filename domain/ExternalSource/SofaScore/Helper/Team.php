@@ -18,7 +18,7 @@ use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
 /**
  * @template-extends SofaScoreHelper<TeamBase>
  */
-class Team extends SofaScoreHelper
+final class Team extends SofaScoreHelper
 {
     public function __construct(
         protected PersonHelper $personHelper,

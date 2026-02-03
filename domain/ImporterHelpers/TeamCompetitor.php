@@ -4,27 +4,43 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Exception;
-use Sports\Competitor\StartLocation;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use SportsImport\ExternalSource;
-use Sports\Competitor\Team\Repository as TeamCompetitorRepository;
-use SportsImport\Attacher\Competitor\Team\Repository as TeamCompetitorAttacherRepository;
-use Sports\Competitor as CompetitorBase;
-use SportsImport\Attacher\Competitor\Team as TeamCompetitorAttacher;
 use Psr\Log\LoggerInterface;
+use Sports\Competitor\StartLocation;
 use Sports\Competitor\Team as TeamCompetitorBase;
+use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
+use SportsImport\Attachers\TeamAttacher as TeamAttacher;
+use SportsImport\Attachers\TeamCompetitorAttacher as TeamCompetitorAttacher;
+use SportsImport\ExternalSource;
 
-class TeamCompetitor
+final class TeamCompetitor
 {
+    // TeamCompetitor
+    protected EntityRepository $teamCompetitorRepos;
+    // TeamCompetitorAttacher
+    protected EntityRepository $teamCompetitorAttacherRepos;
+    // CompetitionAttacherRepository
+    protected EntityRepository $competitionAttacherRepos;
+    // TeamAttacherRepository
+    protected EntityRepository $teamAttacherRepos;
+
     public function __construct(
-        protected TeamCompetitorRepository $teamCompetitorRepos,
-        protected TeamCompetitorAttacherRepository $teamCompetitorAttacherRepos,
-        protected CompetitionAttacherRepository $competitionAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        EntityManagerInterface $entityManager,
     ) {
+        $metadata = $entityManager->getClassMetadata(TeamCompetitor::class);
+        $this->teamCompetitorRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(TeamCompetitorAttacher::class);
+        $this->teamCompetitorAttacherRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(CompetitionAttacher::class);
+        $this->competitionAttacherRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
     }
 
     /**

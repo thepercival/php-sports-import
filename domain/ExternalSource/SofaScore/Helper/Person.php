@@ -16,7 +16,7 @@ use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 /**
  * @template-extends SofaScoreHelper<PersonBase>
  */
-class Person extends SofaScoreHelper
+final class Person extends SofaScoreHelper
 {
     public function __construct(
         protected PlayerApiHelper $apiHelper,
@@ -26,7 +26,7 @@ class Person extends SofaScoreHelper
         parent::__construct($parent, $logger);
     }
 
-    public function getPerson(Game $game, string|int $id): PersonBase|null
+    public function getPerson(string|int $id): PersonBase|null
     {
         if (array_key_exists($id, $this->cache)) {
             return $this->cache[$id];

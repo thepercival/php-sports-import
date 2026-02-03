@@ -4,29 +4,37 @@ declare(strict_types=1);
 
 namespace SportsImport;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sports\Association;
 use Sports\Competition;
-use Sports\Competition\Repository as CompetitionRepository;
+use Sports\Repositories\CompetitionRepository;
+use Sports\Repositories\AgainstGameRepository;
 use Sports\Game\Against as AgainstGame;
-use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\League;
 use Sports\Season;
 use Sports\Sport;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource\GamesAndPlayers;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
+use SportsImport\Attachers\SportAttacher as SportAttacher;
+use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
+use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
+use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
+use SportsImport\Repositories\AttacherRepository;
 
-class Getter
+final class Getter
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
+
+    /** @var AttacherRepository<SportAttacher>  */
+    protected AttacherRepository $sportAttacherRepos;
+    /** @var AttacherRepository<SeasonAttacher>  */
+    protected AttacherRepository $seasonAttacherRepos;
+    /** @var AttacherRepository<LeagueAttacher>  */
+    protected AttacherRepository $leagueAttacherRepos;
+    /** @var AttacherRepository<AssociationAttacher>  */
+    protected AttacherRepository $associationAttacherRepos;
 
     public function __construct(
         protected ImporterHelpers\Sport $sportImportService,
@@ -39,18 +47,22 @@ class Getter
         protected ImporterHelpers\Structure $structureImportService,
         protected ImporterHelpers\Game\Against $againstGameImportService,
         protected ImporterHelpers\Person $personImportService,
-        protected SportAttacherRepository $sportAttacherRepos,
-        protected AssociationAttacherRepository $associationAttacherRepos,
-        protected LeagueAttacherRepository $leagueAttacherRepos,
-        protected SeasonAttacherRepository $seasonAttacherRepos,
-        protected CompetitionAttacherRepository $competitionAttacherRepos,
-        protected AgainstGameAttacherRepository $againstGameAttacherRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
         protected CompetitionRepository $competitionRepos,
         protected AgainstGameRepository $againstGameRepos,
+        protected EntityManagerInterface $entityManager,
         protected LoggerInterface $logger
     ) {
+        $metaData = $entityManager->getClassMetadata(SportAttacher::class);
+        $this->sportAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(SeasonAttacher::class);
+        $this->seasonAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(AssociationAttacher::class);
+        $this->associationAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(LeagueAttacher::class);
+        $this->leagueAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
     public function setEventSender(ImportGameEvents $importGameEventsSender): void
@@ -63,11 +75,12 @@ class Getter
         ExternalSource $externalSource,
         Sport $sport
     ): Sport {
+
         $sportAttacher = $this->sportAttacherRepos->findOneByImportable(
             $externalSource,
             $sport
         );
-        if ($sportAttacher === null) {
+        if (!($sportAttacher instanceof SportAttacher)) {
             throw new \Exception('for external source "' . $externalSource->getName() .'" and sport "' . $sport->getName() . '" there is no externalId', E_ERROR);
         }
         $externalSport = $externalSourceCompetitions->getSport($sportAttacher->getExternalId());

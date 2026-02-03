@@ -6,16 +6,16 @@ use Sports\Competition\Service as CompetitionService;
 use SportsHelpers\Sport\PersistVariant;
 use SportsImport\ExternalSource;
 use Sports\Competition\Repository as CompetitionRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
+use SportsImport\Attachers\Competition\AttacherRepository as CompetitionAttacherRepository;
+use SportsImport\Attachers\League\AttacherRepository as LeagueAttacherRepository;
+use SportsImport\Attachers\Season\AttacherRepository as SeasonAttacherRepository;
+use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
 use Sports\Competition as CompetitionBase;
 use Sports\Competition\Sport as CompetitionSport;
-use SportsImport\Attacher\Competition as CompetitionAttacher;
+use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
 use Psr\Log\LoggerInterface;
 
-class Competition
+final class Competition
 {
     public function __construct(
         protected CompetitionRepository $competitionRepos,
@@ -112,9 +112,9 @@ class Competition
         return $competition;
     }
 
-    protected function editCompetition(CompetitionBase $competition, CompetitionBase $externalSourceCompetition): void
-    {
-        // $competition->setName($externalSourceCompetition->getName());
-        // $this->competitionRepos->save($competition);
-    }
+//    protected function editCompetition(CompetitionBase $competition, CompetitionBase $externalSourceCompetition): void
+//    {
+//        // $competition->setName($externalSourceCompetition->getName());
+//        // $this->competitionRepos->save($competition);
+//    }
 }

@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 use DateTimeImmutable;
 use Sports\Sport\FootballLine;
 
-class Player
+final class Player
 {
     public int $nrOfMinutesPlayed = 0;
 

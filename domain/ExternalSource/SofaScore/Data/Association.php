@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 /**
  * {"name":"England","slug":"england","priority":10,"id":1,"flag":"england"}
  */
-class Association
+final class Association
 {
     public function __construct(
         public string $id,

@@ -6,7 +6,10 @@ use Sports\Person as PersonBase;
 use Sports\Season;
 use SportsImport\Event\Action\Person as PersonAction;
 
-class Person
+/**
+ * @api
+ */
+final class Person
 {
     public function __construct(
         protected PersonAction $action,

@@ -12,9 +12,10 @@ use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 
 /**
+ * @api
  * @template-extends SofaScoreHelper<TeamRole>
  */
-class Role extends SofaScoreHelper
+final class Role extends SofaScoreHelper
 {
     protected StartLocationMap|null $placeLocationMap = null;
 
@@ -23,7 +24,7 @@ class Role extends SofaScoreHelper
 //     * @param Game $game
 //     * @return array|TeamRole[]
 //     */
-//    public function getTeamRoles( Game $game, Team $team, $externalTeamRoles ): array
+//    public function getTeamRoles( Game $game, TeamCompetitorAttacher $team, $externalTeamRoles ): array
 //    {
 //        $teamRoles = [];
 //        $externalTeamRoles = $game->getTeamRoles();
@@ -49,7 +50,7 @@ class Role extends SofaScoreHelper
 //    }
 
 
-//    public function convertToTeamRole( Game $game, Team $team, stdClass $externalTeamRole ): ?TeamRole {
+//    public function convertToTeamRole( Game $game, TeamCompetitorAttacher $team, stdClass $externalTeamRole ): ?TeamRole {
 //        if( array_key_exists( $externalTeamRole->id, $this->teamRoleCache ) ) {
 //            return $this->teamRoleCache[$externalTeamRole->id];
 //        }

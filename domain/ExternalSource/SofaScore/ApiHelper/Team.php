@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-class Team extends ApiHelper
+final class Team extends ApiHelper
 {
     public function __construct(
         SofaScore $sofaScore,
@@ -97,6 +97,7 @@ class Team extends ApiHelper
         return $this->getTransfersEndPointSuffix($externalTeamId);
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         // case ExternalSource::DATA_TEAM_IMAGE:

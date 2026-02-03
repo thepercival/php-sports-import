@@ -21,7 +21,7 @@ use Sports\Sport;
 /**
  * @template-extends SofaScoreHelper<CompetitionBase>
  */
-class Competition extends SofaScoreHelper
+final class Competition extends SofaScoreHelper
 {
     public function __construct(
         protected CompetitionApiHelper $apiHelper,

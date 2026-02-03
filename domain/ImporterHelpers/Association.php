@@ -5,13 +5,13 @@ namespace SportsImport\ImporterHelpers;
 use Exception;
 use SportsImport\ExternalSource;
 use Sports\Association\Repository as AssociationRepository;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
+use SportsImport\Attachers\Association\AttacherRepository as AssociationAttacherRepository;
 use Sports\Association as AssociationBase;
-use SportsImport\Attacher\Association as AssociationAttacher;
+use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
 
 use Psr\Log\LoggerInterface;
 
-class Association
+final class Association
 {
     public function __construct(
         protected AssociationRepository $associationRepos,

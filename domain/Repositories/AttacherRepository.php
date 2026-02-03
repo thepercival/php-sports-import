@@ -2,27 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher;
+namespace SportsImport\Repositories;
 
 use Doctrine\ORM\EntityRepository;
 use SportsHelpers\Identifiable;
-use SportsHelpers\Repository as BaseRepository;
 use SportsImport\ExternalSource;
 
 /**
- * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, MixedMethodCall
- * @phpstan-ignore-next-line
+ * @api
  * @template T
- * @template I
  * @template-extends EntityRepository<T>
  */
-class Repository extends EntityRepository
+final class AttacherRepository extends EntityRepository
 {
-    /**
-     * @use BaseRepository<T>
-     */
-    use BaseRepository;
-
     /**
      * @param ExternalSource $externalSource
      * @param string $externalId
@@ -74,6 +66,6 @@ class Repository extends EntityRepository
         if ($attacher === null) {
             return null;
         }
-        return $attacher->getExternalId();
+        return $attacher->externalId;
     }
 }

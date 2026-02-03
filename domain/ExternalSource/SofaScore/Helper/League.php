@@ -15,7 +15,7 @@ use Sports\Association;
 /**
  * @template-extends SofaScoreHelper<LeagueBase>
  */
-class League extends SofaScoreHelper
+final class League extends SofaScoreHelper
 {
     public function __construct(
         protected LeagueApiHelper $apiHelper,

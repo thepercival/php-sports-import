@@ -17,7 +17,7 @@ use SportsImport\Transfer as TransferBase;
 /**
  * @template-extends SofaScoreHelper<TransferBase>
  */
-class Transfer extends SofaScoreHelper
+final class Transfer extends SofaScoreHelper
 {
     public function __construct(
         protected PersonHelper $personHelper,

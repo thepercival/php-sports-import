@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
-class AgainstGameLineups
+final class AgainstGameLineups
 {
     public function __construct(
         public AgainstGameSidePlayers $homePlayers,

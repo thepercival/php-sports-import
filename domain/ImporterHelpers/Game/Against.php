@@ -26,17 +26,17 @@ use Sports\Sport;
 use Sports\Structure\Repository as StructureRepository;
 use Sports\Team;
 use Sports\Team\Player;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Game\Against as AgainstGameAttacher;
-use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use SportsImport\Attachers\AgainstGameAttacher as AgainstGameAttacher;
+use SportsImport\Attachers\Competition\AttacherRepository as CompetitionAttacherRepository;
+use SportsImport\Attachers\Game\Against\AttacherRepository as AgainstGameAttacherRepository;
+use SportsImport\Attachers\Person\AttacherRepository as PersonAttacherRepository;
+use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
+use SportsImport\Attachers\Team\AttacherRepository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
 use SportsImport\ImporterHelpers\Person as PersonImporterHelper;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 
-class Against
+final class Against
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
 

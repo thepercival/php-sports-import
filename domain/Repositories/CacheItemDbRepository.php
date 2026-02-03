@@ -2,23 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\CacheItemDb;
+namespace SportsImport\Repositories;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
-use SportsHelpers\Repository as BaseRepository;
 use SportsImport\CacheItemDb;
 
 /**
+ * @api
  * @template-extends EntityRepository<CacheItemDb>
  */
-class Repository extends EntityRepository
+final class CacheItemDbRepository extends EntityRepository
 {
-    /**
-     * @use BaseRepository<CacheItemDb>
-     */
-    use BaseRepository;
-
     public function getItem(string $name): string|null
     {
         $cacheItem = $this->findOneBy(["name" => $name]);

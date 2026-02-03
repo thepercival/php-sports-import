@@ -13,7 +13,7 @@ use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 /**
  * @template-extends SofaScoreHelper<list<int>>
  */
-class RoundNumbers extends SofaScoreHelper
+final class RoundNumbers extends SofaScoreHelper
 {
     public function __construct(
         protected GameRoundNumbersApiHelper $apiHelper,

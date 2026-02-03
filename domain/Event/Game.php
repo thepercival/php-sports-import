@@ -5,7 +5,10 @@ namespace SportsImport\Event;
 use Sports\Game\Against as AgainstGame;
 use SportsImport\Event\Action\Game as GameAction;
 
-class Game
+/**
+ * @api
+ */
+final class Game
 {
     public function __construct(
         protected GameAction $action,

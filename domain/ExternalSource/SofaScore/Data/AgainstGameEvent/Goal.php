@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as Base;
 use SportsImport\ExternalSource\SofaScore\Data\Player;
 
-class Goal extends Base
+final class Goal extends Base
 {
     public function __construct(
         Player $player,

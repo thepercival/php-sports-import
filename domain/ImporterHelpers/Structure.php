@@ -2,24 +2,31 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Sports\Competition\Sport\FromToMapper as CompetitionSportFromToMapper;
 use Sports\Competition\Sport\FromToMapStrategy;
 use Sports\Poule\Horizontal\Creator as HorizontalPouleCreator;
 use Sports\Qualify\Rule\Creator as QualifyRuleCreator;
 use Sports\Structure\Repository as StructureRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
+use SportsImport\Attachers\CompetitionAttacher;
 use SportsImport\ExternalSource;
 use Sports\Structure as StructureBase;
 use Sports\Structure\Copier as StructureCopier;
 use Psr\Log\LoggerInterface;
+use SportsImport\Repositories\AttacherRepository;
 
-class Structure
+final class Structure
 {
+    /** @var AttacherRepository<CompetitionAttacher> */
+    private AttacherRepository $competitionAttacherRepos;
+
     public function __construct(
         private StructureRepository $structureRepos,
-        private CompetitionAttacherRepository $competitionAttacherRepos,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        EntityManagerInterface $entityManager
     ) {
+        $metaData = $entityManager->getClassMetadata(CompetitionAttacher::class);
+        $this->competitionAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
     public function import(ExternalSource $externalSource, StructureBase $externalSourceStructure): ?StructureBase

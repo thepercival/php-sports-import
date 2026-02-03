@@ -25,8 +25,7 @@ use Sports\Poule;
 use Sports\Score\Against as AgainstScore;
 use Sports\Team;
 use Sports\Team\Player as TeamPlayer;
-use SportsHelpers\Against\Side;
-use SportsHelpers\Against\Side as AgainstSide;
+use SportsHelpers\Against\AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
@@ -49,7 +48,7 @@ use stdClass;
 /**
  * @template-extends SofaScoreHelper<AgainstGame>
  */
-class Against extends SofaScoreHelper
+final class Against extends SofaScoreHelper
 {
     protected StartLocationMap|null $startLocationMap = null;
 
@@ -221,7 +220,7 @@ class Against extends SofaScoreHelper
      * @return list<Competitor|null>
      */
     public function getGameCompetitors(
-        AgainstGame $game, StartLocationMap $startLocationMap, AgainstSide $side = null): array
+        AgainstGame $game, StartLocationMap $startLocationMap, AgainstSide|null $side = null): array
     {
         return array_map(
             function (AgainstGamePlace $gamePlace) use ($startLocationMap): Competitor|null {
@@ -365,7 +364,7 @@ class Against extends SofaScoreHelper
     protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): GameParticipation
     {
         $game = $againstGamePlace->getGame();
-        $period = new Period($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('PT3H')));
+        $period = Period::fromDate($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('PT3H')));
 
         $person = $this->personHelper->convertDataToPerson($playerData);
 //        if ($person === null) {

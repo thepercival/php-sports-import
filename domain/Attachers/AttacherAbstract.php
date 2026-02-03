@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace SportsImport;
+namespace SportsImport\Attachers;
 
 use SportsHelpers\Identifiable;
+use SportsImport\ExternalSource;
 
 /**
  * @template T
  */
-abstract class Attacher extends Identifiable
+abstract class AttacherAbstract extends Identifiable
 {
-    public const MAX_LENGTH_EXTERNALID = 100;
+    public const int MAX_LENGTH_EXTERNALID = 100;
 
     /**
      * @param T $importable

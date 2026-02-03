@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
-class Player extends ApiHelper
+final class Player extends ApiHelper
 {
     public function __construct(
         SofaScore $sofaScore,
@@ -24,6 +24,7 @@ class Player extends ApiHelper
         return $this->getImgData($this->getImageEndPoint($externalId));
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         // case ExternalSource::DATA_PERSON_IMAGE:

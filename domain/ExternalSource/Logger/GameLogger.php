@@ -8,6 +8,9 @@ use Sports\Competition;
 use SportsImport\ExternalSource;
 use Sports\Game;
 
+/**
+ * @api
+ */
 interface GameLogger
 {
     public function addGameNotFoundNotice(string $msg, Competition $competition): void;

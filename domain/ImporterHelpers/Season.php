@@ -7,12 +7,12 @@ namespace SportsImport\ImporterHelpers;
 use Exception;
 use SportsImport\ExternalSource;
 use Sports\Season\Repository as SeasonRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
+use SportsImport\Attachers\Season\AttacherRepository as SeasonAttacherRepository;
 use Sports\Season as SeasonBase;
-use SportsImport\Attacher\Season as SeasonAttacher;
+use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
 use Psr\Log\LoggerInterface;
 
-class Season
+final class Season
 {
     public function __construct(
         protected SeasonRepository $seasonRepos,

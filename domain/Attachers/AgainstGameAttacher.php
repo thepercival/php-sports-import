@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher\Game;
+namespace SportsImport\Attachers;
 
 use Sports\Game\Against as AgainstGame;
-use SportsImport\Attacher as AttacherBase;
 use SportsImport\ExternalSource;
 
 /**
- * @template-extends AttacherBase<AgainstGame>
+ * @template-extends AttacherAbstract<AgainstGame>
  */
-class Against extends AttacherBase
+final class AgainstGameAttacher extends AttacherAbstract
 {
     public function __construct(
         protected AgainstGame $againstGame,

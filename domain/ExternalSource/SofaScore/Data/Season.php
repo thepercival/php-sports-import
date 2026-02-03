@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
-class Season
+final class Season
 {
     public function __construct(
         public string $name

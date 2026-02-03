@@ -6,14 +6,14 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-class AgainstGames extends ApiHelper
+final class AgainstGames extends ApiHelper
 {
     public function __construct(
         protected AgainstGameApiHelper $againstGameDetailsApiHelper,
@@ -112,6 +112,7 @@ class AgainstGames extends ApiHelper
         return $againstGameData;
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         return 60 * 23; // @TODO ADD CACHE FOR DEV MODE

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
-class TeamCompetitor
+final class TeamCompetitor
 {
     public function __construct(
         public string $id,

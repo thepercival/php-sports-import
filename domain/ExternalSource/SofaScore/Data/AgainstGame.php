@@ -6,12 +6,12 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 
 use DateTimeImmutable;
 use Sports\Game\State as GameState;
-use SportsHelpers\Against\Side;
+use SportsHelpers\Against\AgainstSide;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
 
-class AgainstGame
+final class AgainstGame
 {
     /**
      * @var list<CardEventData|GoalEventData|SubstitutionEventData>
@@ -33,10 +33,10 @@ class AgainstGame
 
 
 
-    public function getPlayers(Side $side): AgainstGameSidePlayers|null {
+    public function getPlayers(AgainstSide $side): AgainstGameSidePlayers|null {
         if( $this->players === null) {
             return null;
         }
-        return $side === Side::Home ? $this->players->homePlayers : $this->players->awayPlayers;
+        return $side === AgainstSide::Home ? $this->players->homePlayers : $this->players->awayPlayers;
     }
 }

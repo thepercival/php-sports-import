@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher;
+namespace SportsImport\Attachers;
 
-use Sports\Season as SeasonBase;
-use SportsImport\Attacher as AttacherBase;
+use Sports\Season;
 use SportsImport\ExternalSource;
 
 /**
- * @template-extends AttacherBase<SeasonBase>
+ * @template-extends AttacherAbstract<Season>
  */
-class Season extends AttacherBase
+final class SeasonAttacher extends AttacherAbstract
 {
     public function __construct(
-        protected SeasonBase $season,
+        protected Season $season,
         ExternalSource $externalSource,
         string $externalId
     ) {

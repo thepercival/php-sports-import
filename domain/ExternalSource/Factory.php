@@ -2,26 +2,36 @@
 
 namespace SportsImport\ExternalSource;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
-class Factory implements Proxy
+/**
+ * @api
+ */
+final class Factory implements Proxy
 {
     /**
      * @var array<string, string>
      */
     protected array $proxyOptions = [];
 
-    protected const COMPETITIONS = 1;
-    protected const COMPETITION_STRUCTURE = 2;
-    protected const GAMES_AND_PLAYERIMAGES = 4;
+    /** @var EntityRepository<ExternalSource>  */
+    protected EntityRepository $externalSourceRepos;
+
+    protected const int COMPETITIONS = 1;
+    protected const int COMPETITION_STRUCTURE = 2;
+    protected const int GAMES_AND_PLAYERIMAGES = 4;
 
     public function __construct(
-        protected Repository $externalSourceRepos,
-        protected CacheItemDbRepository $cacheItemDbRepos,
-        protected LoggerInterface $logger
+        protected EntityManagerInterface $entityManager,
+        protected CacheItemDbRepository    $cacheItemDbRepos,
+        protected LoggerInterface          $logger
     ) {
+        $metaData = $entityManager->getClassMetadata(ExternalSource::class);
+        $this->externalSourceRepos = new EntityRepository($entityManager, $metaData);
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -40,6 +50,7 @@ class Factory implements Proxy
     /**
      * @param array<string, string> $options
      */
+    #[\Override]
     public function setProxy(array $options): void
     {
         $this->proxyOptions = $options;

@@ -6,17 +6,14 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\CacheInfo;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
-use Sports\Sport;
-use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
-use stdClass;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
-class Structure extends ApiHelper
+/**
+ * @api
+ */
+final class Structure extends ApiHelper
 {
     public function __construct(
         SofaScore $sofaScore,
@@ -27,10 +24,10 @@ class Structure extends ApiHelper
     }
 
 //    /**
-//     * @param Competition $competition
+//     * @param CompetitionAttacher $competition
 //     * @return list<TeamCompetitorData>
 //     */
-//    public function getTeamCompetitors(Competition $competition): array
+//    public function getTeamCompetitors(CompetitionAttacher $competition): array
 //    {
 //        /** @var stdClass $apiData */
 //        $apiData = $this->getData(
@@ -97,6 +94,7 @@ class Structure extends ApiHelper
 //        return new TeamCompetitorData((string)$standingRow->id, $teamData );
 //    }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         return 60 * 24 * 7;

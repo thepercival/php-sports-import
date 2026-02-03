@@ -4,29 +4,38 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
 use Sports\Person;
-use Sports\Person\Repository as PersonRepository;
+use Sports\Repositories\PersonRepository;
+use Sports\Repositories\TeamPlayerRepository;
 use Sports\Team;
-use Sports\Team\Player\Repository as PlayerRepository;
-use Sports\Team\Repository as TeamRepository;
 use Sports\Team\Role\Editor as RoleEditor;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
 use SportsImport\ExternalSource;
 use SportsImport\Transfer;
+use SportsImport\Attachers\TeamAttacher;
+use SportsImport\Attachers\PersonAttacher;
 
-class Transfers
+final class Transfers
 {
+    /** @var EntityRepository<PersonAttacher>  */
+    protected EntityRepository $personAttacherRepos;
+    /** @var EntityRepository<TeamAttacher>  */
+    protected EntityRepository $teamAttacherRepos;
+
     public function __construct(
         protected PersonRepository $personRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected PlayerRepository $playerRepos,
-        protected TeamRepository $teamRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
-        protected LoggerInterface $logger
+        protected TeamPlayerRepository $teamPlayerRepos,
+        protected LoggerInterface $logger,
+        EntityManagerInterface $entityManager,
     ) {
+        $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
+        $this->personAttacherRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
     }
 
     /**
@@ -68,7 +77,7 @@ class Transfers
                 $this->logger->info('   to team: "' . $teamTo->getName());
             }
             if (!$roleEditor->withInPeriod($seasonPeriod, $externalTransfer->getDateTime())) {
-                $this->logger->warning('    transferDateTime(' . $dateAsString . ') outside season ' . $seasonPeriod);
+                $this->logger->warning('    transferDateTime(' . $dateAsString . ') outside season ' . $seasonPeriod->toIso8601());
                 continue;
             }
 
@@ -87,7 +96,7 @@ class Transfers
             }
             $this->personRepos->save($person, true);
             foreach ($person->getPlayers() as $player) {
-                $this->playerRepos->save($player, true);
+                $this->teamPlayerRepos->save($player, true);
             }
         }
     }

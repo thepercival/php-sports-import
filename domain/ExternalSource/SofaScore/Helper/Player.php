@@ -13,7 +13,7 @@ use Sports\Team as TeamBase;
 /**
  * @template-extends SofaScoreHelper<TeamBase>
  */
-class Player extends SofaScoreHelper
+final class Player extends SofaScoreHelper
 {
     public function __construct(
         protected PlayerApiHelper $apiHelper,

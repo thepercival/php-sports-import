@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 /**
  * {"player":{..},"slug":"england","priority":10,"id":1,"flag":"england"}
  */
-class Transfer
+final class Transfer
 {
     public function __construct(
         public Player $player,

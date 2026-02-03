@@ -19,7 +19,7 @@ use stdClass;
 /**
  * @template-extends SofaScoreHelper<StructureBase>
  */
-class Structure extends SofaScoreHelper
+final class Structure extends SofaScoreHelper
 {
     protected StructureEditor $structureEditor;
 

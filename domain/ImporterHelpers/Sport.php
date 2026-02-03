@@ -5,11 +5,11 @@ namespace SportsImport\ImporterHelpers;
 use Exception;
 use SportsImport\ExternalSource;
 use Sports\Sport\Repository as SportRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
+use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
 use Sports\Sport as SportBase;
-use SportsImport\Attacher\Sport as SportAttacher;
+use SportsImport\Attachers\SportAttacher as SportAttacher;
 
-class Sport
+final class Sport
 {
     public function __construct(
         protected SportRepository $sportRepos,

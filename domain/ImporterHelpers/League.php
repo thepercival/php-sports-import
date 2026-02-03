@@ -4,12 +4,12 @@ namespace SportsImport\ImporterHelpers;
 
 use SportsImport\ExternalSource;
 use Sports\League\Repository as LeagueRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
+use SportsImport\Attachers\League\AttacherRepository as LeagueAttacherRepository;
+use SportsImport\Attachers\Association\AttacherRepository as AssociationAttacherRepository;
 use Sports\League as LeagueBase;
-use SportsImport\Attacher\League as LeagueAttacher;
+use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
 
-class League
+final class League
 {
     public function __construct(
         protected LeagueRepository $leagueRepos,

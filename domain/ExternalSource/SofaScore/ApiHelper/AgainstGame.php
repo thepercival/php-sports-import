@@ -7,7 +7,6 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Sports\Game\State as GameState;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as EventsApiHelper;
@@ -15,9 +14,10 @@ use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as Lineup
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRoundData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameScoreData;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-class AgainstGame extends ApiHelper
+final class AgainstGame extends ApiHelper
 {
     public function __construct(
         protected LineupsApiHelper $lineupApiHelper,
@@ -129,6 +129,7 @@ class AgainstGame extends ApiHelper
         return $this->getCacheInfoHelper($this->getCacheId($gameId, $onlyScheduled));
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         return 14; // @TODO ADD CACHE FOR DEV MODE

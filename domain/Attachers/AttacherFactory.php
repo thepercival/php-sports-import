@@ -2,34 +2,36 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher;
+namespace SportsImport\Attachers;
 
 use Sports\Association;
 use Sports\Competition;
 use Sports\League;
 use Sports\Season;
 use Sports\Sport;
-use SportsHelpers\Identifiable;
-use SportsImport\Attacher\Association as AssociationAttacher;
-use SportsImport\Attacher\Competition as CompetitionAttacher;
-use SportsImport\Attacher\League as LeagueAttacher;
-use SportsImport\Attacher\Season as SeasonAttacher;
-use SportsImport\Attacher\Sport as SportAttacher;
+use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
+use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
+use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
+use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
+use SportsImport\Attachers\SportAttacher as SportAttacher;
 use SportsImport\ExternalSource;
 
-class Factory
+/**
+ * @api
+ */
+final class AttacherFactory
 {
     /**
-     * @param Identifiable $importable
+     * @param SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher $importable
      * @param ExternalSource $externalSource
      * @param string $externalId
-     * @return SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher|null
+     * @return SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher
      */
     public function createObject(
-        Identifiable $importable,
+        Sport|Association|Season|League|Competition $importable,
         ExternalSource $externalSource,
         string $externalId
-    ): SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher|null {
+    ): SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher {
         if ($importable instanceof Sport) {
             return new SportAttacher(
                 $importable,
@@ -54,19 +56,11 @@ class Factory
                 $externalSource,
                 $externalId
             );
-        } elseif ($importable instanceof Competition) {
-            return new CompetitionAttacher(
-                $importable,
-                $externalSource,
-                $externalId
-            );
-        } /*elseif ($importable instanceof Competitor) {
-            return new CompetitorAttacher(
-                $importable,
-                $externalSource,
-                $externalId
-            );
-        }*/
-        return null;
+        }
+        return new CompetitionAttacher(
+            $importable,
+            $externalSource,
+            $externalId
+        );
     }
 }

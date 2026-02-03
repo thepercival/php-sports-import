@@ -7,6 +7,9 @@ use Sports\Team\Role as TeamRole;
 use Sports\Game;
 use stdClass;
 
+/**
+ * @api
+ */
 interface Role
 {
 //    /**

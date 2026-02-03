@@ -2,24 +2,38 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Exception;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
+use SportsImport\Attachers\AssociationAttacher;
 use SportsImport\ExternalSource;
-use Sports\Team\Repository as TeamRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
-use SportsImport\Attacher\Team as TeamAttacher;
+use SportsImport\Attachers\TeamAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Team as TeamBase;
-use SportsImport\ExternalSource\Team as ExternalSourceTeam;
+use SportsImport\Repositories\AttacherRepository;
 
-class Team
+final class Team
 {
+    /** @var EntityRepository<Team>  */
+    protected EntityRepository $teamRepos;
+    /** @var AttacherRepository<TeamAttacher>  */
+    protected AttacherRepository $teamAttacherRepos;
+    /** @var AttacherRepository<AssociationAttacher>  */
+    protected AttacherRepository $associationAttacherRepos;
+
     public function __construct(
-        protected TeamRepository $teamRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
-        protected AssociationAttacherRepository $associationAttacherRepos,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        EntityManagerInterface $entityManager,
     ) {
+        $metaData = $entityManager->getClassMetadata(Team::class);
+        $this->teamRepos = new EntityRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(AssociationAttacher::class);
+        $this->associationAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
     /**
@@ -88,7 +102,7 @@ class Team
         ExternalSource $externalSource,
         TeamBase $team,
         string $localOutputPath,
-        int $maxWidth = null
+        int|null $maxWidth = null
     ): bool {
         $teamExternalId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
         if ($teamExternalId === null) {
@@ -113,9 +127,9 @@ class Team
             if ($im === false) {
                 return false;
             }
-            if ($maxWidth !== null) {
-                // make smaller if greater than maxWidth
-            }
+//            if ($maxWidth !== null) {
+//                // make smaller if greater than maxWidth
+//            }
             imagepng($im, $localFilePath);
             imagedestroy($im);
             return true;

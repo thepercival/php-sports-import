@@ -15,7 +15,7 @@ use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
 /**
  * @template-extends SofaScoreHelper<AssociationBase>
  */
-class Association extends SofaScoreHelper
+final class Association extends SofaScoreHelper
 {
     protected AssociationBase|null $defaultAssociation = null;
 

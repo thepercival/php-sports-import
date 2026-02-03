@@ -2,7 +2,7 @@
 
 namespace SportsImport\ExternalSource;
 
-class NameAnalyzer
+final class NameAnalyzer
 {
     protected string|null $firstName = null;
     protected string|null $nameInsertions = null;

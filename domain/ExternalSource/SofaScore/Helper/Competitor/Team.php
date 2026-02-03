@@ -20,7 +20,7 @@ use Sports\Competition;
 /**
  * @template-extends SofaScoreHelper<TeamCompetitorBase>
  */
-class Team extends SofaScoreHelper
+final class Team extends SofaScoreHelper
 {
     public function __construct(
         protected TeamHelper $teamHelper,

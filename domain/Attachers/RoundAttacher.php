@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher;
+namespace SportsImport\Attachers;
 
-use Sports\Round as RoundBase;
-use SportsImport\Attacher as AttacherBase;
+use Sports\Round;
 use SportsImport\ExternalSource;
 
 /**
- * @template-extends AttacherBase<RoundBase>
+ * @api
+ * @template-extends AttacherAbstract<Round>
  */
-class Round extends AttacherBase
+final class RoundAttacher extends AttacherAbstract
 {
     public function __construct(
-        protected RoundBase $round,
+        protected Round $round,
         ExternalSource $externalSource,
         string $externalId
     ) {

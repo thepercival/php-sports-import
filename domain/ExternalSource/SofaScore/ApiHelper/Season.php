@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Season as SeasonData;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
-class Season extends ApiHelper
+final class Season extends ApiHelper
 {
     public function __construct(
         SofaScore $sofaScore,
@@ -20,6 +20,7 @@ class Season extends ApiHelper
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         return 0;

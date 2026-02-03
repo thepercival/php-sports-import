@@ -6,7 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 
 use SportsHelpers\Against\Side as AgainstSide;
 
-class AgainstGameSidePlayers
+final class AgainstGameSidePlayers
 {
     /**
      * @param list<Player> $players

@@ -13,13 +13,13 @@ use Psr\Log\LoggerInterface;
 use Sports\Game\State as GameState;
 use SportsHelpers\Dev\ByteFormatter;
 use SportsHelpers\SportRange;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
 abstract class ApiHelper
 {
-    private const NrOfRetries = 2;
+    private const int NrOfRetries = 2;
     private SportRange|null $sleepRangeInSeconds = null;
     private Client|null $client = null;
     protected JsonToDataConverter $jsonToDataConverter;
@@ -173,11 +173,11 @@ abstract class ApiHelper
 
 
 //    /**
-//     * @param Competition $competition
+//     * @param CompetitionAttacher $competition
 //     * @return list<PlaceData>
 //     * @throws Exception
 //     */
-//    public function getStructureData(Competition $competition): array
+//    public function getStructureData(CompetitionAttacher $competition): array
 //    {
 //        $teamCompetitorsData = $this->getTeamCompetitorsData($competition);
 //

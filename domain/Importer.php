@@ -4,31 +4,28 @@ declare(strict_types=1);
 
 namespace SportsImport;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Psr\Log\LoggerInterface;
 use Sports\Association;
 use Sports\Competition;
-use Sports\Competition\Repository as CompetitionRepository;
 use Sports\Competitor\StartLocationMap;
 use Sports\Competitor\Team as TeamCompetitorBase;
-use Sports\Game\Against\Repository as AgainstGameRepository;
 use Sports\Game\State as GameState;
 use Sports\League;
 use Sports\Output\Game\Against as AgainstGameOutput;
 use Sports\Person;
+use Sports\Repositories\AgainstGameRepository;
+use Sports\Repositories\CompetitionRepository;
 use Sports\Season;
 use Sports\Sport;
 use Sports\Team;
 use Sports\Team as TeamBase;
 use Sports\Team\Player;
 use SportsHelpers\SportRange;
-use SportsImport\Attacher\Association\Repository as AssociationAttacherRepository;
-use SportsImport\Attacher\Competition\Repository as CompetitionAttacherRepository;
-use SportsImport\Attacher\Game\Against\Repository as AgainstGameAttacherRepository;
-use SportsImport\Attacher\League\Repository as LeagueAttacherRepository;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Season\Repository as SeasonAttacherRepository;
-use SportsImport\Attacher\Sport\Repository as SportAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use SportsImport\Attachers\AgainstGameAttacher as AgainstGameAttacher;
+use SportsImport\Attachers\Person as PersonAttacher;
+use SportsImport\Attachers\TeamAttacher as TeamAttacher;
 use SportsImport\ExternalSource\Competitions;
 use SportsImport\ExternalSource\CompetitionStructure;
 use SportsImport\ExternalSource\GamesAndPlayers;
@@ -36,10 +33,20 @@ use SportsImport\ExternalSource\Transfers;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
 
-class Importer
+/**
+ * @api
+ */
+final class Importer
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
     protected ImportPersonEvents|null $importPersonEventsSender = null;
+
+    /** @var EntityRepository<TeamAttacher> */
+    protected EntityRepository $teamAttacherRepos;
+    /** @var EntityRepository<AgainstGameAttacher> */
+    protected EntityRepository $againstGameAttacherRepos;
+    /** @var EntityRepository<PersonAttacher> */
+    protected EntityRepository $personAttacherRepos;
 
     public function __construct(
         protected Getter $getter,
@@ -55,18 +62,19 @@ class Importer
         protected ImporterHelpers\Person $personImportService,
         protected ImporterHelpers\Player $playerImportService,
         protected ImporterHelpers\Transfers $transfersImportService,
-        protected SportAttacherRepository $sportAttacherRepos,
-        protected AssociationAttacherRepository $associationAttacherRepos,
-        protected LeagueAttacherRepository $leagueAttacherRepos,
-        protected SeasonAttacherRepository $seasonAttacherRepos,
-        protected CompetitionAttacherRepository $competitionAttacherRepos,
-        protected AgainstGameAttacherRepository $againstGameAttacherRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
         protected CompetitionRepository $competitionRepos,
         protected AgainstGameRepository $againstGameRepos,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        EntityManagerInterface $entityManager
     ) {
+        $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
+        $this->personAttacherRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(AgainstGameAttacher::class);
+        $this->againstGameAttacherRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
     }
 
     public function setGameEventSender(ImportGameEvents $importGameEventsSender): void

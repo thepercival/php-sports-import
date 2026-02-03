@@ -12,7 +12,7 @@ use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
 use stdClass;
 
-class JsonToDataConverter
+final class JsonToDataConverter
 {
     public function __construct(
         private LoggerInterface $logger

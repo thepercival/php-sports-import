@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\Attacher;
+namespace SportsImport\Attachers;
 
-use SportsImport\Attacher as AttacherBase;
-use Sports\Association as AssociationBase;
+use Sports\Association as Association;
 use SportsImport\ExternalSource;
 
 /**
- * @template-extends AttacherBase<AssociationBase>
+ * @template-extends AttacherAbstract<Association>
  */
-class Association extends AttacherBase
+final class AssociationAttacher extends AttacherAbstract
 {
     public function __construct(
-        protected AssociationBase $association,
+        protected Association $association,
         ExternalSource $externalSource,
         string $externalId
     ) {

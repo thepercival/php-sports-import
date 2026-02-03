@@ -4,30 +4,39 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sports\Game\Against as AgainstGame;
 use Sports\Person as PersonBase;
-use Sports\Person\Repository as PersonRepository;
+use Sports\Repositories\PersonRepository;
 use Sports\Season;
 use Sports\Sport\FootballLine;
 use Sports\Team;
 use Sports\Team\Role\Editor as RoleEditor;
-use SportsImport\Attacher\Person as PersonAttacher;
-use SportsImport\Attacher\Person\Repository as PersonAttacherRepository;
-use SportsImport\Attacher\Team\Repository as TeamAttacherRepository;
+use SportsImport\Attachers\PersonAttacher;
+use SportsImport\Attachers\TeamAttacher;
 use SportsImport\ExternalSource;
 use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
+use SportsImport\Repositories\AttacherRepository;
 
-class Person
+final class Person
 {
     protected ImportPersonEvents|null $importPersonEventsSender = null;
+    /** @var AttacherRepository<Person>  */
+    protected AttacherRepository $personAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher>  */
+    protected AttacherRepository $teamAttacherRepos;
 
     public function __construct(
         protected PersonRepository $personRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        EntityManagerInterface $entityManager,
     ) {
+        $metaData = $entityManager->getClassMetadata(PersonAttacher::class);
+        $this->personAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
     public function setEventSender(ImportPersonEvents $importPersonEventsSender): void

@@ -9,7 +9,7 @@ use Sports\Person;
 use Sports\Sport\FootballLine;
 use Sports\Team;
 
-class Transfer
+final class Transfer
 {
     public function __construct(
         public Person $person,

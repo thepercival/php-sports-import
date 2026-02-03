@@ -17,7 +17,7 @@ use stdClass;
 /**
  * @template-extends SofaScoreHelper<SportBase>
  */
-class Sport extends SofaScoreHelper
+final class Sport extends SofaScoreHelper
 {
     public function __construct(
         protected SportApiHelper $apiHelper,

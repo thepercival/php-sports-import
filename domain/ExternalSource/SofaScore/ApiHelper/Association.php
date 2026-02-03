@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\CacheItemDb\Repository as CacheItemDbRepository;
-use SportsImport\ExternalSource;
-use SportsImport\ExternalSource\CacheInfo;
+use Sports\Sport;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Association as AssociationData;
-use Sports\Sport;
+use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-class Association extends ApiHelper
+final class Association extends ApiHelper
 {
     public function __construct(
         SofaScore $sofaScore,
@@ -64,6 +62,7 @@ class Association extends ApiHelper
         return $this->getEndPointSuffix($sport);
     }
 
+    #[\Override]
     public function getCacheMinutes(): int
     {
         return 60 * 24 * 30;

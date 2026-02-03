@@ -16,7 +16,7 @@ use Sports\Season as SeasonBase;
 /**
  * @template-extends SofaScoreHelper<SeasonBase>
  */
-class Season extends SofaScoreHelper
+final class Season extends SofaScoreHelper
 {
     public function __construct(
         protected SeasonApiHelper $apiHelper,
@@ -84,6 +84,6 @@ class Season extends SofaScoreHelper
         if ($endDateTime === false) {
             throw new \Exception('end has incorrect format("' . $format . '")', E_ERROR);
         }
-        return new Period($startDateTime, $endDateTime);
+        return Period::fromDate($startDateTime, $endDateTime);
     }
 }
