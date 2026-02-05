@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
 
 use Psr\Log\LoggerInterface;
-use SportsHelpers\Against\Side as AgainstSide;
+use SportsHelpers\Against\AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;

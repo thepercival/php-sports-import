@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace SportsImport\ImporterHelpers\Game;
 
 use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Sports\Competitor\StartLocationMap;
 use Sports\Game;
 use Sports\Game\Against as AgainstGame;
-use Sports\Game\Against\Repository as AgainstGameRepository;
+use Sports\Repositories\AgainstGameRepository;
 use Sports\Game\Event\Card;
 use Sports\Game\Event\Goal;
 use Sports\Game\Participation as GameParticipation;
@@ -20,25 +21,36 @@ use Sports\Output\Game\Against as AgainstGameOutput;
 use Sports\Output\Game\Column as GameColumn;
 use Sports\Person;
 use Sports\Poule;
-use Sports\Score\Against\Repository as AgainstScoreRepository;
+use Sports\Repositories\AgainstScoreRepository;
 use Sports\Score\Creator as ScoreCreator;
 use Sports\Sport;
 use Sports\Structure\Repository as StructureRepository;
 use Sports\Team;
 use Sports\Team\Player;
 use SportsImport\Attachers\AgainstGameAttacher as AgainstGameAttacher;
-use SportsImport\Attachers\Competition\AttacherRepository as CompetitionAttacherRepository;
-use SportsImport\Attachers\Game\Against\AttacherRepository as AgainstGameAttacherRepository;
-use SportsImport\Attachers\Person\AttacherRepository as PersonAttacherRepository;
-use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
-use SportsImport\Attachers\Team\AttacherRepository as TeamAttacherRepository;
+use SportsImport\Attachers\CompetitionAttacher;
+use SportsImport\Attachers\PersonAttacher;
+use SportsImport\Attachers\SportAttacher;
+use SportsImport\Attachers\TeamAttacher;
 use SportsImport\ExternalSource;
 use SportsImport\ImporterHelpers\Person as PersonImporterHelper;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Against
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
+
+    /** @var AttacherRepository<AgainstGameAttacher>  */
+    protected AttacherRepository $againstGameAttacherRepos;
+    /** @var AttacherRepository<SportAttacher>  */
+    protected AttacherRepository $sportAttacherRepos;
+    /** @var AttacherRepository<CompetitionAttacher>  */
+    protected AttacherRepository $competitionAttacherRepos;
+    /** @var AttacherRepository<PersonAttacher>  */
+    protected AttacherRepository $personAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher>  */
+    protected AttacherRepository $teamAttacherRepos;
 
     // public const MAX_DAYS_BACK = 8;
 
@@ -47,13 +59,23 @@ final class Against
         protected AgainstGameRepository $againstGameRepos,
         protected AgainstScoreRepository $againstScoreRepos,
         protected StructureRepository $structureRepos,
-        protected AgainstGameAttacherRepository $againstGameAttacherRepos,
-        protected SportAttacherRepository $sportAttacherRepos,
-        protected CompetitionAttacherRepository $competitionAttacherRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        protected EntityManagerInterface $entityManager,
     ) {
+        $metaData = $entityManager->getClassMetadata(AgainstGameAttacher::class);
+        $this->againstGameAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(SportAttacher::class);
+        $this->sportAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(CompetitionAttacher::class);
+        $this->competitionAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(PersonAttacher::class);
+        $this->personAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 //
 //    protected function getDeadLine(): DateTimeImmutable {
@@ -98,7 +120,8 @@ final class Against
                     $externalSource,
                     (string)$externalId
                 );
-                $this->againstGameAttacherRepos->save($gameAttacher);
+                $this->entityManager->persist($gameAttacher);
+                $this->entityManager->flush();
 
                 $this->outputGame($game, "created => ");
             } else {
@@ -143,7 +166,8 @@ final class Against
             new AgainstGamePlace($game, $place, $externalSourceGamePlace->getSide());
         }
 
-        $this->againstGameRepos->save($game);
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
         $this->importGameEventsSender?->sendCreateEvent($game);
         return $game;
     }
@@ -164,7 +188,8 @@ final class Against
             $rescheduled = true;
         }
 
-        $this->againstGameRepos->save($game);
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
         if ($stateChanged || $rescheduled) {
             $this->importGameEventsSender?->sendUpdateBasicsEvent($game);
         }
@@ -235,7 +260,8 @@ final class Against
                 }
             }
         }
-        $this->againstGameRepos->save($game);
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
         $this->importGameEventsSender?->sendUpdateScoresLineupsAndEventsEvent($game);
         $this->outputGame($game, "updated scores,lineups,events => ", false);
     }
@@ -287,15 +313,12 @@ final class Against
 
     protected function getSportFromExternal(ExternalSource $externalSource, Sport $externalSport): Sport|null
     {
-        $sport = $this->sportAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSport->getId()
-        );
+        $attacher = $this->sportAttacherRepos->findOneByExternalId($externalSource, (string)$externalSport->getId());
+        $sport = $attacher?->getImportable();
         if ($sport === null) {
             $this->logger->warning("no sport found for external sport " . $externalSport->getName());
             return null;
         }
-
         return $sport;
     }
 
@@ -303,10 +326,8 @@ final class Against
     {
         $externalCompetition = $externalPoule->getRound()->getNumber()->getCompetition();
 
-        $competition = $this->competitionAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalCompetition->getId()
-        );
+        $attacher = $this->competitionAttacherRepos->findOneByExternalId($externalSource, (string)$externalCompetition->getId());
+        $competition = $attacher?->getImportable();
         if ($competition === null) {
             $this->logger->warning("no competition found for external competition " . $externalCompetition->getName());
             return null;
@@ -352,10 +373,8 @@ final class Against
 
     protected function getPersonFromExternal(ExternalSource $externalSource, Person $externalPerson): Person|null
     {
-        $person = $this->personAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalPerson->getId()
-        );
+        $attacher = $this->personAttacherRepos->findOneByExternalId($externalSource, (string)$externalPerson->getId());
+        $person = $attacher?->getImportable();
         if ($person === null) {
             $this->logger->warning("no person found for external person " . $externalPerson->getName());
             return null;
@@ -365,10 +384,9 @@ final class Against
 
     protected function getTeamFromExternal(ExternalSource $externalSource, Team $externalTeam): Team|null
     {
-        $team = $this->teamAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalTeam->getId()
-        );
+        $attacher = $this->teamAttacherRepos->findOneByExternalId($externalSource, (string)$externalTeam->getId());
+        $team = $attacher?->getImportable();
+
         if ($team === null) {
             $this->logger->warning("no team found for external team " . $externalTeam->getName());
             return null;
@@ -387,7 +405,8 @@ final class Against
 
         $this->againstScoreRepos->removeScores($game);
 
-        $this->againstGameRepos->save($game);
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
     }
 
     protected function outputGame(AgainstGame $game, string $prefix, bool $onlyBasics = true): void

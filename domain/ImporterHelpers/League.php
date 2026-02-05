@@ -2,20 +2,34 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
+use SportsImport\Attachers\AssociationAttacher;
 use SportsImport\ExternalSource;
-use Sports\League\Repository as LeagueRepository;
-use SportsImport\Attachers\League\AttacherRepository as LeagueAttacherRepository;
-use SportsImport\Attachers\Association\AttacherRepository as AssociationAttacherRepository;
 use Sports\League as LeagueBase;
 use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
+use SportsImport\Repositories\AttacherRepository;
 
 final class League
 {
+    /** @var EntityRepository<League>  */
+    protected EntityRepository $leagueRepos;
+    /** @var AttacherRepository<LeagueAttacher>  */
+    protected AttacherRepository $leagueAttacherRepos;
+    /** @var AttacherRepository<AssociationAttacher>  */
+    protected AttacherRepository $associationAttacherRepos;
+
     public function __construct(
-        protected LeagueRepository $leagueRepos,
-        protected LeagueAttacherRepository $leagueAttacherRepos,
-        protected AssociationAttacherRepository $associationAttacherRepos
+        protected EntityManagerInterface $entityManager,
     ) {
+        $metaData = $entityManager->getClassMetadata(League::class);
+        $this->leagueRepos = new EntityRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(LeagueAttacher::class);
+        $this->leagueAttacherRepos = new AttacherRepository($entityManager, $metaData);
+
+        $metaData = $entityManager->getClassMetadata(AssociationAttacher::class);
+        $this->associationAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
     /**
@@ -44,7 +58,8 @@ final class League
                     $externalSource,
                     (string)$externalId
                 );
-                $this->leagueAttacherRepos->save($leagueAttacher);
+                $this->entityManager->persist($leagueAttacher);
+                $this->entityManager->flush();
             } else {
                 $this->editLeague($leagueAttacher->getImportable(), $externalSourceLeague);
             }
@@ -54,10 +69,9 @@ final class League
 
     protected function createLeague(ExternalSource $externalSource, LeagueBase $externalSourceLeague): ?LeagueBase
     {
-        $association = $this->associationAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSourceLeague->getAssociation()->getId()
-        );
+        $attacher = $this->associationAttacherRepos->findOneByExternalId($externalSource, (string)$externalSourceLeague->getAssociation()->getId());
+        $association = $attacher?->getImportable();
+
         if ($association === null) {
             return null;
         }

@@ -22,7 +22,7 @@ use SportsImport\Repositories\AttacherRepository;
 final class Person
 {
     protected ImportPersonEvents|null $importPersonEventsSender = null;
-    /** @var AttacherRepository<Person>  */
+    /** @var AttacherRepository<PersonAttacher>  */
     protected AttacherRepository $personAttacherRepos;
     /** @var AttacherRepository<TeamAttacher>  */
     protected AttacherRepository $teamAttacherRepos;
@@ -30,7 +30,7 @@ final class Person
     public function __construct(
         protected PersonRepository $personRepos,
         protected LoggerInterface $logger,
-        EntityManagerInterface $entityManager,
+        protected EntityManagerInterface $entityManager,
     ) {
         $metaData = $entityManager->getClassMetadata(PersonAttacher::class);
         $this->personAttacherRepos = new AttacherRepository($entityManager, $metaData);
@@ -89,7 +89,8 @@ final class Person
                 $externalSource,
                 (string)$externalId
             );
-            $this->personAttacherRepos->save($personAttacher);
+            $this->entityManager->persist($personAttacher);
+            $this->entityManager->flush();
 
             $this->importPersonEventsSender?->sendCreatePersonEvent($person, $season);
         } else {
@@ -109,7 +110,9 @@ final class Person
         if ($dateOfBirth !== null) {
             $person->setDateOfBirth($dateOfBirth);
         }
-        return $this->personRepos->save($person);
+        $this->entityManager->persist($person);
+        $this->entityManager->flush();
+        return $person;
     }
 
     protected function updatePlayerPeriods(

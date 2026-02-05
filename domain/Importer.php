@@ -24,7 +24,7 @@ use Sports\Team as TeamBase;
 use Sports\Team\Player;
 use SportsHelpers\SportRange;
 use SportsImport\Attachers\AgainstGameAttacher as AgainstGameAttacher;
-use SportsImport\Attachers\Person as PersonAttacher;
+use SportsImport\Attachers\PersonAttacher;
 use SportsImport\Attachers\TeamAttacher as TeamAttacher;
 use SportsImport\ExternalSource\Competitions;
 use SportsImport\ExternalSource\CompetitionStructure;
@@ -452,12 +452,15 @@ final class Importer
                 $externalGame
             );
         } catch (\Exception $e) {
-            $game = $this->againstGameAttacherRepos->findImportable($externalSource, $externalGameId);
-            if ($game !== null) {
-                // all batch should be stopped, because of editing playerperiods
-                $competitors = array_values($competition->getTeamCompetitors()->toArray());
-                $gameOutput = new AgainstGameOutput(new StartLocationMap($competitors), $this->logger);
-                $gameOutput->output($game, $e->getMessage());
+            $attacher = $this->againstGameAttacherRepos->findOneByExternalId($externalSource, $externalGameId);
+            if ($attacher !== null) {
+                $game = $attacher->getImportable();
+                if ($game !== null) {
+                    // all batch should be stopped, because of editing playerperiods
+                    $competitors = array_values($competition->getTeamCompetitors()->toArray());
+                    $gameOutput = new AgainstGameOutput(new StartLocationMap($competitors), $this->logger);
+                    $gameOutput->output($game, $e->getMessage());
+                }
             }
         }
     }

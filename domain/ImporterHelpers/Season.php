@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use SportsImport\ExternalSource;
-use Sports\Season\Repository as SeasonRepository;
-use SportsImport\Attachers\Season\AttacherRepository as SeasonAttacherRepository;
+use Sports\Repositories\SeasonRepository;
 use Sports\Season as SeasonBase;
 use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
 use Psr\Log\LoggerInterface;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Season
 {
+    /** @var AttacherRepository<SeasonAttacher>  */
+    protected AttacherRepository $seasonAttacherRepos;
+
     public function __construct(
         protected SeasonRepository $seasonRepos,
-        protected SeasonAttacherRepository $seasonAttacherRepos,
+        protected EntityManagerInterface $entityManager,
         protected LoggerInterface $logger
     ) {
+        $metadata = $entityManager->getClassMetadata(SeasonAttacher::class);
+        $this->seasonAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**
@@ -44,7 +50,8 @@ final class Season
                     $externalSource,
                     (string)$externalId
                 );
-                $this->seasonAttacherRepos->save($seasonAttacher);
+                $this->entityManager->persist($seasonAttacher);
+                $this->entityManager->flush();
             } else {
                 $this->editSeason($seasonAttacher->getImportable(), $externalSourceSeason);
             }
@@ -55,12 +62,16 @@ final class Season
     protected function createSeason(SeasonBase $season): SeasonBase
     {
         $newSeason = new SeasonBase($season->getName(), $season->getPeriod());
-        return $this->seasonRepos->save($newSeason);
+        $this->entityManager->persist($newSeason);
+        $this->entityManager->flush();
+        return $newSeason;
+
     }
 
     protected function editSeason(SeasonBase $season, SeasonBase $externalSourceSeason): void
     {
         $season->setName($externalSourceSeason->getName());
-        $this->seasonRepos->save($season);
+        $this->entityManager->persist($season);
+        $this->entityManager->flush();
     }
 }

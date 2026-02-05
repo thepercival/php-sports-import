@@ -2,28 +2,46 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Sports\Competition\Service as CompetitionService;
 use SportsHelpers\Sport\PersistVariant;
+use SportsImport\Attachers\LeagueAttacher;
+use SportsImport\Attachers\SeasonAttacher;
+use SportsImport\Attachers\SportAttacher;
 use SportsImport\ExternalSource;
-use Sports\Competition\Repository as CompetitionRepository;
-use SportsImport\Attachers\Competition\AttacherRepository as CompetitionAttacherRepository;
-use SportsImport\Attachers\League\AttacherRepository as LeagueAttacherRepository;
-use SportsImport\Attachers\Season\AttacherRepository as SeasonAttacherRepository;
-use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
+use Sports\Repositories\CompetitionRepository;
 use Sports\Competition as CompetitionBase;
 use Sports\Competition\Sport as CompetitionSport;
 use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
-use Psr\Log\LoggerInterface;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Competition
 {
+    /** @var AttacherRepository<SeasonAttacher>  */
+    protected AttacherRepository $seasonAttacherRepos;
+    /** @var AttacherRepository<CompetitionAttacher>  */
+    protected AttacherRepository $competitionAttacherRepos;
+    /** @var AttacherRepository<LeagueAttacher>  */
+    protected AttacherRepository $leagueAttacherRepos;
+    /** @var AttacherRepository<SportAttacher>  */
+    protected AttacherRepository $sportAttacherRepos;
+
+
     public function __construct(
         protected CompetitionRepository $competitionRepos,
-        protected CompetitionAttacherRepository $competitionAttacherRepos,
-        protected LeagueAttacherRepository $leagueAttacherRepos,
-        protected SeasonAttacherRepository $seasonAttacherRepos,
-        protected SportAttacherRepository $sportAttacherRepos
+        protected EntityManagerInterface $entityManager
     ) {
+        $metadata = $entityManager->getClassMetadata(SeasonAttacher::class);
+        $this->seasonAttacherRepos = new AttacherRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(CompetitionAttacher::class);
+        $this->competitionAttacherRepos = new AttacherRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(LeagueAttacher::class);
+        $this->leagueAttacherRepos = new AttacherRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(SportAttacher::class);
+        $this->sportAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**
@@ -51,28 +69,27 @@ final class Competition
                 $externalSource,
                 (string)$externalId
             );
-            $this->competitionAttacherRepos->save($competitionAttacher);
-        } else {
+            $this->entityManager->persist($competitionAttacher);
+            $this->entityManager->flush();
+        } /*else {
             $this->editCompetition($competitionAttacher->getImportable(), $externalSourceCompetition);
-        }
+        }*/
     }
 
     protected function createCompetition(ExternalSource $externalSource, CompetitionBase $externalSourceCompetition): ?CompetitionBase
     {
-        $league = $this->leagueAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSourceCompetition->getLeague()->getId()
-        );
+        $attacher = $this->leagueAttacherRepos->findOneByExternalId($externalSource, (string)$externalSourceCompetition->getLeague()->getId());
+        $league = $attacher?->getImportable();
         if ($league  === null) {
             return null;
         }
-        $season = $this->seasonAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSourceCompetition->getSeason()->getId()
-        );
+
+        $attacher = $this->seasonAttacherRepos->findOneByExternalId($externalSource, (string)$externalSourceCompetition->getSeason()->getId());
+        $season = $attacher?->getImportable();
         if ($season  === null) {
             return null;
         }
+
         $existingCompetition = $this->competitionRepos->findOneBy([
             "league" => $league, "season" => $season
         ]);
@@ -85,7 +102,8 @@ final class Competition
 
         foreach ($externalSourceCompetition->getSports() as $externalCompetitionSport) {
             $externalSportId = (string)$externalCompetitionSport->getSport()->getId();
-            $sport = $this->sportAttacherRepos->findImportable($externalSource, $externalSportId);
+            $attacher = $this->sportAttacherRepos->findOneByExternalId($externalSource, $externalSportId);
+            $sport = $attacher?->getImportable();
             if ($sport === null) {
                 continue;
             }
@@ -108,13 +126,15 @@ final class Competition
                 $externalCompetitionSport);
         }
         $this->competitionRepos->customPersist($competition);
-        $this->competitionRepos->save($competition);
+        $this->entityManager->persist($competition);
+        $this->entityManager->flush();
         return $competition;
     }
 
 //    protected function editCompetition(CompetitionBase $competition, CompetitionBase $externalSourceCompetition): void
 //    {
-//        // $competition->setName($externalSourceCompetition->getName());
-//        // $this->competitionRepos->save($competition);
+//         $competition->setName($externalSourceCompetition->getName());
+//         $this->entityManager->persist($competition);
+//         $this->entityManager->flush();
 //    }
 }

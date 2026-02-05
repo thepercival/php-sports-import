@@ -2,18 +2,20 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use SportsImport\ExternalSource;
-use Sports\Sport\Repository as SportRepository;
-use SportsImport\Attachers\Sport\AttacherRepository as SportAttacherRepository;
+use Sports\Repositories\SportRepository;
 use Sports\Sport as SportBase;
 use SportsImport\Attachers\SportAttacher as SportAttacher;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Sport
 {
     public function __construct(
         protected SportRepository $sportRepos,
-        protected SportAttacherRepository $sportAttacherRepos
+        protected AttacherRepository $sportAttacherRepos,
+        protected EntityManagerInterface $entityManager
     ) {
     }
 
@@ -40,7 +42,8 @@ final class Sport
                     $externalSource,
                     (string)$externalId
                 );
-                $this->sportAttacherRepos->save($sportAttacher);
+                $this->entityManager->persist($sportAttacher);
+                $this->entityManager->flush();
             } else {
                 $this->editSport($sportAttacher->getImportable(), $externalSourceSport);
             }
@@ -60,13 +63,16 @@ final class Sport
             $sport->getDefaultGameMode(),
             $sport->getDefaultNrOfSidePlaces()
         );
-        return $this->sportRepos->save($newSport);
+        $this->entityManager->persist($newSport);
+        $this->entityManager->flush();
+        return $newSport;
     }
 
     protected function editSport(SportBase $sport, SportBase $externalSourceSport): void
     {
         $sport->setName($externalSourceSport->getName());
         $sport->setCustomId($externalSourceSport->getCustomId());
-        $this->sportRepos->save($sport);
+        $this->entityManager->persist($sport);
+        $this->entityManager->flush();
     }
 }

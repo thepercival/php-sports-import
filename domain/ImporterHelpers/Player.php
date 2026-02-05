@@ -4,20 +4,31 @@ declare(strict_types=1);
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Sports\Person as PersonBase;
-use Sports\Person\Repository as PersonRepository;
+use Sports\Repositories\PersonRepository;
 use Sports\Team\Player as TeamPlayer;
-use SportsImport\Attachers\Person\AttacherRepository as PersonAttacherRepository;
-use SportsImport\Attachers\Team\AttacherRepository as TeamAttacherRepository;
+use SportsImport\Attachers\PersonAttacher;
+use SportsImport\Attachers\TeamAttacher;
 use SportsImport\ExternalSource;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Player
 {
+    /** @var AttacherRepository<PersonAttacher>  */
+    protected AttacherRepository $personAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher>  */
+    protected AttacherRepository $teamAttacherRepos;
+
     public function __construct(
         protected PersonRepository $personRepos,
-        protected PersonAttacherRepository $personAttacherRepos,
-        protected TeamAttacherRepository $teamAttacherRepos
+        EntityManagerInterface $entityManager,
     ) {
+        $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
+        $this->personAttacherRepos = new AttacherRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     public function importImage(

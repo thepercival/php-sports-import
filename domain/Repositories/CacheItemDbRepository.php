@@ -55,7 +55,8 @@ final class CacheItemDbRepository extends EntityRepository
             $cacheItem->setValue($value);
             $cacheItem->setExpireDateTime($expireDateTime);
         }
-        $this->save($cacheItem);
+        $this->getEntityManager()->persist($cacheItem);
+        $this->getEntityManager()->flush();
         /** @var string $item */
         $item = $cacheItem->getValue();
         return $item;
@@ -65,7 +66,8 @@ final class CacheItemDbRepository extends EntityRepository
     {
         $cacheItem = $this->findOneBy(["name" => $name]);
         if ($cacheItem !== null) {
-            $this->remove($cacheItem);
+            $this->getEntityManager()->remove($cacheItem);
+            $this->getEntityManager()->flush();
         }
     }
 }

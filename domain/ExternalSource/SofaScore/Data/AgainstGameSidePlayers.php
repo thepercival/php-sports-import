@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Data;
 
-use SportsHelpers\Against\Side as AgainstSide;
+use SportsHelpers\Against\AgainstSide;
 
 final class AgainstGameSidePlayers
 {

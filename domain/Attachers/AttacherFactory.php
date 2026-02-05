@@ -21,12 +21,6 @@ use SportsImport\ExternalSource;
  */
 final class AttacherFactory
 {
-    /**
-     * @param SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher $importable
-     * @param ExternalSource $externalSource
-     * @param string $externalId
-     * @return SportAttacher|AssociationAttacher|SeasonAttacher|LeagueAttacher|CompetitionAttacher
-     */
     public function createObject(
         Sport|Association|Season|League|Competition $importable,
         ExternalSource $externalSource,

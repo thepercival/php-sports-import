@@ -2,22 +2,32 @@
 
 namespace SportsImport\ImporterHelpers;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use Exception;
 use SportsImport\ExternalSource;
-use Sports\Association\Repository as AssociationRepository;
-use SportsImport\Attachers\Association\AttacherRepository as AssociationAttacherRepository;
 use Sports\Association as AssociationBase;
 use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
 
 use Psr\Log\LoggerInterface;
+use SportsImport\Repositories\AttacherRepository;
 
 final class Association
 {
+    /** @var EntityRepository<AssociationBase>  */
+    protected EntityRepository $associationRepos;
+    /** @var AttacherRepository<AssociationAttacher>  */
+    protected AttacherRepository $associationAttacherRepos;
+
     public function __construct(
-        protected AssociationRepository $associationRepos,
-        protected AssociationAttacherRepository $associationAttacherRepos,
+        protected EntityManagerInterface $entityManager,
         protected LoggerInterface $logger
     ) {
+        $metadata = $entityManager->getClassMetadata(AssociationBase::class);
+        $this->associationRepos = new EntityRepository($entityManager, $metadata);
+
+        $metadata = $entityManager->getClassMetadata(AssociationAttacher::class);
+        $this->associationAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**
@@ -43,7 +53,8 @@ final class Association
                     $externalSource,
                     (string)$externalId
                 );
-                $this->associationAttacherRepos->save($associationAttacher);
+                $this->entityManager->persist($associationAttacher);
+                $this->entityManager->flush();
             } else {
                 $this->editAssociation($associationAttacher->getImportable(), $externalSourceAssociation);
             }
@@ -59,10 +70,8 @@ final class Association
         if ($externalParentAssociation !== null) {
             $parentExternalId = $externalParentAssociation->getId();
             if ($parentExternalId !== null) {
-                $parentAssociation = $this->associationAttacherRepos->findImportable(
-                    $externalSource,
-                    (string)$parentExternalId
-                );
+                $attacher = $this->associationAttacherRepos->findOneByExternalId($externalSource, (string)$parentExternalId);
+                $parentAssociation = $attacher?->getImportable();
             }
         }
         $newAssociation->setParent($parentAssociation);

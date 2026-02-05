@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SportsImport\Repositories;
 
+
 use Doctrine\ORM\EntityRepository;
 use SportsHelpers\Identifiable;
 use SportsImport\ExternalSource;
@@ -26,20 +27,6 @@ final class AttacherRepository extends EntityRepository
             'externalId' => $externalId,
             'externalSource' => $externalSource
         ));
-    }
-
-    /**
-     * @param ExternalSource $externalSource
-     * @param string $externalId
-     * @return I|null
-     */
-    public function findImportable(ExternalSource $externalSource, string $externalId): mixed
-    {
-        $attacher = $this->findOneByExternalId($externalSource, $externalId);
-        if ($attacher === null) {
-            return null;
-        }
-        return $attacher->getImportable();
     }
 
     /**

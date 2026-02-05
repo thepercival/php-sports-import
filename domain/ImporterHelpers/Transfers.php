@@ -29,7 +29,7 @@ final class Transfers
         protected PersonRepository $personRepos,
         protected TeamPlayerRepository $teamPlayerRepos,
         protected LoggerInterface $logger,
-        EntityManagerInterface $entityManager,
+        protected EntityManagerInterface $entityManager,
     ) {
         $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
         $this->personAttacherRepos = new EntityRepository($entityManager, $metadata);
@@ -94,27 +94,28 @@ final class Transfers
             } elseif ($teamFrom !== null) {
                 $roleEditor->stop($competition->getSeason(), $person, $externalTransfer->getDateTime());
             }
-            $this->personRepos->save($person, true);
+            $this->entityManager->persist($person);
+            $this->entityManager->flush();
             foreach ($person->getPlayers() as $player) {
-                $this->teamPlayerRepos->save($player, true);
+                $this->entityManager->persist($player);
             }
+            $this->entityManager->flush();
         }
     }
 
     protected function getTeam(ExternalSource $externalSource, Team $externalTeam): Team|null
     {
-        return $this->teamAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalTeam->getId()
-        );
+        $attacher = $this->teamAttacherRepos->findOneByExternalId($externalSource, (string)$externalTeam->getId());
+        if ($attacher === null) {
+            return null;
+        }
+        return $attacher->getImportable();
     }
 
     protected function getPerson(ExternalSource $externalSource, Person $externalPerson): Person
     {
-        $person = $this->personAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalPerson->getId()
-        );
+        $attacher = $this->personAttacherRepos->findOneByExternalId($externalSource, (string)$externalPerson->getId());
+        $person = $attacher?->getImportable();
 
         if ($person === null) {
             throw new \Exception('person not found', E_ERROR);

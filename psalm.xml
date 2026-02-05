@@ -28,7 +28,7 @@
 <!--        <MissingPropertyType errorLevel="suppress" />-->
 <!--        <DeprecatedConstant errorLevel="suppress" />-->
         <MixedMethodCall errorLevel="suppress" />
-        <UndefinedMethod errorLevel="suppress" />
+<!--        <UndefinedMethod errorLevel="suppress" />-->
         <MixedArgument errorLevel="suppress" />
 <!--        <InaccessibleMethod errorLevel="suppress" />-->
 <!--        <TooFewArguments errorLevel="suppress" />-->

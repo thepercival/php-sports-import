@@ -2,7 +2,6 @@
 
 namespace SportsImport\ImporterHelpers;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Exception;
@@ -11,7 +10,9 @@ use SportsImport\ExternalSource;
 use SportsImport\Attachers\TeamAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Team as TeamBase;
+use Sports\Association;
 use SportsImport\Repositories\AttacherRepository;
+
 
 final class Team
 {
@@ -24,7 +25,7 @@ final class Team
 
     public function __construct(
         protected LoggerInterface $logger,
-        EntityManagerInterface $entityManager,
+        protected EntityManagerInterface $entityManager,
     ) {
         $metaData = $entityManager->getClassMetadata(Team::class);
         $this->teamRepos = new EntityRepository($entityManager, $metaData);
@@ -64,7 +65,8 @@ final class Team
                     $externalSource,
                     (string)$externalId
                 );
-                $this->teamAttacherRepos->save($teamAttacher);
+                $this->entityManager->persist($teamAttacher);
+                $this->entityManager->flush();
                 $added++;
             } else {
                 $this->editTeam($teamAttacher->getImportable(), $externalSourceTeam);
@@ -76,10 +78,9 @@ final class Team
 
     protected function createTeam(ExternalSource $externalSource, TeamBase $externalSourceTeam): ?TeamBase
     {
-        $association = $this->associationAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSourceTeam->getAssociation()->getId()
-        );
+        $attacher = $this->associationAttacherRepos->findOneByExternalId($externalSource, (string)$externalSourceTeam->getAssociation()->getId());
+        $association = $attacher?->getImportable();
+
         if ($association === null) {
             return null;
         }
@@ -97,6 +98,9 @@ final class Team
         $this->teamRepos->save($team);
     }
 
+    /**
+     * @psalm-suppress UnusedParam
+     */
     public function importTeamImage(
         ExternalSource\CompetitionStructure $externalSourceTeam,
         ExternalSource $externalSource,

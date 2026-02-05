@@ -83,10 +83,9 @@ final class TeamCompetitor
 
     protected function createTeamCompetitor(ExternalSource $externalSource, TeamCompetitorBase $externalSourceTeamCompetitor): ?TeamCompetitorBase
     {
-        $team = $this->teamAttacherRepos->findImportable(
-            $externalSource,
-            (string)$externalSourceTeamCompetitor->getTeam()->getId()
-        );
+        $attacher = $this->teamAttacherRepos->findOneByExternalId($externalSource, (string)$externalSourceTeamCompetitor->getTeam()->getId());
+        $team = $attacher?->getImportable();
+
         if ($team === null) {
             $location = $externalSourceTeamCompetitor->getStartId();
             throw new \Exception('team not found for teamcompetitor: "' . $location .'"');
