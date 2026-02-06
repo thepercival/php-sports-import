@@ -10,6 +10,9 @@ use Sports\League as LeagueBase;
 use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class League
 {
     /** @var EntityRepository<League>  */

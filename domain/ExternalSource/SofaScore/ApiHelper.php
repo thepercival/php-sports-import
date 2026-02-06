@@ -17,6 +17,9 @@ use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
 use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
+/**
+ * @api
+ */
 abstract class ApiHelper
 {
     private const int NrOfRetries = 2;
@@ -135,7 +138,7 @@ abstract class ApiHelper
         }
         $content = $response->getBody()->getContents();
         $retVal = $this->cacheItemDbRepos->saveItem($cacheId, $content, $cacheMinutes);
-        $this->logger->info("received data size: " . (new ByteFormatter(mb_strlen($retVal))));
+        $this->logger->info("received data size: " . (string)(new ByteFormatter(mb_strlen($retVal))));
         return json_decode($retVal);
     }
 

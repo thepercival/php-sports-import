@@ -21,7 +21,7 @@ use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
 final class Team extends SofaScoreHelper
 {
     public function __construct(
-        protected PersonHelper $personHelper,
+//        protected PersonHelper $personHelper,
         protected TeamApiHelper $apiHelper,
         SofaScore $parent,
         LoggerInterface $logger

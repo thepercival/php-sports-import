@@ -13,7 +13,9 @@ use Sports\Team as TeamBase;
 use Sports\Association;
 use SportsImport\Repositories\AttacherRepository;
 
-
+/**
+ * @api
+ */
 final class Team
 {
     /** @var EntityRepository<Team>  */
@@ -108,7 +110,7 @@ final class Team
         string $localOutputPath,
         int|null $maxWidth = null
     ): bool {
-        $teamExternalId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
+        $teamExternalId = $this->teamAttacherRepos->findOneByImportable($externalSource, $team)?->getExternalId();
         if ($teamExternalId === null) {
             return false;
         }

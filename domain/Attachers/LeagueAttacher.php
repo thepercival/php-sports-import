@@ -13,7 +13,7 @@ use SportsImport\ExternalSource;
 final class LeagueAttacher extends AttacherAbstract
 {
     public function __construct(
-        protected League $league,
+        League $league,
         ExternalSource $externalSource,
         string $externalId
     ) {

@@ -6,6 +6,9 @@ namespace SportsImport;
 
 use SportsHelpers\Identifiable;
 
+/**
+ * @api
+ */
 final class ExternalSource extends Identifiable
 {
     private string|null $username = null;

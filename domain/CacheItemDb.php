@@ -7,6 +7,9 @@ namespace SportsImport;
 use DateTimeImmutable;
 use SportsHelpers\Identifiable;
 
+/**
+ * @api
+ */
 final class CacheItemDb extends Identifiable
 {
     public const MAX_LENGTH_NAME = 150;

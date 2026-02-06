@@ -18,7 +18,7 @@ use stdClass;
 final class AgainstGameLineups extends ApiHelper
 {
     public function __construct(
-        protected PlayerApiHelper $playerApiHelper,
+//        protected PlayerApiHelper $playerApiHelper,
         SofaScore $sofaScore,
         CacheItemDbRepository $cacheItemDbRepos,
         LoggerInterface $logger

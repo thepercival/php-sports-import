@@ -14,7 +14,7 @@ use SportsImport\ExternalSource;
 final class RoundAttacher extends AttacherAbstract
 {
     public function __construct(
-        protected Round $round,
+        Round $round,
         ExternalSource $externalSource,
         string $externalId
     ) {

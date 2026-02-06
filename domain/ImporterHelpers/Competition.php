@@ -15,6 +15,9 @@ use Sports\Competition\Sport as CompetitionSport;
 use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Competition
 {
     /** @var AttacherRepository<SeasonAttacher>  */

@@ -17,7 +17,7 @@ use SportsImport\ExternalSource\SofaScore;
  */
 final class Role extends SofaScoreHelper
 {
-    protected StartLocationMap|null $placeLocationMap = null;
+//    protected StartLocationMap|null $placeLocationMap = null;
 
 
 //    /**

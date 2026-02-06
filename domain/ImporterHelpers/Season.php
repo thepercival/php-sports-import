@@ -13,15 +13,18 @@ use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
 use Psr\Log\LoggerInterface;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Season
 {
     /** @var AttacherRepository<SeasonAttacher>  */
     protected AttacherRepository $seasonAttacherRepos;
 
     public function __construct(
-        protected SeasonRepository $seasonRepos,
+//        protected SeasonRepository $seasonRepos,
         protected EntityManagerInterface $entityManager,
-        protected LoggerInterface $logger
+//        protected LoggerInterface $logger
     ) {
         $metadata = $entityManager->getClassMetadata(SeasonAttacher::class);
         $this->seasonAttacherRepos = new AttacherRepository($entityManager, $metadata);

@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 
 /**
+ * @api
  * @template T
  */
 abstract class Helper

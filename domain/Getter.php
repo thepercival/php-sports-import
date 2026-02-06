@@ -23,9 +23,12 @@ use SportsImport\Attachers\SeasonAttacher as SeasonAttacher;
 use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Getter
 {
-    protected ImportGameEvents|null $importGameEventsSender = null;
+//    protected ImportGameEvents|null $importGameEventsSender = null;
 
     /** @var AttacherRepository<SportAttacher>  */
     protected AttacherRepository $sportAttacherRepos;
@@ -37,20 +40,20 @@ final class Getter
     protected AttacherRepository $associationAttacherRepos;
 
     public function __construct(
-        protected ImporterHelpers\Sport $sportImportService,
-        protected ImporterHelpers\Association $associationImportService,
-        protected ImporterHelpers\Season $seasonImportService,
-        protected ImporterHelpers\League $leagueImportService,
-        protected ImporterHelpers\Competition $competitionImportService,
-        protected ImporterHelpers\Team $teamImportService,
-        protected ImporterHelpers\TeamCompetitor $teamCompetitorImportService,
-        protected ImporterHelpers\Structure $structureImportService,
-        protected ImporterHelpers\Game\Against $againstGameImportService,
-        protected ImporterHelpers\Person $personImportService,
-        protected CompetitionRepository $competitionRepos,
-        protected AgainstGameRepository $againstGameRepos,
-        protected EntityManagerInterface $entityManager,
-        protected LoggerInterface $logger
+//        protected ImporterHelpers\Sport $sportImportService,
+//        protected ImporterHelpers\Association $associationImportService,
+//        protected ImporterHelpers\Season $seasonImportService,
+//        protected ImporterHelpers\League $leagueImportService,
+//        protected ImporterHelpers\Competition $competitionImportService,
+//        protected ImporterHelpers\Team $teamImportService,
+//        protected ImporterHelpers\TeamCompetitor $teamCompetitorImportService,
+//        protected ImporterHelpers\Structure $structureImportService,
+//        protected ImporterHelpers\Game\Against $againstGameImportService,
+//        protected ImporterHelpers\Person $personImportService,
+//        protected CompetitionRepository $competitionRepos,
+//        protected AgainstGameRepository $againstGameRepos,
+        EntityManagerInterface $entityManager,
+//        protected LoggerInterface $logger
     ) {
         $metaData = $entityManager->getClassMetadata(SportAttacher::class);
         $this->sportAttacherRepos = new AttacherRepository($entityManager, $metaData);
@@ -65,10 +68,10 @@ final class Getter
         $this->leagueAttacherRepos = new AttacherRepository($entityManager, $metaData);
     }
 
-    public function setEventSender(ImportGameEvents $importGameEventsSender): void
-    {
-        $this->importGameEventsSender = $importGameEventsSender;
-    }
+//    public function setEventSender(ImportGameEvents $importGameEventsSender): void
+//    {
+////        $this->importGameEventsSender = $importGameEventsSender;
+//    }
 
     public function getSport(
         ExternalSource\Competitions $externalSourceCompetitions,

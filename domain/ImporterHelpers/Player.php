@@ -13,22 +13,23 @@ use SportsImport\Attachers\TeamAttacher;
 use SportsImport\ExternalSource;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Player
 {
     /** @var AttacherRepository<PersonAttacher>  */
     protected AttacherRepository $personAttacherRepos;
-    /** @var AttacherRepository<TeamAttacher>  */
-    protected AttacherRepository $teamAttacherRepos;
 
     public function __construct(
-        protected PersonRepository $personRepos,
+//        protected PersonRepository $personRepos,
         EntityManagerInterface $entityManager,
     ) {
         $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
         $this->personAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
-        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
-        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
+//        $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
+//        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     public function importImage(
@@ -58,7 +59,7 @@ final class Player
 
     protected function getPersonExternalNumberId(ExternalSource $externalSource, PersonBase $person): string|false
     {
-        $personExternalId = $this->personAttacherRepos->findExternalId($externalSource, $person);
+        $personExternalId = $this->personAttacherRepos->findOneByImportable($externalSource, $person)?->getExternalId();
         if ($personExternalId === null) {
             return false;
         }

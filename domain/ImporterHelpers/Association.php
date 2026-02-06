@@ -8,10 +8,11 @@ use Exception;
 use SportsImport\ExternalSource;
 use Sports\Association as AssociationBase;
 use SportsImport\Attachers\AssociationAttacher as AssociationAttacher;
-
-use Psr\Log\LoggerInterface;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Association
 {
     /** @var EntityRepository<AssociationBase>  */
@@ -21,7 +22,7 @@ final class Association
 
     public function __construct(
         protected EntityManagerInterface $entityManager,
-        protected LoggerInterface $logger
+//        protected LoggerInterface $logger
     ) {
         $metadata = $entityManager->getClassMetadata(AssociationBase::class);
         $this->associationRepos = new EntityRepository($entityManager, $metadata);

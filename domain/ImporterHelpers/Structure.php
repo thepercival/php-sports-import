@@ -15,6 +15,9 @@ use Sports\Structure\Copier as StructureCopier;
 use Psr\Log\LoggerInterface;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Structure
 {
     /** @var AttacherRepository<CompetitionAttacher> */

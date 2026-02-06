@@ -10,6 +10,9 @@ use Sports\League;
 use Sports\Season;
 use Sports\Sport;
 
+/**
+ * @api
+ */
 interface Competitions
 {
     /**

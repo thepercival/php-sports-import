@@ -7,16 +7,23 @@ use Exception;
 use SportsImport\ExternalSource;
 use Sports\Repositories\SportRepository;
 use Sports\Sport as SportBase;
-use SportsImport\Attachers\SportAttacher as SportAttacher;
+use SportsImport\Attachers\SportAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Sport
 {
+    /** @var AttacherRepository<SportAttacher> */
+    protected AttacherRepository $sportAttacherRepos;
+
     public function __construct(
         protected SportRepository $sportRepos,
-        protected AttacherRepository $sportAttacherRepos,
         protected EntityManagerInterface $entityManager
     ) {
+        $metadata = $entityManager->getClassMetadata(SportAttacher::class);
+        $this->sportAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**

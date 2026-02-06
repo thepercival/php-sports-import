@@ -32,6 +32,7 @@ use SportsImport\ExternalSource\GamesAndPlayers;
 use SportsImport\ExternalSource\Transfers;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
+use SportsImport\Repositories\AttacherRepository;
 
 /**
  * @api
@@ -41,12 +42,12 @@ final class Importer
     protected ImportGameEvents|null $importGameEventsSender = null;
     protected ImportPersonEvents|null $importPersonEventsSender = null;
 
-    /** @var EntityRepository<TeamAttacher> */
-    protected EntityRepository $teamAttacherRepos;
-    /** @var EntityRepository<AgainstGameAttacher> */
-    protected EntityRepository $againstGameAttacherRepos;
-    /** @var EntityRepository<PersonAttacher> */
-    protected EntityRepository $personAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher> */
+    protected AttacherRepository $teamAttacherRepos;
+    /** @var AttacherRepository<AgainstGameAttacher> */
+    protected AttacherRepository $againstGameAttacherRepos;
+    /** @var AttacherRepository<PersonAttacher> */
+    protected AttacherRepository $personAttacherRepos;
 
     public function __construct(
         protected Getter $getter,
@@ -68,13 +69,13 @@ final class Importer
         EntityManagerInterface $entityManager
     ) {
         $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
-        $this->personAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->personAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(AgainstGameAttacher::class);
-        $this->againstGameAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->againstGameAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
-        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     public function setGameEventSender(ImportGameEvents $importGameEventsSender): void
@@ -248,7 +249,8 @@ final class Importer
             $this->logger->warning("no competitors found for external competition " . $externalCompetition->getName());
         }
 
-        $externalTeamId = $this->teamAttacherRepos->findExternalId($externalSource, $team);
+        $externalTeamId = $this->teamAttacherRepos->findOneByImportable($externalSource, $team)?->getExternalId();
+
         if ($externalTeamId === null) {
             $this->logger->error(
                 'no externalId found for team "' . $team->getName() . '" (' . (string)$team->getId() . ')'
@@ -481,10 +483,7 @@ final class Importer
 //        $maxUpdated = 20;
 
         if ($person !== null) {
-            $personExternalId = $this->personAttacherRepos->findExternalId(
-                $externalSource,
-                $person
-            );
+            $personExternalId = $this->personAttacherRepos->findOneByImportable($externalSource, $person)?->getExternalId();
             if ($personExternalId === null) {
                 return;
             }
@@ -533,10 +532,7 @@ final class Importer
             if ($teamFilter !== null && $teamFilter !== $team) {
                 continue;
             }
-            $teamExternalId = $this->teamAttacherRepos->findExternalId(
-                $externalSource,
-                $team
-            );
+            $teamExternalId = $this->teamAttacherRepos->findOneByImportable($externalSource, $team)?->getExternalId();
             if ($teamExternalId === null) {
                 continue;
             }

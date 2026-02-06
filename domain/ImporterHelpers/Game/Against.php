@@ -37,6 +37,9 @@ use SportsImport\ImporterHelpers\Person as PersonImporterHelper;
 use SportsImport\Queue\Game\ImportEvents as ImportGameEvents;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Against
 {
     protected ImportGameEvents|null $importGameEventsSender = null;
@@ -56,7 +59,7 @@ final class Against
 
     public function __construct(
         protected PersonImporterHelper $personHelper,
-        protected AgainstGameRepository $againstGameRepos,
+//        protected AgainstGameRepository $againstGameRepos,
         protected AgainstScoreRepository $againstScoreRepos,
         protected StructureRepository $structureRepos,
         protected LoggerInterface $logger,

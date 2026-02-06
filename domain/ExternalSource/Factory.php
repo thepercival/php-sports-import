@@ -26,7 +26,7 @@ final class Factory implements Proxy
     protected const int GAMES_AND_PLAYERIMAGES = 4;
 
     public function __construct(
-        protected EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager,
         protected CacheItemDbRepository    $cacheItemDbRepos,
         protected LoggerInterface          $logger
     ) {

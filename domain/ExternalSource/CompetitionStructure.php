@@ -9,6 +9,9 @@ use Sports\Structure;
 use Sports\Competition;
 use Sports\Team as TeamBase;
 
+/**
+ * @api
+ */
 interface CompetitionStructure
 {
     public function getStructure(Competition $competition): Structure;

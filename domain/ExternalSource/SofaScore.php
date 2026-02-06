@@ -47,6 +47,9 @@ use SportsImport\ExternalSource\SofaScore\Helper\Transfer as TransferHelper;
 use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use SportsImport\Transfer;
 
+/**
+ * @api
+ */
 final class SofaScore implements
     Implementation,
     Competitions,
@@ -82,7 +85,7 @@ final class SofaScore implements
 
     public function __construct(
         protected ExternalSourceBase $externalSource,
-        protected CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepository $cacheItemDbRepos,
         protected LoggerInterface $logger
     ) {
         $sportApiHelper = new SportApiHelper($this, $cacheItemDbRepos, $logger);
@@ -101,11 +104,11 @@ final class SofaScore implements
         $this->competitionHelper = new CompetitionHelper($competitionApiHelper, $this, $this->logger);
 
         $playerApiHelper = new PlayerApiHelper($this, $cacheItemDbRepos, $logger);
-        $this->personHelper = new PersonHelper($playerApiHelper, $this, $this->logger);
+        $this->personHelper = new PersonHelper($this, $this->logger);
         $this->playerHelper = new SofaScore\Helper\Player($playerApiHelper, $this, $this->logger);
 
         $teamApiHelper = new TeamApiHelper($this, $cacheItemDbRepos, $logger);
-        $this->teamHelper = new TeamHelper($this->personHelper, $teamApiHelper, $this, $this->logger);
+        $this->teamHelper = new TeamHelper($teamApiHelper, $this, $this->logger);
 
         $this->transferHelper = new TransferHelper(
             $this->personHelper,
@@ -127,8 +130,8 @@ final class SofaScore implements
 
 
 
-        $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
-        $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($playerApiHelper, $this, $cacheItemDbRepos, $logger);
+        $againstGameLineupsApiHelper = new AgainstGameLineupsApiHelper($this, $cacheItemDbRepos, $logger);
+        $againstGameEventsApiHelper = new AgainstGameEventsApiHelper($this, $cacheItemDbRepos, $logger);
         $againstGameApiHelper = new AgainstGameApiHelper(
             $againstGameLineupsApiHelper,
             $againstGameEventsApiHelper,
@@ -144,9 +147,7 @@ final class SofaScore implements
             $this->personHelper,
             $againstGamesApiHelper,
             $againstGameApiHelper,
-            $againstGameLineupsApiHelper,
-            $againstGameEventsApiHelper,
-            new JsonToDataConverter($this->logger),
+//            new JsonToDataConverter($this->logger),
             $this,
             $this->logger
         );
@@ -163,8 +164,6 @@ final class SofaScore implements
 //        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
 //        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
 
-
-        $this->cacheItemDbRepos = $cacheItemDbRepos;
         /* $this->structureOptions = new StructureOptions(
              new VoetbalRange(1, 32),
              new VoetbalRange( 2, 256),

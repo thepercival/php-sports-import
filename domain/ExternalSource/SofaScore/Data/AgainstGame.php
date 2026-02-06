@@ -11,6 +11,9 @@ use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEven
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
 
+/**
+ * @api
+ */
 final class AgainstGame
 {
     /**
@@ -30,8 +33,6 @@ final class AgainstGame
         public AgainstGameScore $awayScore,
     ) {
     }
-
-
 
     public function getPlayers(AgainstSide $side): AgainstGameSidePlayers|null {
         if( $this->players === null) {

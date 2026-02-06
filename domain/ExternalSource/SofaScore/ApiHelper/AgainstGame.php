@@ -17,6 +17,9 @@ use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameSc
 use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
+/**
+ * @api
+ */
 final class AgainstGame extends ApiHelper
 {
     public function __construct(

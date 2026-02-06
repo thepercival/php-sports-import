@@ -19,7 +19,7 @@ use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 final class Person extends SofaScoreHelper
 {
     public function __construct(
-        protected PlayerApiHelper $apiHelper,
+//        protected PlayerApiHelper $apiHelper,
         SofaScore $parent,
         LoggerInterface $logger
     ) {

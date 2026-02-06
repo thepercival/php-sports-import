@@ -6,6 +6,9 @@ namespace SportsImport\ExternalSource\SofaScore\Data;
 
 use SportsHelpers\Against\AgainstSide;
 
+/**
+ * @api
+ */
 final class AgainstGameSidePlayers
 {
     /**

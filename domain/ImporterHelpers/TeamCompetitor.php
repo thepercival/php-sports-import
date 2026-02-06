@@ -14,33 +14,37 @@ use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
 use SportsImport\Attachers\TeamAttacher as TeamAttacher;
 use SportsImport\Attachers\TeamCompetitorAttacher as TeamCompetitorAttacher;
 use SportsImport\ExternalSource;
+use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class TeamCompetitor
 {
-    // TeamCompetitor
-    protected EntityRepository $teamCompetitorRepos;
-    // TeamCompetitorAttacher
-    protected EntityRepository $teamCompetitorAttacherRepos;
-    // CompetitionAttacherRepository
-    protected EntityRepository $competitionAttacherRepos;
-    // TeamAttacherRepository
-    protected EntityRepository $teamAttacherRepos;
+    /** @var EntityRepository<TeamCompetitor> */
+//    protected EntityRepository $teamCompetitorRepos;
+    /** @var AttacherRepository<TeamCompetitorAttacher> */
+    protected AttacherRepository $teamCompetitorAttacherRepos;
+    /** @var AttacherRepository<CompetitionAttacher> */
+    protected AttacherRepository $competitionAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher> */
+    protected AttacherRepository $teamAttacherRepos;
 
     public function __construct(
         protected LoggerInterface $logger,
-        EntityManagerInterface $entityManager,
+        protected EntityManagerInterface $entityManager,
     ) {
-        $metadata = $entityManager->getClassMetadata(TeamCompetitor::class);
-        $this->teamCompetitorRepos = new EntityRepository($entityManager, $metadata);
+//        $metadata = $entityManager->getClassMetadata(TeamCompetitor::class);
+//        $this->teamCompetitorRepos = new EntityRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(TeamCompetitorAttacher::class);
-        $this->teamCompetitorAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->teamCompetitorAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(CompetitionAttacher::class);
-        $this->competitionAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->competitionAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
-        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**
@@ -71,7 +75,8 @@ final class TeamCompetitor
                     $externalSource,
                     (string)$externalId
                 );
-                $this->teamCompetitorAttacherRepos->save($competitorAttacher);
+                $this->entityManager->persist($competitorAttacher);
+                $this->entityManager->flush();
                 $added++;
             } else {
                 $this->editTeamCompetitor($competitorAttacher->getImportable(), $externalSourceTeamCompetitor);
@@ -90,10 +95,11 @@ final class TeamCompetitor
             $location = $externalSourceTeamCompetitor->getStartId();
             throw new \Exception('team not found for teamcompetitor: "' . $location .'"');
         }
-        $competition = $this->competitionAttacherRepos->findImportable(
+        $attacher = $this->competitionAttacherRepos->findOneByExternalId(
             $externalSource,
             (string)$externalSourceTeamCompetitor->getCompetition()->getId()
         );
+        $competition = $attacher?->getImportable();
         if ($competition === null) {
             return null;
         }
@@ -111,7 +117,8 @@ final class TeamCompetitor
         $teamCompetitor->setPublicInfo($externalSourceTeamCompetitor->getPublicInfo());
         $teamCompetitor->setPrivateInfo($externalSourceTeamCompetitor->getPrivateInfo());
 
-        $this->teamCompetitorRepos->save($teamCompetitor);
+        $this->entityManager->persist($teamCompetitor);
+        $this->entityManager->flush();
         return $teamCompetitor;
     }
 
@@ -120,6 +127,7 @@ final class TeamCompetitor
         $teamCompetitor->setPresent($externalSourceTeamCompetitor->getPresent());
         $teamCompetitor->setPublicInfo($externalSourceTeamCompetitor->getPublicInfo());
         $teamCompetitor->setPrivateInfo($externalSourceTeamCompetitor->getPrivateInfo());
-        $this->teamCompetitorRepos->save($teamCompetitor);
+        $this->entityManager->persist($teamCompetitor);
+        $this->entityManager->flush();
     }
 }

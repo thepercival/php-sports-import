@@ -44,8 +44,12 @@ final class Structure extends SofaScoreHelper
         if (array_key_exists($competitionId, $this->cache)) {
             return $this->cache[$competitionId];
         }
-        list($nrOfPlaces, $nrOfPoules) = $this->getPlacesAndPoules($competition);
-        if ($nrOfPlaces === 0 || $nrOfPoules === 0) {
+
+        $teamCompetitorsData = $this->teamCompetitorApiHelper->getTeamCompetitors($competition);
+
+        $nrOfPlaces = count($teamCompetitorsData);
+        $nrOfPoules = 1;
+        if ($nrOfPlaces === 0) {
             throw new \Exception('no places or place in structure for external competition "' . $competition->getName() . '"', E_ERROR);
         }
         $pouleStructure = $this->structureEditor->createBalanced($nrOfPlaces, $nrOfPoules);
@@ -54,41 +58,41 @@ final class Structure extends SofaScoreHelper
         return $structure;
     }
 
-    /**
-     * @param Competition $competition
-     * @return list<int>
-     */
-    protected function getPlacesAndPoules(Competition $competition): array
-    {
-        $teamCompetitorsData = $this->teamCompetitorApiHelper->getTeamCompetitors($competition);
-        return $this->getPlacesAndPoulesHelper($teamCompetitorsData);
-    }
+//    /**
+//     * @param Competition $competition
+//     * @return list<int>
+//     */
+//    protected function getPlacesAndPoules(Competition $competition): array
+//    {
+//        $teamCompetitorsData = $this->teamCompetitorApiHelper->getTeamCompetitors($competition);
+//        return $this->getPlacesAndPoulesHelper($teamCompetitorsData);
+//    }
 
-    /**
-     * @param list<TeamCompetitorData> $teamCompetitorsData
-     * @return list<int>
-     */
-    protected function getPlacesAndPoulesHelper(array $teamCompetitorsData): array
-    {
-        $nrOfPlaces = count($teamCompetitorsData);
-        $nrOfPoules = 1;
-//        if (!property_exists($apiData, 'standingsTables')) {
-//            throw new \Exception('apiData has no property standingsTables', E_ERROR);
-//        }
-//        $standingsTables = $apiData->standingsTables;
-//        if (!($standingsTables instanceof \Traversable)) {
-//            throw new \Exception('apiData->standings is not traversable', E_ERROR);
-//        }
-//        /** @var stdClass $standingsTable */
-//        foreach ($standingsTables as $standingsTable) {
-//            $nrOfPoules++;
-//            if (!property_exists($standingsTable, 'tableRows')) {
-//                continue;
-//            }
-//            /** @var Countable $standingRow */
-//            $standingRow = $standingsTable->tableRows;
-//            $nrOfPlaces += count($standingRow);
-//        }
-        return [$nrOfPlaces,$nrOfPoules];
-    }
+//    /**
+//     * @param list<TeamCompetitorData> $teamCompetitorsData
+//     * @return list<int>
+//     */
+//    protected function getPlacesAndPoulesHelper(array $teamCompetitorsData): array
+//    {
+//        $nrOfPlaces = count($teamCompetitorsData);
+//        $nrOfPoules = 1;
+////        if (!property_exists($apiData, 'standingsTables')) {
+////            throw new \Exception('apiData has no property standingsTables', E_ERROR);
+////        }
+////        $standingsTables = $apiData->standingsTables;
+////        if (!($standingsTables instanceof \Traversable)) {
+////            throw new \Exception('apiData->standings is not traversable', E_ERROR);
+////        }
+////        /** @var stdClass $standingsTable */
+////        foreach ($standingsTables as $standingsTable) {
+////            $nrOfPoules++;
+////            if (!property_exists($standingsTable, 'tableRows')) {
+////                continue;
+////            }
+////            /** @var Countable $standingRow */
+////            $standingRow = $standingsTable->tableRows;
+////            $nrOfPlaces += count($standingRow);
+////        }
+//        return [$nrOfPlaces,$nrOfPoules];
+//    }
 }

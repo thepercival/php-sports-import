@@ -2,6 +2,9 @@
 
 namespace SportsImport\ExternalSource;
 
+/**
+ * @api
+ */
 final class NameAnalyzer
 {
     protected string|null $firstName = null;
@@ -91,10 +94,10 @@ final class NameAnalyzer
         $this->lastName .= $namePart;
     }
 
-    protected function inDefaultNameInsertions(string $nameInsertionInput): bool
-    {
-        return $this->getDefaultNameInsertions($nameInsertionInput) !== null;
-    }
+//    protected function inDefaultNameInsertions(string $nameInsertionInput): bool
+//    {
+//        return $this->getDefaultNameInsertions($nameInsertionInput) !== null;
+//    }
 
     protected function getDefaultNameInsertions(string $nameInsertionInput): string|null
     {

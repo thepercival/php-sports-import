@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sports\Game\Against as AgainstGame;
 use Sports\Person as PersonBase;
-use Sports\Repositories\PersonRepository;
 use Sports\Season;
 use Sports\Sport\FootballLine;
 use Sports\Team;
@@ -19,6 +18,9 @@ use SportsImport\ExternalSource;
 use SportsImport\Queue\Person\ImportEvents as ImportPersonEvents;
 use SportsImport\Repositories\AttacherRepository;
 
+/**
+ * @api
+ */
 final class Person
 {
     protected ImportPersonEvents|null $importPersonEventsSender = null;
@@ -28,7 +30,7 @@ final class Person
     protected AttacherRepository $teamAttacherRepos;
 
     public function __construct(
-        protected PersonRepository $personRepos,
+//        protected PersonRepository $personRepos,
         protected LoggerInterface $logger,
         protected EntityManagerInterface $entityManager,
     ) {

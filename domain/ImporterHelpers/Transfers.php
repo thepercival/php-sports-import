@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SportsImport\ImporterHelpers;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
 use Sports\Person;
@@ -14,28 +13,32 @@ use Sports\Repositories\TeamPlayerRepository;
 use Sports\Team;
 use Sports\Team\Role\Editor as RoleEditor;
 use SportsImport\ExternalSource;
+use SportsImport\Repositories\AttacherRepository;
 use SportsImport\Transfer;
 use SportsImport\Attachers\TeamAttacher;
 use SportsImport\Attachers\PersonAttacher;
 
+/**
+ * @api
+ */
 final class Transfers
 {
-    /** @var EntityRepository<PersonAttacher>  */
-    protected EntityRepository $personAttacherRepos;
-    /** @var EntityRepository<TeamAttacher>  */
-    protected EntityRepository $teamAttacherRepos;
+    /** @var AttacherRepository<PersonAttacher>  */
+    protected AttacherRepository $personAttacherRepos;
+    /** @var AttacherRepository<TeamAttacher>  */
+    protected AttacherRepository $teamAttacherRepos;
 
     public function __construct(
-        protected PersonRepository $personRepos,
-        protected TeamPlayerRepository $teamPlayerRepos,
+//        protected PersonRepository $personRepos,
+//        protected TeamPlayerRepository $teamPlayerRepos,
         protected LoggerInterface $logger,
         protected EntityManagerInterface $entityManager,
     ) {
         $metadata = $entityManager->getClassMetadata(PersonAttacher::class);
-        $this->personAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->personAttacherRepos = new AttacherRepository($entityManager, $metadata);
 
         $metadata = $entityManager->getClassMetadata(TeamAttacher::class);
-        $this->teamAttacherRepos = new EntityRepository($entityManager, $metadata);
+        $this->teamAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
 
     /**

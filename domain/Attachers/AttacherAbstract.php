@@ -8,6 +8,7 @@ use SportsHelpers\Identifiable;
 use SportsImport\ExternalSource;
 
 /**
+ * @api
  * @template T
  */
 abstract class AttacherAbstract extends Identifiable

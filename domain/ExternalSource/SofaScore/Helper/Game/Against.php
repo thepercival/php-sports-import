@@ -57,9 +57,9 @@ final class Against extends SofaScoreHelper
         protected PersonHelper $personHelper,
         protected AgainstGamesApiHelper $againstGamesApiHelper,
         protected AgainstGameApiHelper $againstGameApiHelper,
-        protected AgainstGameLineupsApiHelper $againstGameLineupsApiHelper,
-        protected AgainstGameEventsApiHelper $againstGameEventsApiHelper,
-        protected JsonToDataConverter $jsonToDataConverter,
+//        protected AgainstGameLineupsApiHelper $againstGameLineupsApiHelper,
+//        protected AgainstGameEventsApiHelper $againstGameEventsApiHelper,
+//        protected JsonToDataConverter $jsonToDataConverter,
         SofaScore $parent,
         LoggerInterface $logger
     ) {
@@ -361,7 +361,7 @@ final class Against extends SofaScoreHelper
         }
     }
 
-    protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): GameParticipation
+    protected function createGameParticipation(AgainstGamePlace $againstGamePlace, TeamCompetitor $teamCompetitor, PlayerData $playerData): VOID
     {
         $game = $againstGamePlace->getGame();
         $period = Period::fromDate($game->getStartDateTime(), $game->getStartDateTime()->add(new \DateInterval('PT3H')));
@@ -375,7 +375,7 @@ final class Against extends SofaScoreHelper
         $teamPlayer->setMarketValue($playerData->marketValue);
 
         $beginMinute = $playerData->nrOfMinutesPlayed === 0 ? -1 : 0;
-        return new GameParticipation($againstGamePlace, $teamPlayer, $beginMinute);
+        new GameParticipation($againstGamePlace, $teamPlayer, $beginMinute);
     }
 
     /**
@@ -421,28 +421,28 @@ final class Against extends SofaScoreHelper
         }
     }
 
-    protected function convertApiDataToPerson(stdClass $personApiData): Person
-    {
-        $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($personApiData, null);
-        if ($playerData === null) {
-            throw new Exception('"' . (string)$personApiData->id . '" kon niet worden gevonden als speler', E_ERROR);
-        }
-        $person = $this->personHelper->convertDataToPerson($playerData);
-//        if ($person === null) {
-//            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+//    protected function convertApiDataToPerson(stdClass $personApiData): Person
+//    {
+//        $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($personApiData, null);
+//        if ($playerData === null) {
+//            throw new Exception('"' . (string)$personApiData->id . '" kon niet worden gevonden als speler', E_ERROR);
 //        }
-        return $person;
-    }
+//        $person = $this->personHelper->convertDataToPerson($playerData);
+////        if ($person === null) {
+////            throw new Exception('"'.$playerData->id.'" kon niet worden gevonden als speler', E_ERROR);
+////        }
+//        return $person;
+//    }
 
-    protected function convertPersonApiDataToParticipation(AgainstGame $game, stdClass $personApiData): Participation
-    {
-        $person = $this->convertApiDataToPerson($personApiData);
-        $participation = $game->getParticipation($person);
-        if ($participation === null) {
-            throw new Exception($person->getName() . "(".(string)$person->getId().") kon niet worden gevonden als speler", E_ERROR);
-        }
-        return $participation;
-    }
+//    protected function convertPersonApiDataToParticipation(AgainstGame $game, stdClass $personApiData): Participation
+//    {
+//        $person = $this->convertApiDataToPerson($personApiData);
+//        $participation = $game->getParticipation($person);
+//        if ($participation === null) {
+//            throw new Exception($person->getName() . "(".(string)$person->getId().") kon niet worden gevonden als speler", E_ERROR);
+//        }
+//        return $participation;
+//    }
 
     protected function convertPlayerDataToParticipation(AgainstGame $game, PlayerData $playerData): Participation
     {
