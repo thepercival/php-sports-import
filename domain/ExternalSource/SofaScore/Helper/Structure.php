@@ -6,15 +6,14 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
-use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
 use Sports\Competition;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Structure as StructureBase;
 use Sports\Structure\Editor as StructureEditor;
-use Sports\Competition\Sport\Editor as CompetitionSportEditor;
+use Sports\Competition\CompetitionSportEditor;
 use Sports\Planning\Config\Service as PlanningConfigService;
-use stdClass;
+
 
 /**
  * @template-extends SofaScoreHelper<StructureBase>

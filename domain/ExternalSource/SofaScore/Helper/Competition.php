@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
-use Sports\Competition\Sport as CompetitionSport;
+use Sports\Competition\CompetitionSport;
 use Sports\Ranking\PointsCalculation;
 use SportsHelpers\Sport\PersistVariant;
 use SportsImport\ExternalSource\SofaScore;

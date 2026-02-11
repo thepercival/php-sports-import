@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-  <entity name="SportsImport\Attacher\Game\Against" table="externalAgainstGames" repository-class="SportsImport\Attacher\Game\Against\Repository">
-    <many-to-one field="importable" target-entity="Sports\Game\Against">
+  <entity name="SportsImport\Attachers\LeagueAttacher" table="externalLeagues">
+    <many-to-one field="importable" target-entity="Sports\League">
       <join-columns>
         <join-column name="importableObjectId" referenced-column-name="id" nullable="false" on-delete="CASCADE"/>
       </join-columns>

@@ -7,7 +7,7 @@ use Doctrine\ORM\EntityRepository;
 use SportsImport\Attachers\AssociationAttacher;
 use SportsImport\ExternalSource;
 use Sports\League as LeagueBase;
-use SportsImport\Attachers\LeagueAttacher as LeagueAttacher;
+use SportsImport\Attachers\LeagueAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
 /**
@@ -15,8 +15,6 @@ use SportsImport\Repositories\AttacherRepository;
  */
 final class League
 {
-    /** @var EntityRepository<League>  */
-    protected EntityRepository $leagueRepos;
     /** @var AttacherRepository<LeagueAttacher>  */
     protected AttacherRepository $leagueAttacherRepos;
     /** @var AttacherRepository<AssociationAttacher>  */
@@ -25,9 +23,6 @@ final class League
     public function __construct(
         protected EntityManagerInterface $entityManager,
     ) {
-        $metaData = $entityManager->getClassMetadata(League::class);
-        $this->leagueRepos = new EntityRepository($entityManager, $metaData);
-
         $metaData = $entityManager->getClassMetadata(LeagueAttacher::class);
         $this->leagueAttacherRepos = new AttacherRepository($entityManager, $metaData);
 
@@ -79,13 +74,15 @@ final class League
             return null;
         }
         $league = new LeagueBase($association, $externalSourceLeague->getName());
-        $this->leagueRepos->save($league);
+        $this->entityManager->persist($league);
+        $this->entityManager->flush();
         return $league;
     }
 
     protected function editLeague(LeagueBase $league, LeagueBase $externalSourceLeague): void
     {
         $league->setName($externalSourceLeague->getName());
-        $this->leagueRepos->save($league);
+        $this->entityManager->persist($league);
+        $this->entityManager->flush();
     }
 }

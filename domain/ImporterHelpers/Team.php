@@ -3,14 +3,12 @@
 namespace SportsImport\ImporterHelpers;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
 use Exception;
 use SportsImport\Attachers\AssociationAttacher;
 use SportsImport\ExternalSource;
 use SportsImport\Attachers\TeamAttacher;
 use Psr\Log\LoggerInterface;
 use Sports\Team as TeamBase;
-use Sports\Association;
 use SportsImport\Repositories\AttacherRepository;
 
 /**
@@ -18,8 +16,6 @@ use SportsImport\Repositories\AttacherRepository;
  */
 final class Team
 {
-    /** @var EntityRepository<Team>  */
-    protected EntityRepository $teamRepos;
     /** @var AttacherRepository<TeamAttacher>  */
     protected AttacherRepository $teamAttacherRepos;
     /** @var AttacherRepository<AssociationAttacher>  */
@@ -29,9 +25,6 @@ final class Team
         protected LoggerInterface $logger,
         protected EntityManagerInterface $entityManager,
     ) {
-        $metaData = $entityManager->getClassMetadata(Team::class);
-        $this->teamRepos = new EntityRepository($entityManager, $metaData);
-
         $metaData = $entityManager->getClassMetadata(TeamAttacher::class);
         $this->teamAttacherRepos = new AttacherRepository($entityManager, $metaData);
 
@@ -89,7 +82,8 @@ final class Team
         $team = new TeamBase($association, $externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
 
-        $this->teamRepos->save($team);
+        $this->entityManager->persist($team);
+        $this->entityManager->flush();
         return $team;
     }
 
@@ -97,7 +91,8 @@ final class Team
     {
         $team->setName($externalSourceTeam->getName());
         $team->setAbbreviation($externalSourceTeam->getAbbreviation());
-        $this->teamRepos->save($team);
+        $this->entityManager->persist($team);
+        $this->entityManager->flush();
     }
 
     /**

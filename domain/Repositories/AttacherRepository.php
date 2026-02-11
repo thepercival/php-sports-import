@@ -12,7 +12,7 @@ use SportsImport\ExternalSource;
 
 /**
  * @api
- * @template T
+ * @template T of object
  * @template-extends EntityRepository<T>
  */
 final class AttacherRepository extends EntityRepository

@@ -15,8 +15,6 @@ use SportsImport\Repositories\AttacherRepository;
  */
 final class Association
 {
-    /** @var EntityRepository<AssociationBase>  */
-    protected EntityRepository $associationRepos;
     /** @var AttacherRepository<AssociationAttacher>  */
     protected AttacherRepository $associationAttacherRepos;
 
@@ -24,9 +22,6 @@ final class Association
         protected EntityManagerInterface $entityManager,
 //        protected LoggerInterface $logger
     ) {
-        $metadata = $entityManager->getClassMetadata(AssociationBase::class);
-        $this->associationRepos = new EntityRepository($entityManager, $metadata);
-
         $metadata = $entityManager->getClassMetadata(AssociationAttacher::class);
         $this->associationAttacherRepos = new AttacherRepository($entityManager, $metadata);
     }
@@ -76,13 +71,15 @@ final class Association
             }
         }
         $newAssociation->setParent($parentAssociation);
-        $this->associationRepos->save($newAssociation);
+        $this->entityManager->persist($newAssociation);
+        $this->entityManager->flush();
         return $newAssociation;
     }
 
     protected function editAssociation(AssociationBase $association, AssociationBase $externalSourceAssociation): void
     {
         $association->setName($externalSourceAssociation->getName());
-        $this->associationRepos->save($association);
+        $this->entityManager->persist($association);
+        $this->entityManager->flush();
     }
 }

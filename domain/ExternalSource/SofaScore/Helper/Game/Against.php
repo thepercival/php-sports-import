@@ -19,7 +19,6 @@ use Sports\Game\Participation as GameParticipation;
 use Sports\Game\Phase as GamePhase;
 use Sports\Game\Place\Against as AgainstGamePlace;
 use Sports\Game\State as GameState;
-use Sports\Person;
 use Sports\Place;
 use Sports\Poule;
 use Sports\Score\Against as AgainstScore;
@@ -28,22 +27,17 @@ use Sports\Team\Player as TeamPlayer;
 use SportsHelpers\Against\AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
-use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
 use SportsImport\ExternalSource\SofaScore\Data\Player;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
-use stdClass;
 
 /**
  * @template-extends SofaScoreHelper<AgainstGame>

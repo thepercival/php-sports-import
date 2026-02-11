@@ -24,7 +24,7 @@ use Sports\Poule;
 use Sports\Repositories\AgainstScoreRepository;
 use Sports\Score\Creator as ScoreCreator;
 use Sports\Sport;
-use Sports\Structure\Repository as StructureRepository;
+use Sports\Repositories\StructureRepository;
 use Sports\Team;
 use Sports\Team\Player;
 use SportsImport\Attachers\AgainstGameAttacher as AgainstGameAttacher;

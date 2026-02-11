@@ -3,11 +3,11 @@
 namespace SportsImport\ImporterHelpers;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Sports\Competition\Sport\FromToMapper as CompetitionSportFromToMapper;
-use Sports\Competition\Sport\FromToMapStrategy;
+use Sports\Competition\CompetitionSportFromToMapper;
+use Sports\Competition\CompetitionSportFromToMapStrategy;
 use Sports\Poule\Horizontal\Creator as HorizontalPouleCreator;
 use Sports\Qualify\Rule\Creator as QualifyRuleCreator;
-use Sports\Structure\Repository as StructureRepository;
+use Sports\Repositories\StructureRepository;
 use SportsImport\Attachers\CompetitionAttacher;
 use SportsImport\ExternalSource;
 use Sports\Structure as StructureBase;
@@ -50,7 +50,7 @@ final class Structure
             new CompetitionSportFromToMapper (
                 array_values($externalSourceStructure->getFirstRoundNumber()->getCompetition()->getSports()->toArray()),
                 array_values($toCompetition->getSports()->toArray()),
-                FromToMapStrategy::ByProperties
+                CompetitionSportFromToMapStrategy::ByProperties
             )
         );
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-  <mapped-superclass name="SportsImport\Attacher">
+  <mapped-superclass name="SportsImport\Attachers\AttacherAbstract">
     <field name="externalId" column="externalId" type="string" length="100" nullable="false" unique="false"/>
     <many-to-one field="externalSource" target-entity="SportsImport\ExternalSource">
       <join-columns>

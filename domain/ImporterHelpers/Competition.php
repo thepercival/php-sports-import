@@ -3,15 +3,13 @@
 namespace SportsImport\ImporterHelpers;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Sports\Competition\Service as CompetitionService;
-use SportsHelpers\Sport\PersistVariant;
+use Sports\Competition\CompetitionSport;
 use SportsImport\Attachers\LeagueAttacher;
 use SportsImport\Attachers\SeasonAttacher;
 use SportsImport\Attachers\SportAttacher;
 use SportsImport\ExternalSource;
 use Sports\Repositories\CompetitionRepository;
 use Sports\Competition as CompetitionBase;
-use Sports\Competition\Sport as CompetitionSport;
 use SportsImport\Attachers\CompetitionAttacher as CompetitionAttacher;
 use SportsImport\Repositories\AttacherRepository;
 
