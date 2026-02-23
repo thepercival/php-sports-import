@@ -10,7 +10,7 @@ use Sports\Competition;
 use Sports\Competitor\Team as TeamCompetitor;
 use Sports\Team as TeamBase;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamApiHelper as TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;

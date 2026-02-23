@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -13,14 +13,13 @@ use Psr\Log\LoggerInterface;
 use Sports\Game\State as GameState;
 use SportsHelpers\Dev\ByteFormatter;
 use SportsHelpers\SportRange;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
 /**
  * @api
  */
-abstract class ApiHelper
+abstract class ApiHelperAbstract
 {
     private const int NrOfRetries = 2;
     private SportRange|null $sleepRangeInSeconds = null;
@@ -29,7 +28,7 @@ abstract class ApiHelper
 
     public function __construct(
         protected SofaScore $sofaScore,
-        protected CacheItemDbRepository $cacheItemDbRepos,
+        protected CacheItemDbRepositoryInterface $cacheItemDbRepos,
         protected LoggerInterface $logger
     ) {
         $this->jsonToDataConverter = new JsonToDataConverter($logger);

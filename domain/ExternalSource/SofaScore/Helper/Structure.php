@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
-use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
-use Sports\Competition;
 use Psr\Log\LoggerInterface;
-use SportsImport\ExternalSource\SofaScore;
-use Sports\Structure as StructureBase;
-use Sports\Structure\Editor as StructureEditor;
+use Sports\Competition;
 use Sports\Competition\CompetitionSportEditor;
 use Sports\Planning\Config\Service as PlanningConfigService;
+use Sports\Structure as StructureBase;
+use Sports\Structure\Editor as StructureEditor;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamCompetitorApiHelper as TeamCompetitorApiHelper;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 
 
 /**
@@ -58,10 +58,10 @@ final class Structure extends SofaScoreHelper
     }
 
 //    /**
-//     * @param Competition $competition
+//     * @param CompetitionImportHelper $competition
 //     * @return list<int>
 //     */
-//    protected function getPlacesAndPoules(Competition $competition): array
+//    protected function getPlacesAndPoules(CompetitionImportHelper $competition): array
 //    {
 //        $teamCompetitorsData = $this->teamCompetitorApiHelper->getTeamCompetitors($competition);
 //        return $this->getPlacesAndPoulesHelper($teamCompetitorsData);

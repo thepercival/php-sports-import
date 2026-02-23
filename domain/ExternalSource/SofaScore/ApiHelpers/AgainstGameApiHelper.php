@@ -2,31 +2,31 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Sports\Game\State as GameState;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as EventsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as LineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameEventsApiHelper as EventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameLineupsApiHelper as LineupsApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameRound as AgainstGameRoundData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameScore as AgainstGameScoreData;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
 /**
  * @api
  */
-final class AgainstGame extends ApiHelper
+final class AgainstGameApiHelper extends ApiHelperAbstract
 {
     public function __construct(
         protected LineupsApiHelper $lineupApiHelper,
         protected EventsApiHelper $eventApiHelper,
         SofaScore $sofaScore,
-        CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepositoryInterface $cacheItemDbRepos,
         LoggerInterface $logger
     ) {
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);

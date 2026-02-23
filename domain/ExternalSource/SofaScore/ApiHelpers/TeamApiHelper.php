@@ -2,20 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use Psr\Log\LoggerInterface;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-final class Team extends ApiHelper
+final class TeamApiHelper extends ApiHelperAbstract
 {
     public function __construct(
         SofaScore $sofaScore,
-        CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepositoryInterface $cacheItemDbRepos,
         LoggerInterface $logger
     ) {
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);

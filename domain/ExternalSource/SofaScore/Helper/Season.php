@@ -8,7 +8,7 @@ use League\Period\Period;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\Data\Season as SeasonData;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\SeasonApiHelper as SeasonApiHelper;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use Sports\Season as SeasonBase;

@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper\Game;
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\GameRoundNumbersApiHelper as GameRoundNumbersApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 
 /**

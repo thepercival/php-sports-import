@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper\Team;
 use Sports\Competitor\StartLocationMap;
 use Sports\Team\Role as TeamRole;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper as SofaScoreApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers as SofaScoreApiHelper;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 
@@ -68,7 +68,7 @@ final class Role extends SofaScoreHelper
 //            return null;
 //        }
 //        $line = 1;
-//        $teamRole = new Player( $team, $person, $game->getPeriod(), $line );
+//        $teamRole = new PlayerImportHelper( $team, $person, $game->getPeriod(), $line );
 //        $teamRole->setId( $externalTeamRole->slug );
 //        $teamRole->setShirtNumber( $externalTeamRole->shirt );
 //        $this->teamRoleCache[$teamRole->getId()] = $teamRole;

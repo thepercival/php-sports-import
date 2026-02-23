@@ -2,23 +2,22 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use Psr\Log\LoggerInterface;
 use Sports\Competition;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameApiHelper as AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-final class AgainstGames extends ApiHelper
+final class AgainstGamesApiHelper extends ApiHelperAbstract
 {
     public function __construct(
         protected AgainstGameApiHelper $againstGameDetailsApiHelper,
         SofaScore $sofaScore,
-        CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepositoryInterface $cacheItemDbRepos,
         LoggerInterface $logger
     ) {
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);
@@ -97,7 +96,7 @@ final class AgainstGames extends ApiHelper
 //    return null;
     //}
     //$competitionSport = $competition->getSingleSport();
-    //$game = new AgainstGame($poule, $gameRoundNumber, $startDateTime, $competitionSport, $gameRoundNumber);
+    //$game = new AgainstGameApiHelper($poule, $gameRoundNumber, $startDateTime, $competitionSport, $gameRoundNumber);
     //if (property_exists($externalGame->event, "status")) {
 //    $game->setState($this->apiHelper->convertState($externalGame->event->status->code));
     //}

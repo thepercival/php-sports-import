@@ -3,19 +3,14 @@
 namespace SportsImport\ExternalSource\SofaScore\Helper\Competitor;
 
 use Psr\Log\LoggerInterface;
-use Sports\Association;
-use Sports\Category;
-use Sports\Competitor\StartLocation;
-use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
-use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
-use stdClass;
-use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
-use Sports\Competitor\Team as TeamCompetitorBase;
-use Sports\Team as TeamBase;
-use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
-use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use Sports\Competition;
+use Sports\Competitor\StartLocation;
+use Sports\Competitor\Team as TeamCompetitorBase;
+use SportsImport\ExternalSource\SofaScore;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamCompetitorApiHelper as TeamCompetitorApiHelper;
+use SportsImport\ExternalSource\SofaScore\Data\TeamCompetitor as TeamCompetitorData;
+use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
+use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
 
 /**
  * @template-extends SofaScoreHelper<TeamCompetitorBase>

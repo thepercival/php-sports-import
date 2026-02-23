@@ -22,7 +22,7 @@ interface GamesAndPlayers
 //     */
 //    public function getPerson( Game $game, $id ): ?PersonBase;
 
-    // public function convertToPersonDEP( stdClass $externalPerson ): ?Person;
+    // public function convertToPersonDEP( stdClass $externalPerson ): ?PersonImportHelper;
 
     public function getImagePlayer(string $personExternalId): string;
 

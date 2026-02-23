@@ -5,8 +5,8 @@ namespace SportsImport\ExternalSource;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Psr\Log\LoggerInterface;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 
 /**
  * @api
@@ -27,7 +27,7 @@ final class Factory implements Proxy
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        protected CacheItemDbRepository    $cacheItemDbRepos,
+        protected CacheItemDbRepositoryInterface $cacheItemDbRepos,
         protected LoggerInterface          $logger
     ) {
         $metaData = $entityManager->getClassMetadata(ExternalSource::class);

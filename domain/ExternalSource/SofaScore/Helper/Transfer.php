@@ -7,7 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 use Psr\Log\LoggerInterface;
 use Sports\Team as TeamBase;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Person as PersonHelper;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AssociationApiHelper as AssociationApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore;
 use Sports\Association as AssociationBase;

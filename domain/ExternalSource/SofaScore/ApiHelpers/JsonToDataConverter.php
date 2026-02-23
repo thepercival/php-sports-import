@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;

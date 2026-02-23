@@ -6,7 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\LeagueApiHelper as LeagueApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\League as LeagueData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use Sports\League as LeagueBase;

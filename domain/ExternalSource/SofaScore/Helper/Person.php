@@ -9,7 +9,7 @@ use Sports\Game;
 use Sports\Person as PersonBase;
 use SportsImport\ExternalSource\NameAnalyzer;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\PlayerApiHelper as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 

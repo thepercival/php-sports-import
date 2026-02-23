@@ -2,27 +2,25 @@
 
 declare(strict_types=1);
 
-namespace SportsImport\ExternalSource\SofaScore\ApiHelper;
+namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 
 use Psr\Log\LoggerInterface;
 use Sports\Sport;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Goal as GoalEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Substitution as SubstitutionEventData;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use stdClass;
 
-final class AgainstGameEvents extends ApiHelper
+final class AgainstGameEventsApiHelper extends ApiHelperAbstract
 {
     public function __construct(
 //        protected PlayerApiHelper $playerApiHelper,
         SofaScore $sofaScore,
-        CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepositoryInterface $cacheItemDbRepos,
         LoggerInterface $logger
     ) {
         parent::__construct($sofaScore, $cacheItemDbRepos, $logger);

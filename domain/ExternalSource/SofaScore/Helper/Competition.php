@@ -9,7 +9,7 @@ use Sports\Competition\CompetitionSport;
 use Sports\Ranking\PointsCalculation;
 use SportsHelpers\Sport\PersistVariant;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\CompetitionApiHelper as CompetitionApiHelper;
 use stdClass;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use Sports\Competition as CompetitionBase;

@@ -6,7 +6,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 
 use Psr\Log\LoggerInterface;
 use SportsHelpers\GameMode;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\SportApiHelper as SportApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\Data\Sport as SportData;

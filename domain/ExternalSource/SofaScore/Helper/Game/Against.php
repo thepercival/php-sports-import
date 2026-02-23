@@ -26,8 +26,8 @@ use Sports\Team;
 use Sports\Team\Player as TeamPlayer;
 use SportsHelpers\Against\AgainstSide;
 use SportsImport\ExternalSource\SofaScore;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameApiHelper as AgainstGameApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGamesApiHelper as AgainstGamesApiHelper;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGame as AgainstGameData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent as AgainstGameEventData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameEvent\Card as CardEventData;
@@ -415,7 +415,7 @@ final class Against extends SofaScoreHelper
         }
     }
 
-//    protected function convertApiDataToPerson(stdClass $personApiData): Person
+//    protected function convertApiDataToPerson(stdClass $personApiData): PersonImportHelper
 //    {
 //        $playerData = $this->jsonToDataConverter->convertPlayerJsonToData($personApiData, null);
 //        if ($playerData === null) {
@@ -428,7 +428,7 @@ final class Against extends SofaScoreHelper
 //        return $person;
 //    }
 
-//    protected function convertPersonApiDataToParticipation(AgainstGame $game, stdClass $personApiData): Participation
+//    protected function convertPersonApiDataToParticipation(AgainstGameApiHelper $game, stdClass $personApiData): Participation
 //    {
 //        $person = $this->convertApiDataToPerson($personApiData);
 //        $participation = $game->getParticipation($person);

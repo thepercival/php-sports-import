@@ -16,22 +16,22 @@ use Sports\Season;
 use Sports\Sport;
 use Sports\Structure;
 use Sports\Team;
+use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource;
 use SportsImport\ExternalSource as ExternalSourceBase;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGame as AgainstGameApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameEvents as AgainstGameEventsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGameLineups as AgainstGameLineupsApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\AgainstGames as AgainstGamesApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Association as AssociationApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competition as CompetitionApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Competitor\Team as TeamCompetitorApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\GameRoundNumbers as GameRoundNumbersApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\JsonToDataConverter;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\League as LeagueApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Player as PlayerApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Season as SeasonApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Sport as SportApiHelper;
-use SportsImport\ExternalSource\SofaScore\ApiHelper\Team as TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameEventsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameLineupsApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGamesApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\AssociationApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\CompetitionApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\GameRoundNumbersApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\LeagueApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\SeasonApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\SportApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamApiHelper;
+use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamCompetitorApiHelper as TeamCompetitorApiHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Association as AssociationHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Competition as CompetitionHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Competitor\Team as TeamCompetitorHelper;
@@ -44,7 +44,6 @@ use SportsImport\ExternalSource\SofaScore\Helper\Sport as SportHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Structure as StructureHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Team as TeamHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Transfer as TransferHelper;
-use SportsImport\Repositories\CacheItemDbRepository as CacheItemDbRepository;
 use SportsImport\Transfer;
 
 /**
@@ -85,7 +84,7 @@ final class SofaScore implements
 
     public function __construct(
         protected ExternalSourceBase $externalSource,
-        CacheItemDbRepository $cacheItemDbRepos,
+        CacheItemDbRepositoryInterface $cacheItemDbRepos,
         protected LoggerInterface $logger
     ) {
         $sportApiHelper = new SportApiHelper($this, $cacheItemDbRepos, $logger);
@@ -362,7 +361,7 @@ final class SofaScore implements
 //        return $this->tra->getPerson($againstGame, $id);
 //    }
 
-//    public function convertToPerson(stdClass $externalPerson): ?Person
+//    public function convertToPerson(stdClass $externalPerson): ?PersonImportHelper
 //    {
 //        return $this->personHelper->convertToPerson($externalPerson);
 //    }
