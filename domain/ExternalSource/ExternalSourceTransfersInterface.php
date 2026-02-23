@@ -8,7 +8,10 @@ use Sports\Competition;
 use Sports\Team;
 use SportsImport\Transfer;
 
-interface Transfers
+/**
+ * @api
+ */
+interface ExternalSourceTransfersInterface
 {
     /**
      * @param Competition $competition

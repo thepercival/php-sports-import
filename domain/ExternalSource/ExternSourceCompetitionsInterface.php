@@ -13,7 +13,7 @@ use Sports\Sport;
 /**
  * @api
  */
-interface Competitions
+interface ExternSourceCompetitionsInterface
 {
     /**
      * @return array<int|string, Sport>

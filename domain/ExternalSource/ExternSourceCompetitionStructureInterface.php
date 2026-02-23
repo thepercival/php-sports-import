@@ -12,7 +12,7 @@ use Sports\Team as TeamBase;
 /**
  * @api
  */
-interface CompetitionStructure
+interface ExternSourceCompetitionStructureInterface
 {
     public function getStructure(Competition $competition): Structure;
     /**

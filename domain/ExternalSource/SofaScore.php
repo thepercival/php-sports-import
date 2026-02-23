@@ -51,10 +51,10 @@ use SportsImport\Transfer;
  */
 final class SofaScore implements
     Implementation,
-    Competitions,
-    CompetitionStructure,
-    GamesAndPlayers,
-    Transfers,
+    ExternSourceCompetitionsInterface,
+    ExternSourceCompetitionStructureInterface,
+    ExternalSourceGamesAndPlayersInterface,
+    ExternalSourceTransfersInterface,
     Proxy
 {
     public const string NAME = 'SofaScore';
@@ -383,7 +383,7 @@ final class SofaScore implements
         return $this->transferHelper->getTransfers($team);
     }
 //    protected function showMetadata(
-//        Competitions|CompetitionStructure|CompetitionDetails $externalSourceImpl,
+//        ExternSourceCompetitionsInterface|ExternSourceCompetitionStructureInterface|CompetitionDetails $externalSourceImpl,
 //        int $entity
 //    ): void {
 //        if( $externalSourceImpl instanceof  CacheInfo ) {

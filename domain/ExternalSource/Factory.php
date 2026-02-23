@@ -99,13 +99,13 @@ final class Factory implements Proxy
     protected function getImplementations(Implementation $externalSourceImplementation): int
     {
         $implementations = 0;
-        if ($externalSourceImplementation instanceof ExternalSource\Competitions) {
+        if ($externalSourceImplementation instanceof ExternalSource\ExternSourceCompetitionsInterface) {
             $implementations += self::COMPETITIONS;
         }
-        if ($externalSourceImplementation instanceof ExternalSource\CompetitionStructure) {
+        if ($externalSourceImplementation instanceof ExternalSource\ExternSourceCompetitionStructureInterface) {
             $implementations += self::COMPETITION_STRUCTURE;
         }
-        if ($externalSourceImplementation instanceof ExternalSource\GamesAndPlayers) {
+        if ($externalSourceImplementation instanceof ExternalSource\ExternalSourceGamesAndPlayersInterface) {
             $implementations += self::GAMES_AND_PLAYERIMAGES;
         }
         return $implementations;

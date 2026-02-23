@@ -7,7 +7,10 @@ namespace SportsImport\ExternalSource;
 use Sports\Competition;
 use Sports\Game\Against as AgainstGame;
 
-interface GamesAndPlayers
+/**
+ * @api
+ */
+interface ExternalSourceGamesAndPlayersInterface
 {
 //    /**
 //     * @param Game $game
