@@ -47,41 +47,36 @@ abstract class ApiHelperAbstract
      */
     protected function getHeaders(): array
     {
-        $curlOptions = [
-            CURLOPT_RETURNTRANSFER => true,
-            // CURLOPT_SSL_VERIFYPEER => false,
-            // CURLOPT_SSL_VERIFYHOST => false,
-            // CURLOPT_HEADER => false,
-            CURLOPT_TIMEOUT => 6,
-            CURLOPT_CONNECTTIMEOUT => 6
+        $guzzleOptions = [
+            'timeout' => 6,
+            'connect_timeout' => 6,
         ];
         $proxyOptions = $this->sofaScore->getProxy();
         if ($proxyOptions !== null) {
-            $curlOptions[CURLOPT_PROXY] = $proxyOptions["username"] . ":" . $proxyOptions["password"]
+            $guzzleOptions['proxy'] = $proxyOptions["username"] . ":" . $proxyOptions["password"]
                 . "@" . $proxyOptions["host"] . ":" . $proxyOptions["port"];
         }
 
-//        :authority:        api.sofascore.com
-//:method:HEAD
-//:path:/api/v1/event/11388466/odds/1/all
-//:scheme:https
-//Accept:*/*
-//    Accept-Encoding: gzip, deflate, br
-//Accept-Language: nl,en;q=0.9,en-GB;q=0.8,en-US;q=0.7
-//Origin: https://www.sofascore.com
-//Referer: https://www.sofascore.com/
-//Sec-Ch-Ua: "Chromium";v="122", "Not(A:Brand";v="24", "Microsoft Edge";v="122"
-//Sec-Ch-Ua-Mobile: ?0
-//Sec-Ch-Ua-Platform: "Linux"
-//Sec-Fetch-Dest: empty
-//Sec-Fetch-Mode: cors
-//Sec-Fetch-Site: same-site
-//User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0
+        //        :authority:        api.sofascore.com
+        //:method:HEAD
+        //:path:/api/v1/event/11388466/odds/1/all
+        //:scheme:https
+        //Accept:*/*
+        //    Accept-Encoding: gzip, deflate, br
+        //Accept-Language: nl,en;q=0.9,en-GB;q=0.8,en-US;q=0.7
+        //Origin: https://www.sofascore.com
+        //Referer: https://www.sofascore.com/
+        //Sec-Ch-Ua: "Chromium";v="122", "Not(A:Brand";v="24", "Microsoft Edge";v="122"
+        //Sec-Ch-Ua-Mobile: ?0
+        //Sec-Ch-Ua-Platform: "Linux"
+        //Sec-Fetch-Dest: empty
+        //Sec-Fetch-Mode: cors
+        //Sec-Fetch-Site: same-site
+        //User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0
 
-        return [
-            'curl' => $curlOptions,
+        return array_merge($guzzleOptions, [
             'headers' => [/*"User:agent" => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"*/]
-        ];
+        ]);
     }
 
     protected function resetDataFromCache(string $cacheId): void
@@ -112,11 +107,11 @@ abstract class ApiHelperAbstract
             $randomNr = rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax());
             sleep($randomNr);
         }
-//        return json_decode(
-//            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
-//        );
+        //        return json_decode(
+        //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
+        //        );
         $proxyDescription = ($this->sofaScore->getProxy() === null ? 'no ' : '') . 'proxy used';
-        $this->logger->info('request for "' . $endpoint . '" ('.$proxyDescription.') try ' . ($nrOfRetries+1));
+        $this->logger->info('request for "' . $endpoint . '" (' . $proxyDescription . ') try ' . ($nrOfRetries + 1));
 
         $client = $this->getClient();
         try {
@@ -133,7 +128,7 @@ abstract class ApiHelperAbstract
             if ($nrOfRetries < self::NrOfRetries) {
                 return $this->getData($endpoint, $cacheId, $cacheMinutes, $nrOfRetries + 1);
             }
-            throw new Exception("could not get sofascore-data after retries: cacheid => " . $cacheId, E_ERROR);
+            throw new Exception("could not get sofascore-data after retries: cacheid => " . $cacheId . "(" . $e->getMessage() . ")", E_ERROR);
         }
         $content = $response->getBody()->getContents();
         $retVal = $this->cacheItemDbRepos->saveItem($cacheId, $content, $cacheMinutes);
@@ -150,9 +145,9 @@ abstract class ApiHelperAbstract
             $randomNr = rand($this->sleepRangeInSeconds->getMin(), $this->sleepRangeInSeconds->getMax());
             sleep($randomNr);
         }
-//        return json_decode(
-//            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
-//        );
+        //        return json_decode(
+        //            $this->cacheItemDbRepos->saveItem($cacheId, $this->getDataHelper($endpoint), $cacheMinutes)
+        //        );
         $this->logger->info($endpoint);
         $client = $this->getClient();
         $response = $client->get(
@@ -174,25 +169,25 @@ abstract class ApiHelperAbstract
 
 
 
-//    /**
-//     * @param CompetitionAttacher $competition
-//     * @return list<PlaceData>
-//     * @throws Exception
-//     */
-//    public function getStructureData(CompetitionAttacher $competition): array
-//    {
-//        $teamCompetitorsData = $this->getTeamCompetitorsData($competition);
-//
-//    }
+    //    /**
+    //     * @param CompetitionAttacher $competition
+    //     * @return list<PlaceData>
+    //     * @throws Exception
+    //     */
+    //    public function getStructureData(CompetitionAttacher $competition): array
+    //    {
+    //        $teamCompetitorsData = $this->getTeamCompetitorsData($competition);
+    //
+    //    }
 
-//    public function getPersonImageData(string $personExternalId): string
-//    {
-//        $imgData = $this->getImgData(
-//            $this->getPersonImageEndPoint($personExternalId)
-//        );
-//        return $imgData;
-//    }
-//
+    //    public function getPersonImageData(string $personExternalId): string
+    //    {
+    //        $imgData = $this->getImgData(
+    //            $this->getPersonImageEndPoint($personExternalId)
+    //        );
+    //        return $imgData;
+    //    }
+    //
 
 
     abstract public function getCacheMinutes(): int;
@@ -234,8 +229,7 @@ abstract class ApiHelperAbstract
             return GameState::Canceled;
         } elseif ($state === 90) { // abandoned
             return GameState::Canceled;
-        }
-        elseif ($state === 100) { // finished
+        } elseif ($state === 100) { // finished
             return GameState::Finished;
         }
         throw new \Exception("unknown sofascore-status: " . $state, E_ERROR);
