@@ -9,6 +9,9 @@ use Sports\Person;
 use Sports\Sport\FootballLine;
 use Sports\Team;
 
+/**
+ * @api
+ */
 final class Transfer
 {
     public function __construct(
@@ -17,8 +20,7 @@ final class Transfer
         public Team $fromTeam,
         public Team $toTeam,
         public FootballLine $toLine
-    ) {
-    }
+    ) {}
 
     public function getPerson(): Person
     {

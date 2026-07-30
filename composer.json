@@ -18,17 +18,16 @@
     "ext-json": "*",
     "ext-curl": "*",
     "ext-gd": "*",
-    "vlucas/phpdotenv": "^v5.1",
     "league/period": "^5.0",
     "doctrine/orm": "^3.0",
     "monolog/monolog": "^3.0",
     "jms/serializer": "^3.0",
     "thepercival/php-sports-helpers": "^1.0",
     "thepercival/php-sports": "^1.0",
-    "guzzlehttp/guzzle": "^7.3"
+    "guzzlehttp/guzzle": "^8.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^12.0",
+    "phpunit/phpunit": "^13.0",
     "friendsofphp/php-cs-fixer": "^3.0",
     "vimeo/psalm": "^6.0",
     "psalm/plugin-phpunit": "^0.19"

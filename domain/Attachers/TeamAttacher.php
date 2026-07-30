@@ -8,6 +8,7 @@ use Sports\Team;
 use SportsImport\ExternalSource;
 
 /**
+ * @api
  * @template-extends AttacherAbstract<Team>
  */
 final class TeamAttacher extends AttacherAbstract

@@ -8,6 +8,7 @@ use Sports\Game\Against as AgainstGame;
 use SportsImport\ExternalSource;
 
 /**
+ * @api
  * @template-extends AttacherAbstract<AgainstGame>
  */
 final class AgainstGameAttacher extends AttacherAbstract

@@ -6,6 +6,9 @@ namespace SportsImport\Queue\Game;
 
 use Sports\Game;
 
+/**
+ * @api
+ */
 interface ImportEvents
 {
     public function sendCreateEvent(Game $newGame): void;

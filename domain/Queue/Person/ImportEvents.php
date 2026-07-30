@@ -7,6 +7,9 @@ namespace SportsImport\Queue\Person;
 use Sports\Person;
 use Sports\Season;
 
+/**
+ * @api
+ */
 interface ImportEvents
 {
     public function sendCreatePersonEvent(Person $person, Season $season/*, \DateTimeImmutable $dateTime*/): void;
