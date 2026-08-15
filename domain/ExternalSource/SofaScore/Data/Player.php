@@ -10,6 +10,13 @@ use Sports\Sport\FootballLine;
 final class Player
 {
     public int $nrOfMinutesPlayed = 0;
+    public float|null $rating = null;
+    public bool $manOfTheMatch = false;
+    /**
+     * @api
+     * @var list<GameParticipationStatisticsCategory>
+     */
+    public array $statisticsCategories = [];
 
     public function __construct(
         public string $id,

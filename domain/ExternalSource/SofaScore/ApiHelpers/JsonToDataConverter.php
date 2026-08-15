@@ -7,6 +7,8 @@ namespace SportsImport\ExternalSource\SofaScore\ApiHelpers;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Sports\Sport\FootballLine;
+use SportsImport\ExternalSource\SofaScore\Data\GameParticipationStatistic;
+use SportsImport\ExternalSource\SofaScore\Data\GameParticipationStatisticsCategory;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use SportsImport\ExternalSource\SofaScore\Data\Team as TeamData;
 use SportsImport\ExternalSource\SofaScore\Data\Transfer as TransferData;
@@ -14,6 +16,41 @@ use stdClass;
 
 final class JsonToDataConverter
 {
+    /** @var array<string, list<string>> */
+    private const STATISTICS_CATEGORY_FIELDS = [
+        'Passing' => [
+            'totalPass', 'accuratePass', 'totalLongBalls', 'accurateLongBalls', 'totalCross', 'accurateCross',
+            'accurateOwnHalfPasses', 'totalOwnHalfPasses', 'accurateOppositionHalfPasses',
+            'totalOppositionHalfPasses', 'keyPass', 'goalAssist', 'bigChanceCreated',
+        ],
+        'Shooting' => [
+            'totalShots', 'onTargetScoringAttempt', 'shotOffTarget', 'blockedScoringAttempt', 'goals',
+            'hitWoodwork', 'expectedGoals', 'expectedGoalsOnTarget',
+        ],
+        'Duels & Defence' => [
+            'duelWon', 'duelLost', 'aerialWon', 'aerialLost', 'totalTackle', 'wonTackle', 'interceptionWon',
+            'totalClearance', 'outfielderBlock', 'ballRecovery', 'fouls', 'wasFouled', 'challengeLost',
+            'dispossessed', 'errorLeadToAShot',
+        ],
+        'Ball Carrying & Movement' => [
+            'totalBallCarriesDistance', 'ballCarriesCount', 'totalProgression', 'progressiveBallCarriesCount',
+            'bestBallCarryProgression', 'totalProgressiveBallCarriesDistance', 'unsuccessfulTouch',
+            'possessionLostCtrl',
+        ],
+        'Physical / Tracking' => [
+            'minutesPlayed', 'touches', 'topSpeed', 'kilometersCovered', 'numberOfSprints',
+            'metersCoveredRunningKm', 'metersCoveredHighSpeedRunningKm', 'metersCoveredSprintingKm',
+        ],
+        'Ratings & Normalized Values' => [
+            'rating', 'expectedAssists', 'shotValueNormalized', 'passValueNormalized', 'dribbleValueNormalized',
+            'defensiveValueNormalized', 'goalkeeperValueNormalized',
+        ],
+        'Goalkeeper-Specific' => [
+            'saves', 'savedShotsFromInsideTheBox', 'goodHighClaim', 'totalKeeperSweeper',
+            'accurateKeeperSweeper', 'keeperSaveValue', 'goalsPrevented',
+        ],
+    ];
+
     public function __construct(
         private LoggerInterface $logger
     ) {
@@ -138,6 +175,11 @@ final class JsonToDataConverter
 
         $playerData = new PlayerData($externalId, (string)$apiDataRow->name, $line, $dateOfBirth, $marketValue);
         if ($apiDataStatistics !== null) {
+            if (property_exists($apiDataStatistics, 'rating')) {
+                /** @var int|float $rating */
+                $rating = $apiDataStatistics->rating;
+                $playerData->rating = (float)$rating;
+            }
             if (property_exists($apiDataStatistics, "minutesPlayed")) {
                 /** @var string|int $minutesPlayed */
                 $minutesPlayed = $apiDataStatistics->minutesPlayed;
@@ -145,8 +187,45 @@ final class JsonToDataConverter
                     $playerData->nrOfMinutesPlayed = (int)$minutesPlayed;
                 }
             }
+            $playerData->statisticsCategories = $this->convertStatisticsCategories($apiDataStatistics);
         }
         return $playerData;
+    }
+
+    /**
+     * @return list<GameParticipationStatisticsCategory>
+     */
+    private function convertStatisticsCategories(stdClass $apiDataStatistics): array
+    {
+        $categories = [];
+        foreach (self::STATISTICS_CATEGORY_FIELDS as $categoryName => $fieldNames) {
+            $statistics = [];
+            foreach ($fieldNames as $fieldName) {
+                if (!property_exists($apiDataStatistics, $fieldName)) {
+                    continue;
+                }
+                /** @var int|float|string|null $value */
+                $value = $apiDataStatistics->{$fieldName};
+                if (is_int($value) || is_float($value)) {
+                    $statistics[] = new GameParticipationStatistic($fieldName, $value);
+                }
+            }
+            if ($categoryName === 'Ratings & Normalized Values'
+                && property_exists($apiDataStatistics, 'ratingVersions')
+                && $apiDataStatistics->ratingVersions instanceof stdClass) {
+                foreach (['original', 'alternative'] as $ratingVersion) {
+                    /** @var int|float|string|null $value */
+                    $value = $apiDataStatistics->ratingVersions->{$ratingVersion} ?? null;
+                    if (is_int($value) || is_float($value)) {
+                        $statistics[] = new GameParticipationStatistic('ratingVersions.' . $ratingVersion, $value);
+                    }
+                }
+            }
+            if ($statistics !== []) {
+                $categories[] = new GameParticipationStatisticsCategory($categoryName, $statistics);
+            }
+        }
+        return $categories;
     }
 
     /**

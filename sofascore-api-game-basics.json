@@ -1,0 +1,445 @@
+{
+ "event": {
+  "eventState": {},
+  "tournament": {
+   "name": "VriendenLoterij Eredivisie",
+   "slug": "eredivisie",
+   "category": {
+    "name": "Netherlands",
+    "slug": "netherlands",
+    "sport": {
+     "name": "Football",
+     "slug": "football",
+     "id": 1
+    },
+    "priority": 0,
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 35,
+    "flag": "netherlands",
+    "alpha2": "NL",
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "هولندا",
+      "ru": "Нидерланды"
+     },
+     "shortNameTranslation": {}
+    }
+   },
+   "uniqueTournament": {
+    "name": "VriendenLoterij Eredivisie",
+    "slug": "eredivisie",
+    "primaryColorHex": "#292766",
+    "secondaryColorHex": "#7c79c3",
+    "category": {
+     "name": "Netherlands",
+     "slug": "netherlands",
+     "sport": {
+      "name": "Football",
+      "slug": "football",
+      "id": 1
+     },
+     "priority": 0,
+     "country": {
+      "alpha2": "NL",
+      "alpha3": "NLD",
+      "name": "Netherlands",
+      "slug": "netherlands"
+     },
+     "id": 35,
+     "flag": "netherlands",
+     "alpha2": "NL",
+     "fieldTranslations": {
+      "nameTranslation": {
+       "ar": "هولندا",
+       "ru": "Нидерланды"
+      },
+      "shortNameTranslation": {}
+     }
+    },
+    "userCount": 160984,
+    "hasRounds": true,
+    "hasPerformanceGraphFeature": true,
+    "country": {},
+    "id": 37,
+    "hasEventPlayerStatistics": true,
+    "displayInverseHomeAwayTeams": false,
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "الدوري الهولندي الممتاز",
+      "bn": "এরেডিভিসি",
+      "hi": "इरेडीवीसी",
+      "ru": "Эредивизи VriendenLoterij"
+     },
+     "shortNameTranslation": {}
+    }
+   },
+   "priority": 516,
+   "isGroup": false,
+   "competitionType": 1,
+   "isLive": false,
+   "id": 39,
+   "fieldTranslations": {
+    "nameTranslation": {
+     "ar": "الدوري الهولندي الممتاز",
+     "bn": "এরেডিভিসি",
+     "hi": "इरेडीवीसी",
+     "ru": "Eredivisie VriendenLoterij"
+    },
+    "shortNameTranslation": {}
+   }
+  },
+  "season": {
+   "name": "VriendenLoterij Eredivisie 25/26",
+   "year": "25/26",
+   "editor": false,
+   "id": 77012
+  },
+  "roundInfo": {
+   "round": 34
+  },
+  "customId": "jjbswjb",
+  "status": {
+   "code": 100,
+   "description": "Ended",
+   "type": "finished"
+  },
+  "winnerCode": 2,
+  "venue": {
+   "city": {
+    "name": "Zwolle",
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 21124
+   },
+   "venueCoordinates": {
+    "latitude": 52.516931,
+    "longitude": 6.120948
+   },
+   "hidden": false,
+   "slug": "mac3park-stadion",
+   "name": "Mac3Park Stadion",
+   "capacity": 14000,
+   "country": {
+    "alpha2": "NL",
+    "alpha3": "NLD",
+    "name": "Netherlands",
+    "slug": "netherlands"
+   },
+   "id": 16762,
+   "fieldTranslations": {
+    "nameTranslation": {
+     "ar": "ماك 3 بارك ستاديوم",
+     "hi": "मैक3पार्क स्टेडियन",
+     "bn": "ম্যাক 3পার্ক স্টেডিয়াম",
+     "ru": "Стадион Mac3Park"
+    },
+    "shortNameTranslation": {}
+   },
+   "stadium": {
+    "name": "Mac3Park Stadion",
+    "capacity": 14000
+   }
+  },
+  "referee": {
+   "name": "Erwin Blank",
+   "slug": "blank-erwin",
+   "yellowCards": 609,
+   "redCards": 16,
+   "yellowRedCards": 10,
+   "games": 172,
+   "sport": {
+    "id": 1,
+    "slug": "football",
+    "name": "Football"
+   },
+   "country": {
+    "alpha2": "NL",
+    "alpha3": "NLD",
+    "name": "Netherlands",
+    "slug": "netherlands"
+   },
+   "id": 181557,
+   "fieldTranslations": {
+    "nameTranslation": {
+     "ar": "إروين بلانك",
+     "ru": "Эрвин Бланк"
+    },
+    "shortNameTranslation": {}
+   }
+  },
+  "homeTeam": {
+   "name": "PEC Zwolle",
+   "slug": "pec-zwolle",
+   "shortName": "Zwolle",
+   "gender": "M",
+   "sport": {
+    "name": "Football",
+    "slug": "football",
+    "id": 1
+   },
+   "userCount": 34900,
+   "manager": {
+    "name": "Henry van der Vegt",
+    "slug": "henry-van-der-vegt",
+    "shortName": "H. v. d. Vegt",
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 803743,
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "هنري فان دير فيغت",
+      "ru": "Генри ван дер Вегт"
+     },
+     "shortNameTranslation": {
+      "ar": "ه. ف. د. فيغت",
+      "ru": "Г. Вегт"
+     }
+    }
+   },
+   "venue": {
+    "city": {
+     "name": "Zwolle",
+     "country": {
+      "alpha2": "NL",
+      "alpha3": "NLD",
+      "name": "Netherlands",
+      "slug": "netherlands"
+     },
+     "id": 21124
+    },
+    "venueCoordinates": {
+     "latitude": 52.516931,
+     "longitude": 6.120948
+    },
+    "hidden": false,
+    "slug": "mac3park-stadion",
+    "name": "Mac3Park Stadion",
+    "capacity": 14000,
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 16762,
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "ماك 3 بارك ستاديوم",
+      "hi": "मैक3पार्क स्टेडियन",
+      "bn": "ম্যাক 3পার্ক স্টেডিয়াম",
+      "ru": "Стадион Mac3Park"
+     },
+     "shortNameTranslation": {}
+    },
+    "stadium": {
+     "name": "Mac3Park Stadion",
+     "capacity": 14000
+    }
+   },
+   "nameCode": "ZWO",
+   "national": false,
+   "type": 0,
+   "country": {
+    "alpha2": "NL",
+    "alpha3": "NLD",
+    "name": "Netherlands",
+    "slug": "netherlands"
+   },
+   "id": 2971,
+   "fullName": "PEC Zwolle",
+   "subTeams": {},
+   "teamColors": {
+    "primary": "#0066cc",
+    "secondary": "#ffffff",
+    "text": "#ffffff"
+   },
+   "foundationDateTimestamp": -1879459200,
+   "fieldTranslations": {
+    "nameTranslation": {
+     "ar": "إف سي زويول",
+     "hi": "PEC ज़्वोले",
+     "ru": "Зволле"
+    },
+    "shortNameTranslation": {}
+   },
+   "timeActive": {}
+  },
+  "awayTeam": {
+   "name": "Feyenoord",
+   "slug": "feyenoord",
+   "shortName": "Feyenoord",
+   "gender": "M",
+   "sport": {
+    "name": "Football",
+    "slug": "football",
+    "id": 1
+   },
+   "userCount": 374968,
+   "manager": {
+    "name": "Giovanni van Bronckhorst",
+    "slug": "giovanni-van-bronckhorst",
+    "shortName": "G. v. Bronckhorst",
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 785039,
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "جيوفاني فان برونكهورست",
+      "ru": "Джованни ван Бронкхорст"
+     },
+     "shortNameTranslation": {
+      "ar": "ج. ف. برونكهورست",
+      "ru": "Д. Бронкхорст"
+     }
+    }
+   },
+   "venue": {
+    "city": {
+     "name": "Rotterdam",
+     "country": {
+      "alpha2": "NL",
+      "alpha3": "NLD",
+      "name": "Netherlands",
+      "slug": "netherlands"
+     },
+     "id": 20209
+    },
+    "venueCoordinates": {
+     "latitude": 51.893865,
+     "longitude": 4.523228
+    },
+    "hidden": false,
+    "slug": "de-kuip",
+    "name": "De Kuip",
+    "capacity": 47500,
+    "country": {
+     "alpha2": "NL",
+     "alpha3": "NLD",
+     "name": "Netherlands",
+     "slug": "netherlands"
+    },
+    "id": 612,
+    "fieldTranslations": {
+     "nameTranslation": {
+      "ar": "ملعب دي كويب",
+      "hi": "डे कुइप",
+      "bn": "ডি কুইপ",
+      "ru": "Спортивный комплекс De Kuip"
+     },
+     "shortNameTranslation": {}
+    },
+    "stadium": {
+     "name": "De Kuip",
+     "capacity": 47500
+    }
+   },
+   "nameCode": "FEY",
+   "class": 4,
+   "disabled": false,
+   "national": false,
+   "type": 0,
+   "country": {
+    "alpha2": "NL",
+    "alpha3": "NLD",
+    "name": "Netherlands",
+    "slug": "netherlands"
+   },
+   "id": 2959,
+   "fullName": "Feyenoord",
+   "subTeams": {},
+   "teamColors": {
+    "primary": "#ff0000",
+    "secondary": "#ffffff",
+    "text": "#ffffff"
+   },
+   "foundationDateTimestamp": -1939334400,
+   "fieldTranslations": {
+    "nameTranslation": {
+     "ar": "فينورد",
+     "bn": "ফেইনুর্ড",
+     "hi": "फ़ेनोर्ड",
+     "ru": "Фейеноорд Роттердам"
+    },
+    "shortNameTranslation": {}
+   },
+   "timeActive": {}
+  },
+  "homeScore": {
+   "current": 0,
+   "display": 0,
+   "period1": 0,
+   "period2": 0,
+   "normaltime": 0
+  },
+  "awayScore": {
+   "current": 2,
+   "display": 2,
+   "period1": 0,
+   "period2": 2,
+   "normaltime": 2
+  },
+  "time": {
+   "injuryTime1": 1,
+   "injuryTime2": 1,
+   "currentPeriodStartTimestamp": 1779024828
+  },
+  "changes": {
+   "changes": {
+    "0": "time.injuryTime2",
+    "1": "status.code",
+    "2": "status.description",
+    "3": "status.type"
+   },
+   "changeTimestamp": 1779027624
+  },
+  "hasGlobalHighlights": true,
+  "hasXg": true,
+  "hasEventPlayerStatistics": true,
+  "hasEventPlayerHeatMap": true,
+  "detailId": 1,
+  "crowdsourcingDataDisplayEnabled": false,
+  "correctAiInsight": true,
+  "correctHalftimeAiInsight": true,
+  "id": 14028529,
+  "defaultPeriodCount": 2,
+  "defaultPeriodLength": 45,
+  "defaultOvertimeLength": 15,
+  "slug": "pec-zwolle-feyenoord",
+  "currentPeriodStartTimestamp": 1779024828,
+  "startTimestamp": 1779021000,
+  "finalResultOnly": false,
+  "feedLocked": true,
+  "seasonStatisticsType": "overall",
+  "showTotoPromo": true,
+  "isEditor": false,
+  "eventFilters": {
+   "category": {
+    "0": "club"
+   },
+   "level": {
+    "0": "top-competitions",
+    "1": "pro"
+   },
+   "gender": {
+    "0": "M"
+   }
+  }
+ }
+}

@@ -9,6 +9,7 @@ use SportsHelpers\Against\AgainstSide;
 use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameLineups as AgainstGameLineupsData;
+use SportsImport\ExternalSource\SofaScore\Data\AgainstGameMissingPlayer as AgainstGameMissingPlayerData;
 use SportsImport\ExternalSource\SofaScore\Data\AgainstGameSidePlayers as AgainstGameSidePlayersData;
 use SportsImport\ExternalSource\SofaScore\Data\Player as PlayerData;
 use stdClass;
@@ -16,7 +17,7 @@ use stdClass;
 final class AgainstGameLineupsApiHelper extends ApiHelperAbstract
 {
     public function __construct(
-//        protected PlayerApiHelper $playerApiHelper,
+        //        protected PlayerApiHelper $playerApiHelper,
         SofaScore $sofaScore,
         CacheItemDbRepositoryInterface $cacheItemDbRepos,
         LoggerInterface $logger
@@ -46,7 +47,57 @@ final class AgainstGameLineupsApiHelper extends ApiHelperAbstract
         /** @var stdClass $awayPlayers */
         $awayPlayers = $apiData->away;
         $awayLineup = $this->convertApiPlayers(AgainstSide::Away, $awayPlayers);
-        return new AgainstGameLineupsData($homeLineup, $awayLineup);
+        $missingPlayers = array_merge(
+            $this->convertApiMissingPlayers(AgainstSide::Home, $homePlayers),
+            $this->convertApiMissingPlayers(AgainstSide::Away, $awayPlayers)
+        );
+        return new AgainstGameLineupsData($homeLineup, $awayLineup, $missingPlayers);
+    }
+
+    /**
+     * @return list<AgainstGameMissingPlayerData>
+     */
+    protected function convertApiMissingPlayers(AgainstSide $againstSide, stdClass $apiPlayers): array
+    {
+        if (!property_exists($apiPlayers, 'missingPlayers')) {
+            return [];
+        }
+        if (!is_array($apiPlayers->missingPlayers)) {
+            throw new \Exception('api-lineup property missingPlayers should be an array', E_ERROR);
+        }
+
+        $missingPlayers = [];
+        foreach ($apiPlayers->missingPlayers as $missingPlayerApiData) {
+            if (!($missingPlayerApiData instanceof stdClass)) {
+                throw new \Exception('missing-player data should be an object', E_ERROR);
+            }
+            foreach (['player', 'type', 'reason', 'description', 'externalType'] as $property) {
+                if (!property_exists($missingPlayerApiData, $property)) {
+                    throw new \Exception('missing-player data does not contain property ' . $property, E_ERROR);
+                }
+            }
+            if (!($missingPlayerApiData->player instanceof stdClass)) {
+                throw new \Exception('missing-player property player should be an object', E_ERROR);
+            }
+            $player = $this->jsonToDataConverter->convertPlayerJsonToData($missingPlayerApiData->player, null);
+            if ($player === null) {
+                continue;
+            }
+            $expectedEndDate = null;
+            if (property_exists($missingPlayerApiData, 'expectedEndDate')) {
+                $expectedEndDate = new \DateTimeImmutable((string)$missingPlayerApiData->expectedEndDate);
+            }
+            $missingPlayers[] = new AgainstGameMissingPlayerData(
+                $player,
+                $againstSide,
+                (string)$missingPlayerApiData->type,
+                (int)$missingPlayerApiData->reason,
+                (string)$missingPlayerApiData->description,
+                (int)$missingPlayerApiData->externalType,
+                $expectedEndDate
+            );
+        }
+        return $missingPlayers;
     }
 
     protected function convertApiPlayers(AgainstSide $againstSide, stdClass $apiPlayers): AgainstGameSidePlayersData
@@ -72,7 +123,7 @@ final class AgainstGameLineupsApiHelper extends ApiHelperAbstract
             return $this->jsonToDataConverter->convertPlayerJsonToData($playerApiDataRow, $statistics);
         }, $playersApiData);
 
-        $players = array_values( array_filter($players, function (PlayerData|null $playerApiData): bool {
+        $players = array_values(array_filter($players, function (PlayerData|null $playerApiData): bool {
             return $playerApiData !== null;
         }));
 

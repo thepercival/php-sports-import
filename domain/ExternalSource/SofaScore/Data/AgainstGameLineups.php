@@ -8,7 +8,8 @@ final class AgainstGameLineups
 {
     public function __construct(
         public AgainstGameSidePlayers $homePlayers,
-        public AgainstGameSidePlayers $awayPlayers
-    ) {
-    }
+        public AgainstGameSidePlayers $awayPlayers,
+        /** @var list<AgainstGameMissingPlayer> */
+        public array $missingPlayers
+    ) {}
 }

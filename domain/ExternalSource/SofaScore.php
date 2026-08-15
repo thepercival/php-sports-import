@@ -19,6 +19,8 @@ use Sports\Team;
 use SportsImport\CacheItemDb\CacheItemDbRepositoryInterface;
 use SportsImport\ExternalSource;
 use SportsImport\ExternalSource as ExternalSourceBase;
+use SportsImport\ExternalSource\ExternalSourceGameMissingPlayersInterface;
+use SportsImport\ExternalSource\ExternalSourceGameParticipationStatisticsInterface;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameEventsApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\AgainstGameLineupsApiHelper;
@@ -54,6 +56,8 @@ final class SofaScore implements
     ExternSourceCompetitionsInterface,
     ExternSourceCompetitionStructureInterface,
     ExternalSourceGamesAndPlayersInterface,
+    ExternalSourceGameMissingPlayersInterface,
+    ExternalSourceGameParticipationStatisticsInterface,
     ExternalSourceTransfersInterface,
     Proxy
 {
@@ -146,7 +150,7 @@ final class SofaScore implements
             $this->personHelper,
             $againstGamesApiHelper,
             $againstGameApiHelper,
-//            new JsonToDataConverter($this->logger),
+            //            new JsonToDataConverter($this->logger),
             $this,
             $this->logger
         );
@@ -160,8 +164,8 @@ final class SofaScore implements
 
         // $this->transfersApiHelper = new TransfersApiHelper
 
-//        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
-//        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
+        //        $teamRoleApiHelper = new TeamRoleApiHelper($externalSource, $cacheItemDbRepos, $logger);
+        //        $this->teamRoleHelper = new TeamRoleHelper($teamRoleApiHelper, $this, $this->logger);
 
         /* $this->structureOptions = new StructureOptions(
              new VoetbalRange(1, 32),
@@ -343,28 +347,40 @@ final class SofaScore implements
         return $this->againstGameHelper->getAgainstGame($competition, $id, $resetCache);
     }
 
-//    public function convertToTeamRole( Game $game, TeamCompetitorAttacher $team, stdClass $externalTeamRole): TeamRole {
-//        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
-//    }
+    #[\Override]
+    public function getAgainstGameMissingPlayers(string|int $gameId): array
+    {
+        return $this->againstGameHelper->getAgainstGameMissingPlayers($gameId);
+    }
+
+    #[\Override]
+    public function getAgainstGameParticipationStatistics(string|int $gameId): array
+    {
+        return $this->againstGameHelper->getAgainstGameParticipationStatistics($gameId);
+    }
+
+    //    public function convertToTeamRole( Game $game, TeamCompetitorAttacher $team, stdClass $externalTeamRole): TeamRole {
+    //        return $this->getTeamRoleHelper()->convertToTeamRole( $game, $team, $externalTeamRole );
+    //    }
 
     public function getPerson(string|int $id): Person|null
     {
         return $this->personHelper->getPerson($id);
     }
 
-//    /**
-//     * @param CompetitionBase $competition
-//     * @return list<TransferData>
-//     */
-//    public function getTransfers(CompetitionAttacher $competition): array
-//    {
-//        return $this->tra->getPerson($againstGame, $id);
-//    }
+    //    /**
+    //     * @param CompetitionBase $competition
+    //     * @return list<TransferData>
+    //     */
+    //    public function getTransfers(CompetitionAttacher $competition): array
+    //    {
+    //        return $this->tra->getPerson($againstGame, $id);
+    //    }
 
-//    public function convertToPerson(stdClass $externalPerson): ?PersonImportHelper
-//    {
-//        return $this->personHelper->convertToPerson($externalPerson);
-//    }
+    //    public function convertToPerson(stdClass $externalPerson): ?PersonImportHelper
+    //    {
+    //        return $this->personHelper->convertToPerson($externalPerson);
+    //    }
 
     #[\Override]
     public function getImagePlayer(string $personExternalId): string
