@@ -19,42 +19,90 @@ final class JsonToDataConverter
     /** @var array<string, list<string>> */
     private const STATISTICS_CATEGORY_FIELDS = [
         'Passing' => [
-            'totalPass', 'accuratePass', 'totalLongBalls', 'accurateLongBalls', 'totalCross', 'accurateCross',
-            'accurateOwnHalfPasses', 'totalOwnHalfPasses', 'accurateOppositionHalfPasses',
-            'totalOppositionHalfPasses', 'keyPass', 'goalAssist', 'bigChanceCreated',
+            'totalPass',
+            'accuratePass',
+            'totalLongBalls',
+            'accurateLongBalls',
+            'totalCross',
+            'accurateCross',
+            'accurateOwnHalfPasses',
+            'totalOwnHalfPasses',
+            'accurateOppositionHalfPasses',
+            'totalOppositionHalfPasses',
+            'keyPass',
+            'goalAssist',
+            'bigChanceCreated',
         ],
         'Shooting' => [
-            'totalShots', 'onTargetScoringAttempt', 'shotOffTarget', 'blockedScoringAttempt', 'goals',
-            'hitWoodwork', 'expectedGoals', 'expectedGoalsOnTarget',
+            'totalShots',
+            'onTargetScoringAttempt',
+            'shotOffTarget',
+            'blockedScoringAttempt',
+            'goals',
+            'hitWoodwork',
+            'expectedGoals',
+            'expectedGoalsOnTarget',
         ],
         'Duels & Defence' => [
-            'duelWon', 'duelLost', 'aerialWon', 'aerialLost', 'totalTackle', 'wonTackle', 'interceptionWon',
-            'totalClearance', 'outfielderBlock', 'ballRecovery', 'fouls', 'wasFouled', 'challengeLost',
-            'dispossessed', 'errorLeadToAShot',
+            'duelWon',
+            'duelLost',
+            'aerialWon',
+            'aerialLost',
+            'totalTackle',
+            'wonTackle',
+            'interceptionWon',
+            'totalClearance',
+            'outfielderBlock',
+            'ballRecovery',
+            'fouls',
+            'wasFouled',
+            'challengeLost',
+            'dispossessed',
+            'errorLeadToAShot',
         ],
         'Ball Carrying & Movement' => [
-            'totalBallCarriesDistance', 'ballCarriesCount', 'totalProgression', 'progressiveBallCarriesCount',
-            'bestBallCarryProgression', 'totalProgressiveBallCarriesDistance', 'unsuccessfulTouch',
+            'totalBallCarriesDistance',
+            'ballCarriesCount',
+            'totalProgression',
+            'progressiveBallCarriesCount',
+            'bestBallCarryProgression',
+            'totalProgressiveBallCarriesDistance',
+            'unsuccessfulTouch',
             'possessionLostCtrl',
         ],
         'Physical / Tracking' => [
-            'minutesPlayed', 'touches', 'topSpeed', 'kilometersCovered', 'numberOfSprints',
-            'metersCoveredRunningKm', 'metersCoveredHighSpeedRunningKm', 'metersCoveredSprintingKm',
+            'minutesPlayed',
+            'touches',
+            'topSpeed',
+            'kilometersCovered',
+            'numberOfSprints',
+            'metersCoveredRunningKm',
+            'metersCoveredHighSpeedRunningKm',
+            'metersCoveredSprintingKm',
         ],
         'Ratings & Normalized Values' => [
-            'rating', 'expectedAssists', 'shotValueNormalized', 'passValueNormalized', 'dribbleValueNormalized',
-            'defensiveValueNormalized', 'goalkeeperValueNormalized',
+            'rating',
+            'expectedAssists',
+            'shotValueNormalized',
+            'passValueNormalized',
+            'dribbleValueNormalized',
+            'defensiveValueNormalized',
+            'goalkeeperValueNormalized',
         ],
         'Goalkeeper-Specific' => [
-            'saves', 'savedShotsFromInsideTheBox', 'goodHighClaim', 'totalKeeperSweeper',
-            'accurateKeeperSweeper', 'keeperSaveValue', 'goalsPrevented',
+            'saves',
+            'savedShotsFromInsideTheBox',
+            'goodHighClaim',
+            'totalKeeperSweeper',
+            'accurateKeeperSweeper',
+            'keeperSaveValue',
+            'goalsPrevented',
         ],
     ];
 
     public function __construct(
         private LoggerInterface $logger
-    ) {
-    }
+    ) {}
 
     /**
      * @param stdClass $transferJson
@@ -136,22 +184,22 @@ final class JsonToDataConverter
             return null;
         }
         if (!property_exists($apiDataRow, 'slug')) {
-            $this->logger->warning('could not find stdClass-property ('.(string)$apiDataRow->id.') "slug"');
+            $this->logger->warning('could not find stdClass-property (' . (string)$apiDataRow->id . ') "slug"');
             // throw new \Exception('could not find stdClass-property "slug"', E_ERROR);
             return null;
         }
         // addMissingPositionToPlayer
-        if (!property_exists($apiDataRow, 'position') ) {
-            if( $apiDataRow->slug === 'caner-demircioglu') {
+        if (!property_exists($apiDataRow, 'position')) {
+            if ($apiDataRow->slug === 'caner-demircioglu') {
                 $apiDataRow->position = 'F'; // G D M F
-            } else if( $apiDataRow->slug === 'coen-dunnink') {
+            } else if ($apiDataRow->slug === 'coen-dunnink') {
                 $apiDataRow->position = 'M'; // G D M F
             }
         }
 
         if (!property_exists($apiDataRow, 'position')) {
             // throw new \Exception('could not find stdClass-property "position"', E_ERROR);
-            $this->logger->warning('could not find stdClass-property ('.(string)$apiDataRow->slug.') "position"');
+            $this->logger->warning('could not find stdClass-property (' . (string)$apiDataRow->slug . ') "position"');
             return null;
         }
 
@@ -210,9 +258,11 @@ final class JsonToDataConverter
                     $statistics[] = new GameParticipationStatistic($fieldName, $value);
                 }
             }
-            if ($categoryName === 'Ratings & Normalized Values'
+            if (
+                $categoryName === 'Ratings & Normalized Values'
                 && property_exists($apiDataStatistics, 'ratingVersions')
-                && $apiDataStatistics->ratingVersions instanceof stdClass) {
+                && $apiDataStatistics->ratingVersions instanceof stdClass
+            ) {
                 foreach (['original', 'alternative'] as $ratingVersion) {
                     /** @var int|float|string|null $value */
                     $value = $apiDataStatistics->ratingVersions->{$ratingVersion} ?? null;
@@ -260,5 +310,4 @@ final class JsonToDataConverter
             (string)$teamJson->shortName
         );
     }
-
 }

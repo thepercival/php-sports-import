@@ -13,6 +13,5 @@ final readonly class GameParticipationStatisticsCategory
     public function __construct(
         public string $name,
         public array $statistics
-    ) {
-    }
+    ) {}
 }

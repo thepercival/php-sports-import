@@ -17,6 +17,5 @@ final readonly class ParticipationStatistics
         public Player $player,
         public array $categories,
         public bool $manOfTheMatch
-    ) {
-    }
+    ) {}
 }

@@ -10,6 +10,5 @@ final readonly class Statistic
     public function __construct(
         public string $name,
         public int|float $value
-    ) {
-    }
+    ) {}
 }
