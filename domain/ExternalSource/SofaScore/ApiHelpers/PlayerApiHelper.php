@@ -27,7 +27,7 @@ final class PlayerApiHelper extends ApiHelperAbstract
         $json = $this->getData(
             $this->getProfileEndPoint($playerId),
             $this->getProfileCacheId($playerId),
-            $this->getCacheMinutes()
+            $this->getProfileCacheMinutes()
         );
         if (!property_exists($json, 'player') || !($json->player instanceof stdClass)) {
             throw new \Exception('could not find stdClass-property "player"', E_ERROR);
@@ -52,6 +52,11 @@ final class PlayerApiHelper extends ApiHelperAbstract
     public function getProfileCacheId(string $playerId): string
     {
         return 'player/' . $playerId;
+    }
+
+    public function getProfileCacheMinutes(): int
+    {
+        return 60;
     }
 
     public function getImage(string $externalId): string
