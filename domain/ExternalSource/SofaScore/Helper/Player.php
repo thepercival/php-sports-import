@@ -7,6 +7,7 @@ namespace SportsImport\ExternalSource\SofaScore\Helper;
 use Psr\Log\LoggerInterface;
 use SportsImport\ExternalSource\SofaScore;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\PlayerApiHelper as PlayerApiHelper;
+use SportsImport\ExternalSource\SofaScore\Data\PlayerProfile;
 use SportsImport\ExternalSource\SofaScore\Helper as SofaScoreHelper;
 use Sports\Team as TeamBase;
 
@@ -26,5 +27,10 @@ final class Player extends SofaScoreHelper
     public function getImagePlayer(string $personExternalId): string
     {
         return $this->apiHelper->getImage($personExternalId);
+    }
+
+    public function getPlayerProfile(string $personExternalId): PlayerProfile
+    {
+        return $this->apiHelper->getProfile($personExternalId);
     }
 }

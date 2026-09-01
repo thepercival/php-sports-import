@@ -34,6 +34,7 @@ use SportsImport\ExternalSource\SofaScore\ApiHelpers\SeasonApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\SportApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamApiHelper;
 use SportsImport\ExternalSource\SofaScore\ApiHelpers\TeamCompetitorApiHelper as TeamCompetitorApiHelper;
+use SportsImport\ExternalSource\SofaScore\Data\PlayerProfile;
 use SportsImport\ExternalSource\SofaScore\Helper\Association as AssociationHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Competition as CompetitionHelper;
 use SportsImport\ExternalSource\SofaScore\Helper\Competitor\Team as TeamCompetitorHelper;
@@ -386,6 +387,11 @@ final class SofaScore implements
     public function getImagePlayer(string $personExternalId): string
     {
         return $this->playerHelper->getImagePlayer($personExternalId);
+    }
+
+    public function getPlayerProfile(string $personExternalId): PlayerProfile
+    {
+        return $this->playerHelper->getPlayerProfile($personExternalId);
     }
 
     /**
