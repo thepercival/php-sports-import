@@ -307,7 +307,10 @@ final class JsonToDataConverter
         }
         return new TeamData(
             (string)$teamJson->id,
-            (string)$teamJson->shortName
+            (string)$teamJson->shortName,
+            property_exists($teamJson, 'parentTeam') && $teamJson->parentTeam instanceof stdClass
+                ? $this->convertTeamJsonToData($teamJson->parentTeam)
+                : null
         );
     }
 }
