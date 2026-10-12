@@ -18,6 +18,11 @@ final class Factory implements Proxy
      */
     protected array $proxyOptions = [];
 
+    /**
+     * @var list<string>|null
+     */
+    protected array|null $browserFetchCommand = null;
+
     /** @var EntityRepository<ExternalSource>  */
     protected EntityRepository $externalSourceRepos;
 
@@ -56,6 +61,14 @@ final class Factory implements Proxy
         $this->proxyOptions = $options;
     }
 
+    /**
+     * @param list<string> $command executable and arguments; the url is appended as last argument
+     */
+    public function setBrowserFetchCommand(array $command): void
+    {
+        $this->browserFetchCommand = $command;
+    }
+
     public function createByName(string $name): ?Implementation
     {
         $externalSource = $this->externalSourceRepos->findOneBy(["name" => $name ]);
@@ -68,6 +81,9 @@ final class Factory implements Proxy
         }
         if (count($this->proxyOptions) > 0 && ($implementation instanceof Proxy)) {
             $implementation->setProxy($this->proxyOptions);
+        }
+        if ($this->browserFetchCommand !== null && ($implementation instanceof SofaScore)) {
+            $implementation->setBrowserFetchCommand($this->browserFetchCommand);
         }
         return $implementation;
     }

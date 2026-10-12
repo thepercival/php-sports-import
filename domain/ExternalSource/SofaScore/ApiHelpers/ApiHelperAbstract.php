@@ -113,27 +113,73 @@ abstract class ApiHelperAbstract
         $proxyDescription = ($this->sofaScore->getProxy() === null ? 'no ' : '') . 'proxy used';
         $this->logger->info('request for "' . $endpoint . '" (' . $proxyDescription . ') try ' . ($nrOfRetries + 1));
 
-        $client = $this->getClient();
         try {
-            $response = $client->get(
-                $endpoint,
-                $this->getHeaders()
-            );
+            $content = $this->fetchContent($endpoint);
         } catch (RequestException $e) {
             if ($nrOfRetries < self::NrOfRetries) {
                 return $this->getData($endpoint, $cacheId, $cacheMinutes, $nrOfRetries + 1);
             }
-            throw new Exception("req: could not get sofascore-data after retries: cacheid => " . $cacheId, E_ERROR);
+            throw new Exception("req: could not get sofascore-data after retries: cacheid => " . $cacheId . " (" . $e->getMessage() . ")", E_ERROR);
         } catch (Exception $e) {
             if ($nrOfRetries < self::NrOfRetries) {
                 return $this->getData($endpoint, $cacheId, $cacheMinutes, $nrOfRetries + 1);
             }
             throw new Exception("could not get sofascore-data after retries: cacheid => " . $cacheId . "(" . $e->getMessage() . ")", E_ERROR);
         }
-        $content = $response->getBody()->getContents();
         $retVal = $this->cacheItemDbRepos->saveItem($cacheId, $content, $cacheMinutes);
         $this->logger->info("received data size: " . (string)(new ByteFormatter(mb_strlen($retVal))));
         return json_decode($retVal);
+    }
+
+    /**
+     * @throws Exception
+     * @throws RequestException
+     */
+    private function fetchContent(string $endpoint): string
+    {
+        $browserFetchCommand = $this->sofaScore->getBrowserFetchCommand();
+        if ($browserFetchCommand === null) {
+            return $this->getClient()->get($endpoint, $this->getHeaders())->getBody()->getContents();
+        }
+        return $this->fetchContentViaBrowser($browserFetchCommand, $endpoint);
+    }
+
+    /**
+     * @param list<string> $command
+     * @throws Exception
+     */
+    private function fetchContentViaBrowser(array $command, string $endpoint): string
+    {
+        $env = null;
+        $proxyOptions = $this->sofaScore->getProxy();
+        if ($proxyOptions !== null) {
+            // credentials via env, not argv, so they do not show up in the process list
+            $env = array_merge(getenv(), [
+                'FETCH_PROXY_HOST' => $proxyOptions['host'],
+                'FETCH_PROXY_PORT' => $proxyOptions['port'],
+                'FETCH_PROXY_USERNAME' => $proxyOptions['username'],
+                'FETCH_PROXY_PASSWORD' => $proxyOptions['password'],
+            ]);
+        }
+        $process = proc_open(
+            array_merge($command, [$endpoint]),
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            null,
+            $env
+        );
+        if (!is_resource($process)) {
+            throw new Exception('could not start browser-fetch command', E_ERROR);
+        }
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+        if ($exitCode !== 0 || $stdout === false || $stdout === '') {
+            throw new Exception('browser-fetch failed(' . $exitCode . '): ' . trim((string)$stderr), E_ERROR);
+        }
+        return $stdout;
     }
 
     protected function getImgData(string $endpoint): string

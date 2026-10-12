@@ -68,6 +68,11 @@ final class SofaScore implements
      */
     private array|null $proxyOptions = null;
 
+    /**
+     * @var list<string>|null
+     */
+    private array|null $browserFetchCommand = null;
+
     protected SportHelper $sportHelper;
     protected AssociationHelper $associationHelper;
     protected LeagueHelper $leagueHelper;
@@ -448,6 +453,22 @@ final class SofaScore implements
     public function getProxy(): array|null
     {
         return $this->proxyOptions;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function getBrowserFetchCommand(): array|null
+    {
+        return $this->browserFetchCommand;
+    }
+
+    /**
+     * @param list<string> $command
+     */
+    public function setBrowserFetchCommand(array $command): void
+    {
+        $this->browserFetchCommand = $command;
     }
 
     /**
